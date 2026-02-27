@@ -1,0 +1,152 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
+import { razorpayInstance, RAZORPAY_CONFIG } from '@/lib/razorpay';
+import { supabaseAdmin } from '@/lib/supabase';
+import { PRICING_PLANS } from '@/lib/config';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user details from Clerk
+    const clerkUser = await currentUser();
+    const userEmail = clerkUser?.emailAddresses[0]?.emailAddress || 'user@example.com';
+    const userName = clerkUser?.fullName || clerkUser?.firstName || 'User';
+
+    // Get plan type from request body
+    const body = await request.json();
+    const planType = body.planType || 'basic'; // default to basic if not specified
+
+    if (planType !== 'basic' && planType !== 'pro') {
+      return NextResponse.json({ error: 'Invalid plan type' }, { status: 400 });
+    }
+
+    // Get the appropriate Razorpay plan ID
+    const razorpayPlanId = planType === 'basic'
+      ? process.env.RAZORPAY_BASIC_PLAN_ID
+      : process.env.RAZORPAY_PRO_PLAN_ID;
+
+    if (!razorpayPlanId) {
+      return NextResponse.json(
+        { error: `Razorpay plan ID not configured for ${planType} plan` },
+        { status: 500 }
+      );
+    }
+
+    // Get or create user in Supabase
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('clerk_user_id', userId)
+      .single();
+
+    let user = existingUser;
+
+    if (!user) {
+      // Create user in Supabase
+      const { data: newUser, error } = await supabaseAdmin
+        .from('users')
+        .insert({
+          clerk_user_id: userId,
+          email: userEmail,
+          subscription_plan_type: planType,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating user:', error);
+        return NextResponse.json({
+          error: 'Failed to create user',
+          details: error.message
+        }, { status: 500 });
+      }
+
+      user = newUser;
+    }
+
+    // Check if already has active subscription
+    if (user.subscription_status === 'active') {
+      return NextResponse.json(
+        { error: 'You already have an active subscription' },
+        { status: 400 }
+      );
+    }
+
+    // Create or get Razorpay customer
+    let customerId = user.razorpay_customer_id;
+
+    if (!customerId) {
+      try {
+        const customer = await razorpayInstance.customers.create({
+          name: userName,
+          email: userEmail,
+          contact: '',
+        });
+
+        customerId = customer.id;
+      } catch (error: any) {
+        // If customer already exists, fetch the existing customer
+        if (error.error?.description?.includes('already exists')) {
+          console.log('Customer already exists, fetching existing customer...');
+          const customers = await razorpayInstance.customers.all({
+            email: userEmail,
+          });
+
+          if (customers.items && customers.items.length > 0) {
+            customerId = customers.items[0].id;
+            console.log('Found existing customer:', customerId);
+          } else {
+            throw new Error('Customer exists but could not be retrieved');
+          }
+        } else {
+          throw error;
+        }
+      }
+
+      // Update user with customer ID
+      await supabaseAdmin
+        .from('users')
+        .update({ razorpay_customer_id: customerId })
+        .eq('id', user.id);
+    }
+
+    // Create Razorpay subscription
+    const subscription = await razorpayInstance.subscriptions.create({
+      plan_id: razorpayPlanId,
+      customer_id: customerId,
+      total_count: 12, // 12 months
+      quantity: 1,
+      notes: {
+        user_id: userId,
+        supabase_user_id: user.id,
+        plan_type: planType,
+      },
+    });
+
+    // Store subscription ID and plan type, but keep status as pending until payment is confirmed
+    await supabaseAdmin
+      .from('users')
+      .update({
+        subscription_id: subscription.id,
+        subscription_status: 'pending', // Will be updated to 'active' after payment
+        subscription_plan_type: planType,
+      })
+      .eq('id', user.id);
+
+    return NextResponse.json({
+      subscriptionId: subscription.id,
+      shortUrl: subscription.short_url,
+    });
+  } catch (error) {
+    console.error('Subscription creation error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to create subscription' },
+      { status: 500 }
+    );
+  }
+}
