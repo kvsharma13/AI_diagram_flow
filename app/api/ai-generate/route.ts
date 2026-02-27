@@ -30,14 +30,10 @@ export async function POST(request: NextRequest) {
     const email = clerkUser?.emailAddresses[0]?.emailAddress;
     const isWhitelisted = isWhitelistedUser(userId, email);
 
-    // Whitelisted users have unlimited access
-    if (isWhitelisted) {
-      console.log('Whitelisted user - unlimited access');
-
     // Get or create user from database
     let { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, subscription_status')
+      .select('id, subscription_status, subscription_plan_type')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -47,10 +43,10 @@ export async function POST(request: NextRequest) {
         .from('users')
         .insert({
           clerk_user_id: userId,
-          email: `${userId}@user.com`,
-          subscription_status: 'active', // Set to active for testing
+          email: email || `${userId}@user.com`,
+          subscription_status: 'active',
         })
-        .select('id, subscription_status')
+        .select('id, subscription_status, subscription_plan_type')
         .single();
 
       if (createError || !newUser) {
@@ -63,6 +59,9 @@ export async function POST(request: NextRequest) {
       user = newUser;
     }
 
+    // Whitelisted users have unlimited access
+    if (isWhitelisted) {
+      console.log('Whitelisted user - unlimited access');
       // Skip subscription and usage checks for whitelisted users
       // Continue to generation
     } else {
