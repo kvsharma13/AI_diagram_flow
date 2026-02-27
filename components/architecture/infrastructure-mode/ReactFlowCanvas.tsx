@@ -117,7 +117,7 @@ export default function ReactFlowCanvas({
   const { diagram, setNodes: storeSetNodes, setEdges: storeSetEdges } = useArchitectureStore();
 
   // Convert store nodes/edges to ReactFlow format
-  const rfNodes: RFNode[] = diagram?.nodes || [];
+  const rfNodes = (diagram?.nodes || []) as RFNode[];
 
   // First, get all valid parent node IDs
   const validParentIds = new Set(
