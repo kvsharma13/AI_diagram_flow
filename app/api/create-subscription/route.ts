@@ -90,18 +90,25 @@ export async function POST(request: NextRequest) {
 
         customerId = customer.id;
       } catch (error: any) {
-        // If customer already exists, fetch the existing customer
+        // If customer already exists, try to fetch by listing all customers
         if (error.error?.description?.includes('already exists')) {
           console.log('Customer already exists, fetching existing customer...');
-          const customers = await razorpayInstance.customers.all({
-            email: userEmail,
-          });
+          try {
+            // Fetch all customers and find by email
+            const customers = await razorpayInstance.customers.all({ count: 100 });
+            const existingCustomer = customers.items.find(
+              (c: any) => c.email === userEmail
+            );
 
-          if (customers.items && customers.items.length > 0) {
-            customerId = customers.items[0].id;
-            console.log('Found existing customer:', customerId);
-          } else {
-            throw new Error('Customer exists but could not be retrieved');
+            if (existingCustomer) {
+              customerId = existingCustomer.id;
+              console.log('Found existing customer:', customerId);
+            } else {
+              throw new Error('Customer exists but could not be retrieved');
+            }
+          } catch (fetchError) {
+            console.error('Error fetching customers:', fetchError);
+            throw new Error('Failed to retrieve existing customer');
           }
         } else {
           throw error;
