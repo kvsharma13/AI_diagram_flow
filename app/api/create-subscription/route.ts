@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
         supabase_user_id: user.id,
         plan_type: planType,
       },
-    });
+    } as any);
 
     // Store subscription ID and plan type, but keep status as pending until payment is confirmed
     await supabaseAdmin
