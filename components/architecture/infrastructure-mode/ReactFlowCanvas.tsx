@@ -126,11 +126,12 @@ export default function ReactFlowCanvas({
 
   // Then convert nodes, validating parent relationships
   const convertedNodes: RFNode[] = rfNodes.map((node) => {
+    const nodeData = node as any;
     const rfNode: RFNode = {
       id: node.id,
       type: node.type === 'group' ? 'group' : 'service',
       position: node.position,
-      data: { ...node.data, label: node.label, icon: node.icon || node.type },
+      data: { ...nodeData.data, label: nodeData.label, icon: nodeData.icon || node.type },
     };
 
     // Handle parent-child relationships - only if parent exists
