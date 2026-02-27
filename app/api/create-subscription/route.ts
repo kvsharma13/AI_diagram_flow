@@ -123,6 +123,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Razorpay subscription
+    console.log('Creating subscription with:', {
+      plan_id: razorpayPlanId,
+      customer_id: customerId,
+      plan_type: planType
+    });
+
     const subscription = await razorpayInstance.subscriptions.create({
       plan_id: razorpayPlanId,
       customer_id: customerId,
