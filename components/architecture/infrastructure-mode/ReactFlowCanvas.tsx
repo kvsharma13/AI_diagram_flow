@@ -12,6 +12,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   BackgroundVariant,
+  ConnectionLineType,
   Handle,
   Position,
 } from 'reactflow';
@@ -143,9 +144,9 @@ export default function ReactFlowCanvas({
     // Set dimensions for group nodes
     if (node.type === 'group' && nodeData.data?.width && nodeData.data?.height) {
       rfNode.style = {
-        width: parseInt(node.data.width),
-        height: parseInt(node.data.height),
-        zIndex: node.layerId ? 1 : 0,
+        width: parseInt(nodeData.data.width),
+        height: parseInt(nodeData.data.height),
+        zIndex: nodeData.layerId ? 1 : 0,
       };
     }
 
@@ -291,7 +292,7 @@ export default function ReactFlowCanvas({
         type: 'smoothstep',
       }}
       connectionLineStyle={{ stroke: '#60a5fa', strokeWidth: 2 }}
-      connectionLineType="smoothstep"
+      connectionLineType={ConnectionLineType.SmoothStep}
     >
       <Background color="#1e293b" variant={BackgroundVariant.Dots} gap={20} size={1} />
       <Controls showInteractive={false} />

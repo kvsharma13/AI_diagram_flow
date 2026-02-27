@@ -711,13 +711,13 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         });
 
         // Calculate total timeline months
-        const maxEndMonth = Math.max(...phases.map(p => p.startMonth + p.duration - 1));
+        const maxEndMonth = Math.max(...phases.map((p: GanttPhase) => p.startMonth + p.duration - 1));
         const timelineMonths = timelineData.totalMonths || data.timelineMonths || data.duration || maxEndMonth || 12;
 
         console.log('Import complete:', {
           phases: phases.length,
           timelineMonths,
-          hasMonthlyData: phases.some(p => p.months && p.months.length > 0)
+          hasMonthlyData: phases.some((p: GanttPhase) => p.months && p.months.length > 0)
         });
 
         return {
@@ -804,7 +804,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
 
           // Create a mapping of simplified role names to stakeholder indices
           const roleMapping = new Map<string, number>();
-          stakeholders.forEach((s, index) => {
+          stakeholders.forEach((s: RACIStakeholder, index: number) => {
             const simplifiedName = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
             roleMapping.set(simplifiedName, index);
 

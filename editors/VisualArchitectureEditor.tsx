@@ -33,7 +33,6 @@ import {
   Download,
   Upload,
 } from 'lucide-react';
-import { SiAmazonaws, SiGooglecloud, SiMicrosoftazure, SiDocker, SiKubernetes } from 'react-icons/si';
 
 // Custom Node Component with Icons
 const ServiceNode = ({ data }: any) => {
