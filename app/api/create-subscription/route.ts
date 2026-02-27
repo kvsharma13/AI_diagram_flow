@@ -151,8 +151,22 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Subscription creation error:', error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+
+    // Extract detailed error message
+    let errorMessage = 'Failed to create subscription';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      const err = error as any;
+      errorMessage = err.error?.description || err.message || JSON.stringify(err);
+    }
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create subscription' },
+      {
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : String(error)
+      },
       { status: 500 }
     );
   }
