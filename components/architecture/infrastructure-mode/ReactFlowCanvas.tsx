@@ -135,13 +135,13 @@ export default function ReactFlowCanvas({
     };
 
     // Handle parent-child relationships - only if parent exists
-    if (node.layerId && validParentIds.has(node.layerId)) {
-      rfNode.parentNode = node.layerId;
+    if (nodeData.layerId && validParentIds.has(nodeData.layerId)) {
+      rfNode.parentNode = nodeData.layerId;
       rfNode.extent = 'parent' as const;
     }
 
     // Set dimensions for group nodes
-    if (node.type === 'group' && node.data?.width && node.data?.height) {
+    if (node.type === 'group' && nodeData.data?.width && nodeData.data?.height) {
       rfNode.style = {
         width: parseInt(node.data.width),
         height: parseInt(node.data.height),
