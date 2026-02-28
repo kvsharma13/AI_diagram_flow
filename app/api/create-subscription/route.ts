@@ -80,6 +80,18 @@ export async function POST(request: NextRequest) {
     // Create or get Razorpay customer
     let customerId = user.razorpay_customer_id;
 
+    // Verify the stored customer exists in Razorpay (if we have one)
+    if (customerId) {
+      try {
+        console.log('Verifying existing customer:', customerId);
+        await razorpayInstance.customers.fetch(customerId);
+        console.log('Customer verified successfully');
+      } catch (error: any) {
+        console.log('Stored customer does not exist, creating new one');
+        customerId = null; // Reset so we create a new customer
+      }
+    }
+
     if (!customerId) {
       try {
         const customer = await razorpayInstance.customers.create({
@@ -89,6 +101,7 @@ export async function POST(request: NextRequest) {
         });
 
         customerId = customer.id;
+        console.log('New customer created:', customerId);
       } catch (error: any) {
         // If customer already exists, try to fetch by listing all customers
         if (error.error?.description?.includes('already exists')) {
