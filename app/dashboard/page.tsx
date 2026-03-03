@@ -75,28 +75,8 @@ export default function DashboardPage() {
     );
   }
 
-  if (subscriptionCheck?.needsSubscription && !subscriptionCheck?.isWhitelisted) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-screen bg-gray-50">
-        <Card className="max-w-md text-center">
-          <CardHeader className="space-y-4">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
-              <Lock className="w-8 h-8 text-purple-600" />
-            </div>
-            <CardTitle className="text-2xl">Subscription Required</CardTitle>
-            <CardDescription>
-              Please subscribe to access the dashboard and all features.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild size="lg" className="w-full">
-              <Link href="/pricing">View Pricing Plans</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Allow access to dashboard even without subscription
+  const needsSubscription = subscriptionCheck?.needsSubscription && !subscriptionCheck?.isWhitelisted;
 
   const planBadge = subscriptionCheck?.planType === 'pro' ? (
     <Badge variant="default">Pro Plan</Badge>
@@ -108,27 +88,60 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="p-8 max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex items-start justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-4xl font-bold text-gray-900">
-                Welcome back, {user?.firstName || 'User'}!
-              </h1>
-              {planBadge}
+      <div className="max-w-7xl mx-auto">
+        {/* Subscription Warning Banner */}
+        {needsSubscription && (
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4">
+            <div className="flex items-center justify-between max-w-7xl mx-auto">
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5" />
+                <div>
+                  <p className="font-semibold">Subscribe to unlock all features</p>
+                  <p className="text-sm text-white/90">
+                    You can explore the dashboard, but need a subscription to use AI generation and features
+                  </p>
+                </div>
+              </div>
+              <Button asChild variant="secondary" size="sm" className="bg-white text-purple-600 hover:bg-gray-100">
+                <Link href="/pricing">
+                  Subscribe Now
+                </Link>
+              </Button>
             </div>
-            <p className="text-gray-600 text-lg">
-              Here's what's happening with your projects today.
-            </p>
           </div>
-          <SignOutButton redirectUrl="/">
-            <Button variant="destructive" size="default">
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
-          </SignOutButton>
-        </div>
+        )}
+
+        <div className="p-8">
+          {/* Header */}
+          <div className="mb-8 flex items-start justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <h1 className="text-4xl font-bold text-gray-900">
+                  Welcome back, {user?.firstName || 'User'}!
+                </h1>
+                {planBadge}
+              </div>
+              <p className="text-gray-600 text-lg">
+                Here's what's happening with your projects today.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {needsSubscription && (
+                <Button asChild size="default">
+                  <Link href="/pricing">
+                    <Sparkles className="w-4 h-4" />
+                    Subscribe
+                  </Link>
+                </Button>
+              )}
+              <SignOutButton redirectUrl="/">
+                <Button variant="ghost" size="sm" className="text-gray-600">
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </Button>
+              </SignOutButton>
+            </div>
+          </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -280,6 +293,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
