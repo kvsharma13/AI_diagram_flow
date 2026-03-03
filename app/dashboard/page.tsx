@@ -32,10 +32,7 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         setSubscriptionCheck(data);
-
-        if (data.needsSubscription && !data.isWhitelisted) {
-          router.push('/pricing?required=true');
-        }
+        // Don't redirect - allow access to dashboard regardless of subscription
       }
 
       const usageResponse = await fetch('/api/ai-usage');
