@@ -11,26 +11,9 @@ function PaymentSuccessContent() {
   const [isActivating, setIsActivating] = useState(true);
 
   useEffect(() => {
-    const activateSubscription = async () => {
-      const subscriptionId = searchParams.get('subscription_id');
-
-      if (subscriptionId) {
-        try {
-          // Activate the subscription
-          await fetch('/api/activate-subscription', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subscriptionId }),
-          });
-        } catch (error) {
-          console.error('Failed to activate subscription:', error);
-        }
-      }
-
-      setIsActivating(false);
-    };
-
-    activateSubscription();
+    // Don't auto-activate - let the Razorpay webhook handle activation
+    // This page is only for showing success message
+    setIsActivating(false);
 
     // Redirect to dashboard after 5 seconds
     const timer = setTimeout(() => {
@@ -38,7 +21,7 @@ function PaymentSuccessContent() {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [router, searchParams]);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center p-6">

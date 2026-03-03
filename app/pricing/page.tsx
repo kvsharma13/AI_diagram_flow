@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { Check, Sparkles, Zap, ArrowRight, Loader2, Star } from 'lucide-react';
+import { Check, Sparkles, ArrowRight, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
 import Script from 'next/script';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 type PlanType = 'basic' | 'pro';
 
@@ -49,7 +52,6 @@ export default function PricingPage() {
         description: planNames[planType],
         image: '/logo.png',
         handler: function (response: any) {
-          // Payment successful
           router.push('/payment/success?subscription_id=' + data.subscriptionId);
         },
         prefill: {
@@ -57,27 +59,51 @@ export default function PricingPage() {
           email: user?.emailAddresses[0]?.emailAddress || '',
         },
         theme: {
-          color: '#9333EA', // Purple
+          color: '#9333EA',
         },
       };
 
+      if (typeof (window as any).Razorpay === 'undefined') {
+        throw new Error('Razorpay script not loaded. Please refresh the page.');
+      }
+
       const razorpay = new (window as any).Razorpay(options);
       razorpay.on('payment.failed', function (response: any) {
+        alert(`Payment failed: ${response.error?.description || 'Unknown error'}`);
         router.push('/payment/cancelled');
       });
       razorpay.open();
     } catch (error) {
-      console.error('Subscription error:', error);
-      alert('Failed to start subscription. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start subscription';
+      alert(errorMessage);
     } finally {
       setIsLoading(null);
     }
   };
 
+  const features = {
+    basic: [
+      { name: '5 AI Generations per Month', description: 'Combined for both Gantt charts and RACI matrices' },
+      { name: 'Unlimited Manual Editing', description: 'Create and edit projects without any limits' },
+      { name: 'Unlimited Code Imports', description: 'Import from JSON without restrictions' },
+      { name: 'Unlimited Projects', description: 'Create as many projects as you need' },
+      { name: 'Auto-Save & Cloud Storage', description: 'Automatic cloud backup for all projects' },
+      { name: 'Export to PNG/JSON', description: 'Download charts for presentations' },
+    ],
+    pro: [
+      { name: '12 AI Generations per Month', description: 'Combined for both Gantt charts and RACI matrices' },
+      { name: 'Unlimited Manual Editing', description: 'Create and edit projects without any limits' },
+      { name: 'Unlimited Code Imports', description: 'Import from JSON without restrictions' },
+      { name: 'Unlimited Projects', description: 'Create as many projects as you need' },
+      { name: 'Auto-Save & Cloud Storage', description: 'Automatic cloud backup for all projects' },
+      { name: 'Priority Support', description: 'Get help faster via email' },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200">
+      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
@@ -89,26 +115,17 @@ export default function PricingPage() {
           </Link>
           <div className="flex items-center gap-4">
             {isSignedIn ? (
-              <Link
-                href="/dashboard"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-              >
-                Dashboard
-              </Link>
+              <Button variant="ghost" asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
             ) : (
               <>
-                <Link
-                  href="/sign-in"
-                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                >
-                  Get Started
-                </Link>
+                <Button variant="ghost" asChild>
+                  <Link href="/sign-in">Sign In</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/sign-up">Get Started</Link>
+                </Button>
               </>
             )}
           </div>
@@ -117,103 +134,65 @@ export default function PricingPage() {
 
       {/* Pricing Section */}
       <div className="max-w-7xl mx-auto px-6 py-20">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+        <div className="text-center mb-16 space-y-4">
+          <Badge variant="default" className="mb-4">
+            <Sparkles className="w-3 h-3 mr-1" />
+            Simple, Transparent Pricing
+          </Badge>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-gray-600 mb-4">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Get unlimited access to all features. Only AI generation is limited by plan.
           </p>
-          <p className="text-sm text-gray-500">
-            ✅ Cancel anytime • Secure payment with Razorpay
-          </p>
+          <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Cancel anytime</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span>Secure payment</span>
+            </div>
+          </div>
         </div>
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {/* Basic Plan */}
-          <div className="bg-white rounded-3xl shadow-xl border-2 border-gray-200 overflow-hidden hover:shadow-2xl transition-shadow">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6">
-              <div className="mb-2">
-                <h3 className="text-2xl font-bold">Basic Plan</h3>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold">₹900</span>
-                <span className="text-xl opacity-90">/month</span>
-              </div>
-              <p className="mt-2 opacity-90">Perfect for getting started</p>
-            </div>
-
-            {/* Features */}
-            <div className="px-8 py-8">
-              <div className="space-y-4 mb-8">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">5 AI Generations per Month</p>
-                    <p className="text-sm text-gray-600">Combined for both Gantt charts and RACI matrices</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Unlimited Manual Editing</p>
-                    <p className="text-sm text-gray-600">Create and edit projects without any limits</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Unlimited Code Imports</p>
-                    <p className="text-sm text-gray-600">Import from JSON without restrictions</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Unlimited Projects</p>
-                    <p className="text-sm text-gray-600">Create as many projects as you need</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Auto-Save & Cloud Storage</p>
-                    <p className="text-sm text-gray-600">Automatic cloud backup for all projects</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Export to PNG/JSON</p>
-                    <p className="text-sm text-gray-600">Download charts for presentations</p>
-                  </div>
+          <Card className="relative overflow-hidden transition-all hover:scale-105">
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-600 to-indigo-600" />
+            <CardHeader className="pb-8">
+              <CardTitle className="text-gray-900">Basic Plan</CardTitle>
+              <CardDescription>Perfect for getting started</CardDescription>
+              <div className="mt-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold text-gray-900">₹900</span>
+                  <span className="text-xl text-gray-600">/month</span>
                 </div>
               </div>
+            </CardHeader>
 
-              {/* CTA Button */}
-              <button
+            <CardContent className="space-y-4">
+              {features.basic.map((feature, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{feature.name}</p>
+                    <p className="text-sm text-gray-600">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+
+            <CardFooter className="flex-col gap-4">
+              <Button
                 onClick={() => handleSubscribe('basic')}
                 disabled={isLoading !== null}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-4 rounded-xl text-lg font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                size="lg"
               >
                 {isLoading === 'basic' ? (
                   <>
@@ -226,105 +205,53 @@ export default function PricingPage() {
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
-              </button>
-
-              <p className="text-center text-sm text-gray-500 mt-4">
+              </Button>
+              <p className="text-center text-sm text-gray-500">
                 Cancel anytime • Secure payment
               </p>
-            </div>
-          </div>
+            </CardFooter>
+          </Card>
 
           {/* Pro Plan */}
-          <div className="bg-white rounded-3xl shadow-2xl border-4 border-purple-300 overflow-hidden relative">
-            {/* Popular Badge */}
-            <div className="absolute top-6 right-6 z-10">
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg">
-                <Star className="w-4 h-4" />
+          <Card className="relative overflow-hidden transition-all hover:scale-105 border-4 border-purple-300">
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-600 to-pink-600" />
+            <div className="absolute top-6 right-6">
+              <Badge variant="default" className="shadow-lg">
+                <Star className="w-3 h-3 mr-1" />
                 Most Popular
-              </div>
+              </Badge>
             </div>
-
-            {/* Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-6">
-              <div className="mb-2">
-                <h3 className="text-2xl font-bold">Pro Plan</h3>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold">₹2000</span>
-                <span className="text-xl opacity-90">/month</span>
-              </div>
-              <p className="mt-2 opacity-90">Best value for power users</p>
-            </div>
-
-            {/* Features */}
-            <div className="px-8 py-8">
-              <div className="space-y-4 mb-8">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">12 AI Generations per Month</p>
-                    <p className="text-sm text-gray-600">Combined for both Gantt charts and RACI matrices</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Unlimited Manual Editing</p>
-                    <p className="text-sm text-gray-600">Create and edit projects without any limits</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Unlimited Code Imports</p>
-                    <p className="text-sm text-gray-600">Import from JSON without restrictions</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Unlimited Projects</p>
-                    <p className="text-sm text-gray-600">Create as many projects as you need</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Auto-Save & Cloud Storage</p>
-                    <p className="text-sm text-gray-600">Automatic cloud backup for all projects</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Priority Support</p>
-                    <p className="text-sm text-gray-600">Get help faster via email</p>
-                  </div>
+            <CardHeader className="pb-8">
+              <CardTitle className="text-gray-900">Pro Plan</CardTitle>
+              <CardDescription>Best value for power users</CardDescription>
+              <div className="mt-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold text-gray-900">₹2000</span>
+                  <span className="text-xl text-gray-600">/month</span>
                 </div>
               </div>
+            </CardHeader>
 
-              {/* CTA Button */}
-              <button
+            <CardContent className="space-y-4">
+              {features.pro.map((feature, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{feature.name}</p>
+                    <p className="text-sm text-gray-600">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+
+            <CardFooter className="flex-col gap-4">
+              <Button
                 onClick={() => handleSubscribe('pro')}
                 disabled={isLoading !== null}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-4 rounded-xl text-lg font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                className="w-full"
+                size="lg"
               >
                 {isLoading === 'pro' ? (
                   <>
@@ -337,55 +264,53 @@ export default function PricingPage() {
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
-              </button>
-
-              <p className="text-center text-sm text-gray-500 mt-4">
+              </Button>
+              <p className="text-center text-sm text-gray-500">
                 Cancel anytime • Secure payment
               </p>
-            </div>
-          </div>
+            </CardFooter>
+          </Card>
         </div>
 
         {/* FAQ */}
-        <div className="mt-20 max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-2">What's the difference between Basic and Pro?</h3>
-              <p className="text-gray-600">
-                Both plans give you unlimited access to all features (manual editing, code imports, projects). The only difference is AI generations per month: Basic gets 5, Pro gets 12. Choose based on how often you need AI assistance.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-2">What happens when I reach my AI limit?</h3>
-              <p className="text-gray-600">
-                You can still use unlimited manual editing and code imports. AI generations reset on the 1st of each month. You can also upgrade to Pro anytime for more AI credits.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-2">Can I switch plans later?</h3>
-              <p className="text-gray-600">
-                Yes! You can upgrade from Basic to Pro or downgrade from Pro to Basic anytime from your dashboard. Changes take effect on your next billing cycle.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-2">Can I cancel anytime?</h3>
-              <p className="text-gray-600">
-                Yes! Cancel anytime from your dashboard. You'll continue to have access until the end of your billing period. No questions asked.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h3 className="font-semibold text-gray-900 mb-2">Is my data secure?</h3>
-              <p className="text-gray-600">
-                Absolutely. We use bank-level encryption, regular backups, and secure cloud storage. Your projects are safe with us.
-              </p>
-            </div>
+        <div className="mt-24 max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900">
+              Frequently Asked Questions
+            </h2>
+          </div>
+          <div className="space-y-4">
+            {[
+              {
+                q: "What's the difference between Basic and Pro?",
+                a: "Both plans give you unlimited access to all features (manual editing, code imports, projects). The only difference is AI generations per month: Basic gets 5, Pro gets 12. Choose based on how often you need AI assistance."
+              },
+              {
+                q: "What happens when I reach my AI limit?",
+                a: "You can still use unlimited manual editing and code imports. AI generations reset on the 1st of each month. You can also upgrade to Pro anytime for more AI credits."
+              },
+              {
+                q: "Can I switch plans later?",
+                a: "Yes! You can upgrade from Basic to Pro or downgrade from Pro to Basic anytime from your dashboard. Changes take effect on your next billing cycle."
+              },
+              {
+                q: "Can I cancel anytime?",
+                a: "Yes! Cancel anytime from your dashboard. You'll continue to have access until the end of your billing period. No questions asked."
+              },
+              {
+                q: "Is my data secure?",
+                a: "Absolutely. We use bank-level encryption, regular backups, and secure cloud storage. Your projects are safe with us."
+              }
+            ].map((faq, index) => (
+              <Card key={index} className="border border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-lg">{faq.q}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">{faq.a}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
@@ -393,7 +318,8 @@ export default function PricingPage() {
       {/* Razorpay Script */}
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
+        onLoad={() => console.log('Razorpay script loaded')}
       />
     </div>
   );

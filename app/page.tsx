@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import { Calendar, Users, Sparkles, Code, Zap, Shield, TrendingUp, Check, ArrowRight, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function LandingPage() {
   return (
@@ -18,28 +21,22 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <Link
-              href="/sign-in"
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/sign-in?redirect_url=/pricing"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-            >
-              Get Started
-            </Link>
+            <Button variant="ghost" asChild>
+              <Link href="/sign-in">Sign In</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/sign-in?redirect_url=/pricing">Get Started</Link>
+            </Button>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-6 pt-20 pb-32 text-center">
-        <div className="mb-6 inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-purple-200">
-          <Sparkles className="w-4 h-4 text-purple-600" />
-          <span className="text-sm font-semibold text-purple-700">AI-Powered Project Management</span>
-        </div>
+        <Badge variant="default" className="mb-6 px-4 py-2">
+          <Sparkles className="w-4 h-4 mr-2" />
+          AI-Powered Project Management
+        </Badge>
 
         <h1 className="text-6xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
           Plan Projects
@@ -55,19 +52,15 @@ export default function LandingPage() {
         </p>
 
         <div className="flex items-center justify-center gap-4 mb-12">
-          <Link
-            href="/sign-in?redirect_url=/pricing"
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-xl text-lg font-bold transition-all shadow-2xl hover:shadow-purple-500/50 hover:scale-105 flex items-center gap-2"
-          >
-            Get Started
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-          <a
-            href="#pricing"
-            className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-xl text-lg font-bold transition-all shadow-lg border-2 border-gray-200"
-          >
-            View Pricing
-          </a>
+          <Button size="xl" asChild>
+            <Link href="/sign-in?redirect_url=/pricing">
+              Get Started
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </Button>
+          <Button size="xl" variant="outline" asChild>
+            <Link href="/pricing">View Pricing</Link>
+          </Button>
         </div>
 
         <div className="flex items-center justify-center gap-8 text-sm text-gray-600">
