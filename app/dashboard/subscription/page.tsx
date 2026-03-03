@@ -200,32 +200,36 @@ export default function SubscriptionPage() {
           </div>
         )}
 
-        {/* Manage Subscription */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Manage Subscription</h3>
-          <p className="text-gray-600 mb-4">
-            Need to update your payment method or cancel your subscription? You can manage your subscription through Razorpay's customer portal.
-          </p>
-          <button
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all text-sm"
-            onClick={() => alert('Razorpay customer portal will be integrated here')}
-          >
-            Manage via Razorpay
-          </button>
-          <p className="text-xs text-gray-500 mt-3">
-            Cancel anytime • Changes take effect at the end of your billing period
-          </p>
-        </div>
+        {/* Manage Subscription - Only show for active subscribers */}
+        {!isLoading && (subscription?.subscriptionStatus === 'active' || subscription?.subscriptionStatus === 'trialing') && (
+          <>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Manage Subscription</h3>
+              <p className="text-gray-600 mb-4">
+                Need to update your payment method or cancel your subscription? You can manage your subscription through Razorpay's customer portal.
+              </p>
+              <button
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all text-sm"
+                onClick={() => alert('Razorpay customer portal will be integrated here')}
+              >
+                Manage via Razorpay
+              </button>
+              <p className="text-xs text-gray-500 mt-3">
+                Cancel anytime • Changes take effect at the end of your billing period
+              </p>
+            </div>
 
-        {/* Billing History */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Billing History</h3>
-          <div className="text-center py-8 text-gray-500">
-            <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No billing history yet</p>
-            <p className="text-sm">Your invoices will appear here after your first payment</p>
-          </div>
-        </div>
+            {/* Billing History */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Billing History</h3>
+              <div className="text-center py-8 text-gray-500">
+                <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No billing history yet</p>
+                <p className="text-sm">Your invoices will appear here after your first payment</p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
