@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { format, startOfMonth } from 'date-fns';
-import { isWhitelistedUser, getAICreditsForPlan } from '@/lib/config';
+import { isWhitelistedUser, isTestUser, getTestUserPlan, getAICreditsForPlan } from '@/lib/config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,6 +22,50 @@ export async function GET(request: NextRequest) {
         remaining: 999,
         limit: 999,
         isWhitelisted: true,
+        hasSubscription: true,
+      });
+    }
+
+    // Check if test user (testing mode with real plan limits)
+    if (isTestUser(email)) {
+      const testPlan = getTestUserPlan(email);
+      const aiLimit = getAICreditsForPlan(testPlan || 'basic');
+
+      // Get user from database to check usage
+      const { data: user } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('clerk_user_id', userId)
+        .single();
+
+      if (user) {
+        // Get current month usage
+        const currentMonth = format(startOfMonth(new Date()), 'yyyy-MM');
+        const { data: usage } = await supabaseAdmin
+          .from('ai_usage')
+          .select('generations_count')
+          .eq('user_id', user.id)
+          .eq('month_year', currentMonth)
+          .single();
+
+        const used = usage?.generations_count || 0;
+        const remaining = Math.max(0, aiLimit - used);
+
+        return NextResponse.json({
+          used,
+          remaining,
+          limit: aiLimit,
+          isTestUser: true,
+          hasSubscription: true,
+        });
+      }
+
+      // If user not in DB yet, return fresh limits
+      return NextResponse.json({
+        used: 0,
+        remaining: aiLimit,
+        limit: aiLimit,
+        isTestUser: true,
         hasSubscription: true,
       });
     }

@@ -1,6 +1,6 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from './supabase';
-import { isWhitelistedUser } from './config';
+import { isWhitelistedUser, isTestUser, getTestUserPlan, getAICreditsForPlan } from './config';
 
 export async function checkUserSubscription() {
   const { userId } = await auth();
@@ -17,14 +17,29 @@ export async function checkUserSubscription() {
   const clerkUser = await currentUser();
   const email = clerkUser?.emailAddresses[0]?.emailAddress;
 
-  // Check if whitelisted (you)
+  // Check if whitelisted (unlimited access)
   if (isWhitelistedUser(userId, email)) {
     return {
       hasAccess: true,
       isWhitelisted: true,
       needsSubscription: false,
       user: clerkUser,
-      aiCredits: 999, // Unlimited for you
+      aiCredits: 999, // Unlimited
+    };
+  }
+
+  // Check if test user (testing mode with real plan limits)
+  if (isTestUser(email)) {
+    const testPlan = getTestUserPlan(email);
+    return {
+      hasAccess: true,
+      isWhitelisted: false,
+      isTestUser: true,
+      needsSubscription: false,
+      user: clerkUser,
+      planType: testPlan,
+      subscriptionStatus: 'active',
+      aiCredits: getAICreditsForPlan(testPlan || 'basic'),
     };
   }
 

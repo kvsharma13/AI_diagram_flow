@@ -4,6 +4,15 @@ export const WHITELISTED_USERS: string[] = [
   // 'user_xxx' // Example: add test user IDs here
 ];
 
+// Test users - can manually set plan type for testing without payment
+// Change testPlan to 'pro' when you want to test Pro features
+export const TEST_USERS: Record<string, { email: string; testPlan: 'basic' | 'pro' }> = {
+  'kavindrash12@gmail.com': {
+    email: 'kavindrash12@gmail.com',
+    testPlan: 'basic', // Change to 'pro' to test Pro plan
+  },
+};
+
 // Pricing tiers
 export const PRICING_PLANS = {
   BASIC: {
@@ -17,7 +26,7 @@ export const PRICING_PLANS = {
     name: 'Pro Plan',
     price: 2000,
     priceDisplay: '₹2,000',
-    aiCredits: 12,
+    aiCredits: 10,
     razorpayPlanId: 'plan_pro_2000', // You'll create this in Razorpay
   },
 };
@@ -26,6 +35,16 @@ export const PRICING_PLANS = {
 export function isWhitelistedUser(userId: string, email?: string): boolean {
   return WHITELISTED_USERS.includes(userId) ||
          (email ? WHITELISTED_USERS.includes(email) : false);
+}
+
+// Check if user is a test user
+export function isTestUser(email?: string): boolean {
+  return email ? email in TEST_USERS : false;
+}
+
+// Get test user plan
+export function getTestUserPlan(email?: string): 'basic' | 'pro' | null {
+  return email && TEST_USERS[email] ? TEST_USERS[email].testPlan : null;
 }
 
 // Get AI credits based on plan
