@@ -5,13 +5,17 @@ import Link from 'next/link';
 import { Lock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useProjectStore } from '@/store/useProjectStore';
+import GanttEditor from '@/editors/GanttEditor';
 
 export default function GanttPage() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { project, setProject } = useProjectStore();
 
   useEffect(() => {
     checkSubscription();
+    initializeProject();
   }, []);
 
   const checkSubscription = async () => {
@@ -28,6 +32,26 @@ export default function GanttPage() {
       console.error('Failed to check subscription:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const initializeProject = () => {
+    // Initialize a temporary project for the Gantt editor
+    if (!project) {
+      setProject({
+        id: 'temp-gantt',
+        name: 'Gantt Chart Editor',
+        ganttPhases: [],
+        raciTasks: [],
+        raciStakeholders: [],
+        raciAssignments: [],
+        architectureComponents: [],
+        flowchartSteps: [],
+        timelineMonths: 12,
+        timelineUnit: 'months',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
   };
 
@@ -56,25 +80,9 @@ export default function GanttPage() {
           </div>
         )}
 
-        {/* Page Content (blurred when not subscribed) */}
+        {/* Page Content */}
         <div className={!hasSubscription ? 'blur-sm pointer-events-none' : ''}>
-          <div className="p-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-6">Gantt Chart</h1>
-            <p className="text-gray-600 mb-8">
-              Create and manage Gantt charts for your projects.
-            </p>
-
-            {/* Placeholder content */}
-            <div className="grid grid-cols-1 gap-6">
-              <Card className="p-6">
-                <h3 className="font-semibold text-lg mb-2">What is a Gantt Chart?</h3>
-                <p className="text-gray-600">
-                  A Gantt chart is a bar chart that illustrates a project schedule,
-                  showing the start and finish dates of project elements.
-                </p>
-              </Card>
-            </div>
-          </div>
+          {hasSubscription && project && <GanttEditor />}
         </div>
       </div>
   );

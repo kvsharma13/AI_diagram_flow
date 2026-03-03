@@ -8,20 +8,32 @@ import { CreditCard, Calendar, Zap, Check, AlertCircle, Sparkles } from 'lucide-
 export default function SubscriptionPage() {
   const { user } = useUser();
   const [aiUsage, setAiUsage] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchAIUsage();
+    fetchData();
   }, []);
 
-  const fetchAIUsage = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/ai-usage');
-      if (response.ok) {
-        const data = await response.json();
-        setAiUsage(data);
+      // Fetch AI usage
+      const usageResponse = await fetch('/api/ai-usage');
+      if (usageResponse.ok) {
+        const usageData = await usageResponse.json();
+        setAiUsage(usageData);
+      }
+
+      // Fetch subscription data
+      const subResponse = await fetch('/api/check-subscription');
+      if (subResponse.ok) {
+        const subData = await subResponse.json();
+        setSubscription(subData);
       }
     } catch (error) {
-      console.error('Failed to fetch AI usage:', error);
+      console.error('Failed to fetch data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -35,35 +47,64 @@ export default function SubscriptionPage() {
 
       <div className="max-w-4xl space-y-6">
         {/* Subscription Status Card */}
-        <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl shadow-lg p-8 text-white">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Pro Plan</h2>
-              <p className="opacity-90">Active Subscription</p>
-            </div>
-            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg font-semibold">
-              ₹900/month
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-5 h-5" />
-                <span className="text-sm opacity-90">Next Billing</span>
+        {isLoading ? (
+          <div className="bg-gray-200 animate-pulse rounded-xl h-48"></div>
+        ) : subscription?.subscriptionStatus === 'active' || subscription?.subscriptionStatus === 'trialing' ? (
+          <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl shadow-lg p-8 text-white">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">
+                  {subscription?.planType === 'pro' ? 'Pro Plan' : 'Basic Plan'}
+                </h2>
+                <p className="opacity-90">
+                  {subscription?.subscriptionStatus === 'active' ? 'Active Subscription' : 'Trial Period'}
+                </p>
               </div>
-              <p className="text-xl font-bold">1st of next month</p>
+              <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg font-semibold">
+                ₹{subscription?.planType === 'pro' ? '2000' : '900'}/month
+              </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5" />
-                <span className="text-sm opacity-90">Status</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="w-5 h-5" />
+                  <span className="text-sm opacity-90">Next Billing</span>
+                </div>
+                <p className="text-xl font-bold">
+                  {subscription?.nextBillingDate || '1st of next month'}
+                </p>
               </div>
-              <p className="text-xl font-bold">Active</p>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="w-5 h-5" />
+                  <span className="text-sm opacity-90">Status</span>
+                </div>
+                <p className="text-xl font-bold capitalize">
+                  {subscription?.subscriptionStatus || 'Active'}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border-2 border-dashed border-gray-300 p-8">
+            <div className="text-center">
+              <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Active Subscription</h2>
+              <p className="text-gray-600 mb-6">
+                Subscribe to unlock AI-powered generation and all features
+              </p>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+              >
+                <Sparkles className="w-5 h-5" />
+                View Plans & Subscribe
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* AI Usage Card */}
         {aiUsage && (
@@ -108,50 +149,56 @@ export default function SubscriptionPage() {
         )}
 
         {/* Plan Features */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">What's Included</h3>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-gray-900">10 AI Generations per Month</p>
-                <p className="text-sm text-gray-600">Create charts from text descriptions</p>
+        {!isLoading && (subscription?.subscriptionStatus === 'active' || subscription?.subscriptionStatus === 'trialing') && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">What's Included</h3>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {subscription?.planType === 'pro' ? '10' : '5'} AI Generations per Month
+                  </p>
+                  <p className="text-sm text-gray-600">Create charts from text descriptions</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-gray-900">Unlimited Manual Editing</p>
-                <p className="text-sm text-gray-600">Create and edit as many projects as you want</p>
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">Unlimited Manual Editing</p>
+                  <p className="text-sm text-gray-600">Create and edit as many projects as you want</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-gray-900">Unlimited Code Imports</p>
-                <p className="text-sm text-gray-600">Import from JSON without limits</p>
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">Unlimited Code Imports</p>
+                  <p className="text-sm text-gray-600">Import from JSON without limits</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-gray-900">Cloud Storage & Auto-Save</p>
-                <p className="text-sm text-gray-600">All projects automatically saved</p>
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">Cloud Storage & Auto-Save</p>
+                  <p className="text-sm text-gray-600">All projects automatically saved</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-gray-900">Priority Support</p>
-                <p className="text-sm text-gray-600">Get help when you need it</p>
-              </div>
+              {subscription?.planType === 'pro' && (
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-gray-900">Priority Support</p>
+                    <p className="text-sm text-gray-600">Get help when you need it</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Manage Subscription */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

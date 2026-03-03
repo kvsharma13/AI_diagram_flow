@@ -43,5 +43,6 @@ export async function checkUserSubscription() {
     needsSubscription: !hasActiveSubscription,
     user: clerkUser,
     planType: user?.subscription_plan_type || 'basic',
+    subscriptionStatus: user?.subscription_status || 'inactive',
   };
 }

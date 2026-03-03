@@ -303,18 +303,18 @@ export default function RACIMatrixEditor() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">RACI Matrix</h1>
+      <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
+        <div className="px-4 md:px-6 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-shrink-0">
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-900">RACI Matrix</h1>
               <p className="text-sm text-gray-500 mt-0.5">
                 {tasks.length} tasks • {stakeholders.length} stakeholders
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 flex-wrap lg:flex-nowrap">
               <button
                 onClick={() => setShowAIImportModal(true)}
                 className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg transition-all shadow-sm"
@@ -357,7 +357,7 @@ export default function RACIMatrixEditor() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4 md:p-6">
         <div className="max-w-full">
           {/* Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">

@@ -5,13 +5,17 @@ import Link from 'next/link';
 import { Lock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useProjectStore } from '@/store/useProjectStore';
+import RACIMatrixEditor from '@/editors/RACIMatrixEditor';
 
 export default function RACIPage() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { project, setProject } = useProjectStore();
 
   useEffect(() => {
     checkSubscription();
+    initializeProject();
   }, []);
 
   const checkSubscription = async () => {
@@ -28,6 +32,26 @@ export default function RACIPage() {
       console.error('Failed to check subscription:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const initializeProject = () => {
+    // Initialize a temporary project for the RACI editor
+    if (!project) {
+      setProject({
+        id: 'temp-raci',
+        name: 'RACI Matrix Editor',
+        ganttPhases: [],
+        raciTasks: [],
+        raciStakeholders: [],
+        raciAssignments: [],
+        architectureComponents: [],
+        flowchartSteps: [],
+        timelineMonths: 12,
+        timelineUnit: 'months',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
   };
 
@@ -56,25 +80,9 @@ export default function RACIPage() {
           </div>
         )}
 
-        {/* Page Content (blurred when not subscribed) */}
+        {/* Page Content */}
         <div className={!hasSubscription ? 'blur-sm pointer-events-none' : ''}>
-          <div className="p-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-6">RACI Matrix</h1>
-            <p className="text-gray-600 mb-8">
-              Create and manage RACI matrices for your projects.
-            </p>
-
-            {/* Placeholder content */}
-            <div className="grid grid-cols-1 gap-6">
-              <Card className="p-6">
-                <h3 className="font-semibold text-lg mb-2">What is RACI?</h3>
-                <p className="text-gray-600">
-                  RACI stands for Responsible, Accountable, Consulted, and Informed.
-                  It's a responsibility assignment matrix used in project management.
-                </p>
-              </Card>
-            </div>
-          </div>
+          {hasSubscription && project && <RACIMatrixEditor />}
         </div>
       </div>
   );
