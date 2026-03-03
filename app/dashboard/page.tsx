@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser, SignOutButton } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import { Plus, Calendar, Users, Sparkles, TrendingUp, Zap, Lock, LogOut } from 'lucide-react';
+import { Users, Sparkles, TrendingUp, Zap, Lock, Calendar, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const { user } = useUser();
-  const router = useRouter();
   const [stats, setStats] = useState({
     projects: 0,
     aiCreditsRemaining: 0,
@@ -53,14 +51,13 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 min-h-screen bg-gray-50">
+      <div className="p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <Skeleton className="h-10 w-64" />
               <Skeleton className="h-5 w-96" />
             </div>
-            <Skeleton className="h-10 w-24" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Skeleton className="h-40 w-full" />
@@ -85,11 +82,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto">
         {/* Subscription Warning Banner */}
         {needsSubscription && (
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4">
-            <div className="flex items-center justify-between max-w-7xl mx-auto">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Lock className="w-5 h-5" />
                 <div>
@@ -108,9 +104,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="p-8">
+        <div className="p-8 max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8 flex items-start justify-between">
+          <div className="mb-8">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <h1 className="text-4xl font-bold text-gray-900">
@@ -121,22 +117,6 @@ export default function DashboardPage() {
               <p className="text-gray-600 text-lg">
                 Here's what's happening with your projects today.
               </p>
-            </div>
-            <div className="flex items-center gap-3">
-              {needsSubscription && (
-                <Button asChild size="default">
-                  <Link href="/pricing">
-                    <Sparkles className="w-4 h-4" />
-                    Subscribe
-                  </Link>
-                </Button>
-              )}
-              <SignOutButton redirectUrl="/">
-                <Button variant="ghost" size="sm" className="text-gray-600">
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </Button>
-              </SignOutButton>
             </div>
           </div>
 
@@ -230,6 +210,44 @@ export default function DashboardPage() {
               </CardHeader>
             </Link>
           </Card>
+
+          {/* Gantt Chart */}
+          <Card className="group bg-white border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all cursor-pointer">
+            <Link href="/dashboard/gantt">
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <Calendar className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl mb-2">Gantt Chart</CardTitle>
+                    <CardDescription>
+                      Create beautiful timelines with drag-and-drop editing
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Link>
+          </Card>
+
+          {/* RACI Matrix */}
+          <Card className="group bg-gradient-to-br from-purple-600 to-pink-600 border-none text-white hover:shadow-xl transition-all cursor-pointer">
+            <Link href="/dashboard/raci">
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <Users className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl mb-2 text-white">RACI Matrix</CardTitle>
+                    <CardDescription className="text-white/90">
+                      Define clear responsibilities with visual matrix
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Link>
+          </Card>
         </div>
 
         {/* Features Overview */}
@@ -292,6 +310,5 @@ export default function DashboardPage() {
         </Card>
         </div>
       </div>
-    </div>
   );
 }

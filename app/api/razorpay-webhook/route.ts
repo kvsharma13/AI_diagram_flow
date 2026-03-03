@@ -59,69 +59,62 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSubscriptionActivated(subscription: any) {
-  console.log('Subscription activated:', subscription.id);
+  console.log('Subscription activated (created, not paid yet):', subscription.id);
 
+  // DO NOT activate subscription here! This event fires when subscription is created,
+  // NOT when payment is successful. We'll activate on subscription.charged event.
+
+  // Just store the subscription dates for reference
   const { error } = await supabaseAdmin
     .from('users')
     .update({
-      subscription_status: 'active',
+      // Keep status as 'pending' until payment is confirmed
       subscription_start_date: new Date(subscription.start_at * 1000).toISOString(),
       subscription_end_date: new Date(subscription.end_at * 1000).toISOString(),
     })
     .eq('subscription_id', subscription.id);
 
   if (error) {
-    console.error('Error updating subscription status:', error);
-  }
-
-  // Initialize AI usage for current month
-  const { data: user } = await supabaseAdmin
-    .from('users')
-    .select('id')
-    .eq('subscription_id', subscription.id)
-    .single();
-
-  if (user) {
-    const currentMonth = format(startOfMonth(new Date()), 'yyyy-MM');
-
-    await supabaseAdmin.from('ai_usage').upsert({
-      user_id: user.id,
-      month_year: currentMonth,
-      generations_count: 0,
-    });
+    console.error('Error updating subscription dates:', error);
   }
 }
 
 async function handleSubscriptionCharged(subscription: any, payment: any) {
-  console.log('Subscription charged:', subscription.id, 'Payment:', payment.id);
+  console.log('Subscription charged - PAYMENT SUCCESSFUL:', subscription.id, 'Payment:', payment.id);
 
-  // Reset AI usage count for new billing period
+  // Get user
   const { data: user } = await supabaseAdmin
     .from('users')
-    .select('id')
+    .select('id, subscription_status')
     .eq('subscription_id', subscription.id)
     .single();
 
-  if (user) {
-    const currentMonth = format(startOfMonth(new Date()), 'yyyy-MM');
-
-    // Reset or create AI usage for new month
-    await supabaseAdmin.from('ai_usage').upsert({
-      user_id: user.id,
-      month_year: currentMonth,
-      generations_count: 0,
-    }, {
-      onConflict: 'user_id,month_year',
-    });
+  if (!user) {
+    console.error('User not found for subscription:', subscription.id);
+    return;
   }
 
-  // Update subscription end date
+  // ACTIVATE subscription now that payment is confirmed
   await supabaseAdmin
     .from('users')
     .update({
+      subscription_status: 'active', // NOW we activate, after payment
       subscription_end_date: new Date(subscription.current_end * 1000).toISOString(),
     })
     .eq('subscription_id', subscription.id);
+
+  // Initialize AI usage for current month
+  const currentMonth = format(startOfMonth(new Date()), 'yyyy-MM');
+
+  await supabaseAdmin.from('ai_usage').upsert({
+    user_id: user.id,
+    month_year: currentMonth,
+    generations_count: 0,
+  }, {
+    onConflict: 'user_id,month_year',
+  });
+
+  console.log('Subscription activated successfully after payment');
 }
 
 async function handleSubscriptionCancelled(subscription: any) {
