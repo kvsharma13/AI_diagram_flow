@@ -38,13 +38,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!user) {
-      // Create user if doesn't exist
+      // Create user if doesn't exist - NO SUBSCRIPTION by default
       const { data: newUser, error: createError } = await supabaseAdmin
         .from('users')
         .insert({
           clerk_user_id: userId,
           email: email || `${userId}@user.com`,
-          subscription_status: 'active',
+          subscription_status: 'inactive', // Changed: users must subscribe first
         })
         .select('id, subscription_status, subscription_plan_type')
         .single();

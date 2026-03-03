@@ -47,13 +47,14 @@ export async function POST(request: NextRequest) {
     let user = existingUser;
 
     if (!user) {
-      // Create user in Supabase
+      // Create user in Supabase - inactive until payment confirmed
       const { data: newUser, error } = await supabaseAdmin
         .from('users')
         .insert({
           clerk_user_id: userId,
           email: userEmail,
           subscription_plan_type: planType,
+          subscription_status: 'inactive', // Will be activated by webhook after payment
         })
         .select()
         .single();

@@ -1,6 +1,7 @@
 // Whitelisted users (full access, no payment required)
-export const WHITELISTED_USERS = [
-  'user_3AFuuZeqtkGNYQHHthj8WDpguVo', // Your Clerk user ID - unlimited access
+// Add user IDs or emails here for testing/admin access
+export const WHITELISTED_USERS: string[] = [
+  // 'user_xxx' // Example: add test user IDs here
 ];
 
 // Pricing tiers
