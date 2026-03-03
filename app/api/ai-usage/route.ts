@@ -42,6 +42,19 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Check if user has active subscription
+    const hasActiveSubscription = user.subscription_status === 'active' || user.subscription_status === 'trialing';
+
+    // If no active subscription, return 0/0
+    if (!hasActiveSubscription) {
+      return NextResponse.json({
+        used: 0,
+        remaining: 0,
+        limit: 0,
+        hasSubscription: false,
+      });
+    }
+
     // Get AI limit based on plan
     const aiLimit = getAICreditsForPlan(user.subscription_plan_type);
 
@@ -63,7 +76,7 @@ export async function GET(request: NextRequest) {
       remaining,
       limit: aiLimit,
       isWhitelisted: false,
-      hasSubscription: user.subscription_status === 'active' || user.subscription_status === 'trialing',
+      hasSubscription: true,
     });
   } catch (error) {
     console.error('AI usage check error:', error);

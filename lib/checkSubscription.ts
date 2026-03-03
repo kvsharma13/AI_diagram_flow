@@ -42,7 +42,7 @@ export async function checkUserSubscription() {
     isWhitelisted: false,
     needsSubscription: !hasActiveSubscription,
     user: clerkUser,
-    planType: user?.subscription_plan_type || 'basic',
+    planType: hasActiveSubscription ? (user?.subscription_plan_type || 'basic') : null,
     subscriptionStatus: user?.subscription_status || 'inactive',
   };
 }
