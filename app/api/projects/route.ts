@@ -53,15 +53,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name } = body;
 
-    // Get or create user in Supabase
+    // Get user and CHECK SUBSCRIPTION
     let { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id')
+      .select('id, subscription_status')
       .eq('clerk_user_id', userId)
       .single();
 
     if (!user) {
-      // Create user if doesn't exist
+      // Create user if doesn't exist - INACTIVE by default
       console.log('Creating new user in Supabase:', userId);
 
       const { data: newUser, error: createError } = await supabaseAdmin
@@ -69,9 +69,9 @@ export async function POST(request: NextRequest) {
         .insert({
           clerk_user_id: userId,
           email: request.headers.get('x-user-email') || `${userId}@user.com`,
-          subscription_status: 'active', // Set to active for testing
+          subscription_status: 'inactive', // Must subscribe to use features
         })
-        .select('id')
+        .select('id, subscription_status')
         .single();
 
       if (createError) {
@@ -83,6 +83,14 @@ export async function POST(request: NextRequest) {
       }
 
       user = newUser;
+    }
+
+    // CHECK SUBSCRIPTION before allowing project creation
+    if (user.subscription_status !== 'active' && user.subscription_status !== 'trialing') {
+      return NextResponse.json({
+        error: 'Subscription required',
+        needsSubscription: true
+      }, { status: 403 });
     }
 
     // Create project
