@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { format, startOfMonth } from 'date-fns';
-import { isWhitelistedUser, getAICreditsForPlan } from '@/lib/config';
+import { isWhitelistedUser, isTestUser, getTestUserPlan, getAICreditsForPlan } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,10 +25,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is whitelisted
+    // Check if user is whitelisted or test user
     const clerkUser = await currentUser();
     const email = clerkUser?.emailAddresses[0]?.emailAddress;
     const isWhitelisted = isWhitelistedUser(userId, email);
+    const isTest = isTestUser(email);
 
     // Get or create user from database
     let { data: user, error: userError } = await supabaseAdmin
@@ -64,8 +65,36 @@ export async function POST(request: NextRequest) {
       console.log('Whitelisted user - unlimited access');
       // Skip subscription and usage checks for whitelisted users
       // Continue to generation
+    } else if (isTest) {
+      // Test users have plan-based access without payment
+      console.log('Test user - plan-based access');
+      const testPlan = getTestUserPlan(email);
+      const aiLimit = getAICreditsForPlan(testPlan || 'basic');
+
+      // Check AI usage for current month
+      const currentMonth = format(startOfMonth(new Date()), 'yyyy-MM');
+
+      const { data: usage } = await supabaseAdmin
+        .from('ai_usage')
+        .select('generations_count')
+        .eq('user_id', user.id)
+        .eq('month_year', currentMonth)
+        .single();
+
+      const currentUsage = usage?.generations_count || 0;
+
+      if (currentUsage >= aiLimit) {
+        return NextResponse.json(
+          {
+            error: `AI generation limit reached (${aiLimit}/${aiLimit}). Upgrade your plan or wait until next month.`,
+            limitReached: true,
+            remaining: 0
+          },
+          { status: 429 }
+        );
+      }
     } else {
-      // For non-whitelisted users, check subscription
+      // For regular users, check subscription
       if (user.subscription_status !== 'active' && user.subscription_status !== 'trialing') {
         return NextResponse.json(
           { error: 'Active subscription required. Please subscribe to use AI generation.', needsSubscription: true },
@@ -205,10 +234,18 @@ Rules:
 
     const parsedJSON = JSON.parse(jsonText);
 
-    // Increment AI usage count (only for non-whitelisted users)
+    // Increment AI usage count (for test users and regular subscribers)
     if (!isWhitelisted && user) {
       const currentMonth = format(startOfMonth(new Date()), 'yyyy-MM');
-      const aiLimit = getAICreditsForPlan(user.subscription_plan_type);
+
+      // Get limit based on user type
+      let aiLimit;
+      if (isTest) {
+        const testPlan = getTestUserPlan(email);
+        aiLimit = getAICreditsForPlan(testPlan || 'basic');
+      } else {
+        aiLimit = getAICreditsForPlan(user.subscription_plan_type);
+      }
 
       const { data: usage } = await supabaseAdmin
         .from('ai_usage')
