@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { isWhitelistedUser, isTestUser } from '@/lib/config';
 
 // GET - List all projects for user
 export async function GET(request: NextRequest) {
@@ -53,6 +54,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name } = body;
 
+    // Check if whitelisted or test user
+    const clerkUser = await currentUser();
+    const email = clerkUser?.emailAddresses[0]?.emailAddress;
+    const isWhitelisted = isWhitelistedUser(userId, email);
+    const isTest = isTestUser(email);
+
     // Get user and CHECK SUBSCRIPTION
     let { data: user, error: userError } = await supabaseAdmin
       .from('users')
@@ -68,7 +75,7 @@ export async function POST(request: NextRequest) {
         .from('users')
         .insert({
           clerk_user_id: userId,
-          email: request.headers.get('x-user-email') || `${userId}@user.com`,
+          email: email || `${userId}@user.com`,
           subscription_status: 'inactive', // Must subscribe to use features
         })
         .select('id, subscription_status')
@@ -85,12 +92,14 @@ export async function POST(request: NextRequest) {
       user = newUser;
     }
 
-    // CHECK SUBSCRIPTION before allowing project creation
-    if (user.subscription_status !== 'active' && user.subscription_status !== 'trialing') {
-      return NextResponse.json({
-        error: 'Subscription required',
-        needsSubscription: true
-      }, { status: 403 });
+    // CHECK SUBSCRIPTION before allowing project creation (skip for whitelisted/test users)
+    if (!isWhitelisted && !isTest) {
+      if (user.subscription_status !== 'active' && user.subscription_status !== 'trialing') {
+        return NextResponse.json({
+          error: 'Subscription required',
+          needsSubscription: true
+        }, { status: 403 });
+      }
     }
 
     // Create project

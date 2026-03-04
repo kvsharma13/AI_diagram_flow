@@ -77,11 +77,15 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
-        const project = await response.json();
-        router.push(`/dashboard/gantt?projectId=${project.id}`);
+        const data = await response.json();
+        router.push(`/dashboard/gantt?projectId=${data.project.id}`);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to create project');
       }
     } catch (error) {
       console.error('Failed to create project:', error);
+      alert('Failed to create project. Please try again.');
     } finally {
       setIsCreating(false);
     }
@@ -99,11 +103,15 @@ export default function DashboardPage() {
       });
 
       if (response.ok) {
-        const project = await response.json();
-        router.push(`/dashboard/raci?projectId=${project.id}`);
+        const data = await response.json();
+        router.push(`/dashboard/raci?projectId=${data.project.id}`);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to create project');
       }
     } catch (error) {
       console.error('Failed to create project:', error);
+      alert('Failed to create project. Please try again.');
     } finally {
       setIsCreating(false);
     }
