@@ -285,7 +285,6 @@ Rules:
         .upsert({
           user_id: user.id,
           generation_type: type, // 'gantt' or 'raci'
-          chart_type: type, // 'gantt' or 'raci'
           month_year: currentMonth,
           generations_count: currentUsage + 1,
         }, {
