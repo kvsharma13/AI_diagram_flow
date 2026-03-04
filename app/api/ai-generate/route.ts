@@ -256,7 +256,9 @@ Rules:
 
       const currentUsage = usage?.generations_count || 0;
 
-      await supabaseAdmin.from('ai_usage').upsert({
+      console.log(`Incrementing usage for user ${user.id}: ${currentUsage} -> ${currentUsage + 1}`);
+
+      const { error: upsertError } = await supabaseAdmin.from('ai_usage').upsert({
         user_id: user.id,
         month_year: currentMonth,
         generations_count: currentUsage + 1,
@@ -264,9 +266,18 @@ Rules:
         onConflict: 'user_id,month_year'
       });
 
+      if (upsertError) {
+        console.error('Failed to update AI usage:', upsertError);
+      } else {
+        console.log(`Successfully updated usage to ${currentUsage + 1}`);
+      }
+
+      const remaining = aiLimit - currentUsage - 1;
+      console.log(`Remaining credits: ${remaining}/${aiLimit}`);
+
       return NextResponse.json({
         data: parsedJSON,
-        remaining: aiLimit - currentUsage - 1
+        remaining
       });
     }
 
