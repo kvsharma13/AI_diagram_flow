@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create project
+    // Create project with all required fields
     console.log('Creating project for user:', user.id);
 
     const { data: project, error } = await supabaseAdmin
@@ -114,6 +114,10 @@ export async function POST(request: NextRequest) {
         raci_tasks: [],
         raci_stakeholders: [],
         raci_assignments: [],
+        architecture_components: [],
+        flowchart_steps: [],
+        timeline_months: 12,
+        timeline_unit: 'months',
       })
       .select()
       .single();

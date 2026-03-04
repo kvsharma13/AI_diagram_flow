@@ -47,8 +47,26 @@ function RACIContent() {
     try {
       const response = await fetch(`/api/projects/${id}`);
       if (response.ok) {
-        const projectData = await response.json();
-        setProject(projectData);
+        const data = await response.json();
+        const dbProject = data.project;
+
+        // Convert database fields (snake_case) to store format (camelCase)
+        const project = {
+          id: dbProject.id,
+          name: dbProject.name,
+          ganttPhases: dbProject.gantt_phases || [],
+          raciTasks: dbProject.raci_tasks || [],
+          raciStakeholders: dbProject.raci_stakeholders || [],
+          raciAssignments: dbProject.raci_assignments || [],
+          architectureComponents: dbProject.architecture_components || [],
+          flowchartSteps: dbProject.flowchart_steps || [],
+          timelineMonths: dbProject.timeline_months || 12,
+          timelineUnit: dbProject.timeline_unit || 'months',
+          createdAt: new Date(dbProject.created_at),
+          updatedAt: new Date(dbProject.updated_at),
+        };
+
+        setProject(project);
       }
     } catch (error) {
       console.error('Failed to load project:', error);
