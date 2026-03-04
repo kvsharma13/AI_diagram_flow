@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Users, Sparkles, TrendingUp, Zap, Lock, Calendar, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const { user } = useUser();
+  const router = useRouter();
   const [stats, setStats] = useState({
     projects: 0,
     aiCreditsRemaining: 0,
@@ -19,9 +21,23 @@ export default function DashboardPage() {
   });
   const [subscriptionCheck, setSubscriptionCheck] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showGanttDialog, setShowGanttDialog] = useState(false);
+  const [showRaciDialog, setShowRaciDialog] = useState(false);
+  const [projectName, setProjectName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     checkSubscription();
+
+    // Refetch when page becomes visible again (e.g., after using AI)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkSubscription();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const checkSubscription = async () => {
@@ -46,6 +62,50 @@ export default function DashboardPage() {
       console.error('Failed to check subscription:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const createGanttProject = async () => {
+    if (!projectName.trim()) return;
+
+    setIsCreating(true);
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: projectName.trim() }),
+      });
+
+      if (response.ok) {
+        const project = await response.json();
+        router.push(`/dashboard/gantt?projectId=${project.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create project:', error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const createRaciProject = async () => {
+    if (!projectName.trim()) return;
+
+    setIsCreating(true);
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: projectName.trim() }),
+      });
+
+      if (response.ok) {
+        const project = await response.json();
+        router.push(`/dashboard/raci?projectId=${project.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create project:', error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -212,41 +272,43 @@ export default function DashboardPage() {
           </Card>
 
           {/* Gantt Chart */}
-          <Card className="group bg-white border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all cursor-pointer">
-            <Link href="/dashboard/gantt">
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Calendar className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl mb-2">Gantt Chart</CardTitle>
-                    <CardDescription>
-                      Create beautiful timelines with drag-and-drop editing
-                    </CardDescription>
-                  </div>
+          <Card
+            className="group bg-white border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all cursor-pointer"
+            onClick={() => setShowGanttDialog(true)}
+          >
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Calendar className="w-7 h-7 text-white" />
                 </div>
-              </CardHeader>
-            </Link>
+                <div>
+                  <CardTitle className="text-xl mb-2">Gantt Chart</CardTitle>
+                  <CardDescription>
+                    Create beautiful timelines with drag-and-drop editing
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
           </Card>
 
           {/* RACI Matrix */}
-          <Card className="group bg-gradient-to-br from-purple-600 to-pink-600 border-none text-white hover:shadow-xl transition-all cursor-pointer">
-            <Link href="/dashboard/raci">
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Users className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl mb-2 text-white">RACI Matrix</CardTitle>
-                    <CardDescription className="text-white/90">
-                      Define clear responsibilities with visual matrix
-                    </CardDescription>
-                  </div>
+          <Card
+            className="group bg-gradient-to-br from-purple-600 to-pink-600 border-none text-white hover:shadow-xl transition-all cursor-pointer"
+            onClick={() => setShowRaciDialog(true)}
+          >
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Users className="w-7 h-7 text-white" />
                 </div>
-              </CardHeader>
-            </Link>
+                <div>
+                  <CardTitle className="text-xl mb-2 text-white">RACI Matrix</CardTitle>
+                  <CardDescription className="text-white/90">
+                    Define clear responsibilities with visual matrix
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
           </Card>
         </div>
 
@@ -309,6 +371,82 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         </div>
+
+        {/* Gantt Project Name Dialog */}
+        {showGanttDialog && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Create Gantt Chart</h3>
+              <p className="text-sm text-gray-600 mb-4">Give your project a name to get started</p>
+              <input
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && createGanttProject()}
+                placeholder="Enter project name..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                autoFocus
+              />
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowGanttDialog(false);
+                    setProjectName('');
+                  }}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={isCreating}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createGanttProject}
+                  disabled={!projectName.trim() || isCreating}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                >
+                  {isCreating ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RACI Project Name Dialog */}
+        {showRaciDialog && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Create RACI Matrix</h3>
+              <p className="text-sm text-gray-600 mb-4">Give your project a name to get started</p>
+              <input
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && createRaciProject()}
+                placeholder="Enter project name..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+                autoFocus
+              />
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowRaciDialog(false);
+                    setProjectName('');
+                  }}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={isCreating}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createRaciProject}
+                  disabled={!projectName.trim() || isCreating}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                >
+                  {isCreating ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
   );
 }

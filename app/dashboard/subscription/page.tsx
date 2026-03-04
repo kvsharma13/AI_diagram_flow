@@ -13,6 +13,16 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     fetchData();
+
+    // Refetch when page becomes visible again (e.g., after using AI)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const fetchData = async () => {
