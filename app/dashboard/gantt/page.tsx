@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Sparkles, Loader2 } from 'lucide-react';
@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { useProjectStore } from '@/store/useProjectStore';
 import GanttEditor from '@/editors/GanttEditor';
 
-export default function GanttPage() {
+function GanttContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
   const [hasSubscription, setHasSubscription] = useState(false);
@@ -114,5 +114,20 @@ export default function GanttPage() {
           {hasSubscription && project && <GanttEditor />}
         </div>
       </div>
+  );
+}
+
+export default function GanttPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <GanttContent />
+    </Suspense>
   );
 }
