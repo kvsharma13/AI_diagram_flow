@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
     const isWhitelisted = isWhitelistedUser(userId, email);
     const isTest = isTestUser(email);
 
+    console.log(`User check - ID: ${userId}, Email: ${email}, IsTest: ${isTest}, IsWhitelisted: ${isWhitelisted}`);
+
     // Get or create user from database
     let { data: user, error: userError } = await supabaseAdmin
       .from('users')
@@ -40,6 +42,8 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       // Create user if doesn't exist - NO SUBSCRIPTION by default
+      console.log('Creating new user in database:', userId, email);
+
       const { data: newUser, error: createError } = await supabaseAdmin
         .from('users')
         .insert({
@@ -50,14 +54,26 @@ export async function POST(request: NextRequest) {
         .select('id, subscription_status, subscription_plan_type')
         .single();
 
-      if (createError || !newUser) {
+      if (createError) {
+        console.error('Failed to create user:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create user. Please try again.', details: createError.message },
+          { status: 500 }
+        );
+      }
+
+      if (!newUser) {
+        console.error('User creation returned null');
         return NextResponse.json(
           { error: 'Failed to create user. Please try again.' },
           { status: 500 }
         );
       }
 
+      console.log('User created successfully:', newUser.id);
       user = newUser;
+    } else {
+      console.log('User found in database:', user.id);
     }
 
     // Whitelisted users have unlimited access
@@ -235,7 +251,7 @@ Rules:
     const parsedJSON = JSON.parse(jsonText);
 
     // Increment AI usage count (for test users and regular subscribers)
-    if (!isWhitelisted && user) {
+    if (!isWhitelisted && user && user.id) {
       const currentMonth = format(startOfMonth(new Date()), 'yyyy-MM');
 
       // Get limit based on user type
@@ -243,37 +259,48 @@ Rules:
       if (isTest) {
         const testPlan = getTestUserPlan(email);
         aiLimit = getAICreditsForPlan(testPlan || 'basic');
+        console.log(`Test user detected - Plan: ${testPlan}, Limit: ${aiLimit}`);
       } else {
         aiLimit = getAICreditsForPlan(user.subscription_plan_type);
+        console.log(`Regular user - Plan: ${user.subscription_plan_type}, Limit: ${aiLimit}`);
       }
 
-      const { data: usage } = await supabaseAdmin
+      const { data: usage, error: usageError } = await supabaseAdmin
         .from('ai_usage')
         .select('generations_count')
         .eq('user_id', user.id)
         .eq('month_year', currentMonth)
         .single();
 
+      if (usageError && usageError.code !== 'PGRST116') { // PGRST116 = not found is OK
+        console.error('Error fetching current usage:', usageError);
+      }
+
       const currentUsage = usage?.generations_count || 0;
+      console.log(`Current usage for user ${user.id}: ${currentUsage}/${aiLimit}`);
+      console.log(`Incrementing usage: ${currentUsage} -> ${currentUsage + 1}`);
 
-      console.log(`Incrementing usage for user ${user.id}: ${currentUsage} -> ${currentUsage + 1}`);
-
-      const { error: upsertError } = await supabaseAdmin.from('ai_usage').upsert({
-        user_id: user.id,
-        month_year: currentMonth,
-        generations_count: currentUsage + 1,
-      }, {
-        onConflict: 'user_id,month_year'
-      });
+      const { data: upsertData, error: upsertError } = await supabaseAdmin
+        .from('ai_usage')
+        .upsert({
+          user_id: user.id,
+          month_year: currentMonth,
+          generations_count: currentUsage + 1,
+        }, {
+          onConflict: 'user_id,month_year'
+        })
+        .select();
 
       if (upsertError) {
-        console.error('Failed to update AI usage:', upsertError);
+        console.error('❌ FAILED to update AI usage:', upsertError);
+        console.error('Upsert details:', { user_id: user.id, month_year: currentMonth, generations_count: currentUsage + 1 });
       } else {
-        console.log(`Successfully updated usage to ${currentUsage + 1}`);
+        console.log('✅ Successfully updated usage to', currentUsage + 1);
+        console.log('Upsert result:', upsertData);
       }
 
       const remaining = aiLimit - currentUsage - 1;
-      console.log(`Remaining credits: ${remaining}/${aiLimit}`);
+      console.log(`Final: ${remaining} remaining out of ${aiLimit}`);
 
       return NextResponse.json({
         data: parsedJSON,
