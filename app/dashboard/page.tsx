@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Users, Sparkles, TrendingUp, Zap, Lock, Calendar, Plus } from 'lucide-react';
+import { Users, Sparkles, TrendingUp, Zap, Lock, Calendar, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -212,8 +212,17 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-white/90">
                 AI Generations
               </CardTitle>
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={checkSubscription}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title="Refresh"
+                >
+                  <RefreshCw className="w-4 h-4 text-white" />
+                </button>
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
               </div>
             </CardHeader>
             <CardContent>
