@@ -103,7 +103,7 @@ function ArchitectureContent() {
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative h-screen overflow-hidden">
         {/* Subscribe Overlay */}
         {!hasSubscription && !isLoading && (
           <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -128,7 +128,7 @@ function ArchitectureContent() {
         )}
 
         {/* Page Content */}
-        <div className={!hasSubscription ? 'blur-sm pointer-events-none' : ''}>
+        <div className={`h-full ${!hasSubscription ? 'blur-sm pointer-events-none' : ''}`}>
           {hasSubscription && project && <ArchitectureEditor />}
         </div>
       </div>
