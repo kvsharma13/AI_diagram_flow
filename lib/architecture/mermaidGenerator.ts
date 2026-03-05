@@ -41,14 +41,6 @@ export function generateMermaidFromApplication(
     mermaid += `${edge.source} ${arrow} ${edge.target}\n`;
   });
 
-  // Add styling
-  mermaid += '\n';
-  layers.forEach((layer, index) => {
-    const colors = ['#61DAFB', '#68A063', '#8B5CF6', '#F59E0B', '#EC4899', '#10B981'];
-    const color = layer.color || colors[index % colors.length];
-    mermaid += `style ${layer.id} fill:${color},stroke:#000,stroke-width:2px\n`;
-  });
-
   return mermaid;
 }
 

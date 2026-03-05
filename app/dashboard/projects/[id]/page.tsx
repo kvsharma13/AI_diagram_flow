@@ -134,9 +134,9 @@ export default function ProjectEditorPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <Link
@@ -226,7 +226,7 @@ export default function ProjectEditorPage() {
       </div>
 
       {/* Editor Content */}
-      <div className="h-[calc(100vh-200px)]">
+      <div className="flex-1 overflow-hidden">
         {activeEditor === 'gantt' && <GanttEditor />}
         {activeEditor === 'raci' && <RACIMatrixEditor />}
         {activeEditor === 'architecture' && <ArchitectureEditor />}
