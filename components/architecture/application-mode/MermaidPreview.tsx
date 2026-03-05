@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type mermaidAPI from 'mermaid';
-import { Download, ZoomIn, ZoomOut, RotateCcw, Code, Eye } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, RotateCcw, Code, Eye, AlertCircle, X } from 'lucide-react';
 
 interface Props {
   code: string;
@@ -14,6 +14,7 @@ interface Props {
 
 export default function MermaidPreview({ code, diagramRef: externalDiagramRef, showCodeToggle = false, onToggleCode, showCode = true }: Props) {
   const [error, setError] = useState<string | null>(null);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
   const [zoom, setZoom] = useState(1);
   const internalDiagramRef = useRef<HTMLDivElement>(null);
@@ -55,21 +56,44 @@ export default function MermaidPreview({ code, diagramRef: externalDiagramRef, s
     const renderDiagram = async () => {
       if (!code || !mermaidContainerRef.current || !mermaidLoaded || !mermaidRef.current) return;
 
+      const container = mermaidContainerRef.current;
+
       try {
         setError(null);
-        mermaidContainerRef.current.innerHTML = '';
+        setShowErrorPopup(false);
+        container.innerHTML = '';
 
         const id = `mermaid-${Date.now()}`;
         const { svg } = await mermaidRef.current.render(id, code);
-        mermaidContainerRef.current.innerHTML = svg;
+        container.innerHTML = svg;
 
         // Also update the export ref if provided
         if (externalDiagramRef?.current) {
-          externalDiagramRef.current = mermaidContainerRef.current;
+          externalDiagramRef.current = container;
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Mermaid render error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to render diagram');
+
+        // Clear any partial renders or mermaid error messages
+        container.innerHTML = '';
+
+        // Extract clean error message
+        let errorMessage = 'Syntax error in diagram code';
+        if (err?.message) {
+          errorMessage = err.message
+            .replace(/^Error: /, '')
+            .replace(/Lexical error.*$/m, 'Invalid syntax in diagram code')
+            .replace(/Parse error.*$/m, 'Syntax error - check your code')
+            .split('\n')[0];
+        }
+
+        setError(errorMessage);
+        setShowErrorPopup(true);
+
+        // Auto-hide popup after 5 seconds
+        setTimeout(() => {
+          setShowErrorPopup(false);
+        }, 5000);
       }
     };
 
@@ -178,18 +202,12 @@ export default function MermaidPreview({ code, diagramRef: externalDiagramRef, s
       {/* Preview Canvas */}
       <div
         ref={diagramRef}
-        className="flex-1 overflow-auto p-8 flex items-center justify-center"
+        className="flex-1 overflow-auto p-8 flex items-center justify-center relative"
       >
         {!mermaidLoaded ? (
           <div className="flex flex-col items-center gap-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             <p className="text-gray-400">Loading renderer...</p>
-          </div>
-        ) : error ? (
-          <div className="max-w-md p-6 bg-red-900/20 border border-red-600 rounded-lg">
-            <h3 className="text-red-400 font-semibold mb-2">Syntax Error</h3>
-            <p className="text-red-300 text-sm">{error}</p>
-            <p className="text-red-400 text-xs mt-3">Check your Mermaid syntax and try again.</p>
           </div>
         ) : (
           <div
@@ -204,6 +222,26 @@ export default function MermaidPreview({ code, diagramRef: externalDiagramRef, s
               transition: 'transform 0.2s ease-in-out',
             }}
           />
+        )}
+
+        {/* Error Popup Notification */}
+        {showErrorPopup && error && (
+          <div className="fixed top-4 right-4 max-w-md bg-red-900 border-2 border-red-500 rounded-lg shadow-2xl p-4 animate-in slide-in-from-top-2 z-50">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-red-200 font-semibold mb-1">Syntax Error</h3>
+                <p className="text-red-300 text-sm">{error}</p>
+                <p className="text-red-400 text-xs mt-2">Check your Mermaid code and fix the syntax.</p>
+              </div>
+              <button
+                onClick={() => setShowErrorPopup(false)}
+                className="text-red-400 hover:text-red-200 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
