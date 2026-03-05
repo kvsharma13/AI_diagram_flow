@@ -61,8 +61,14 @@ export default function MermaidPreview({ code, diagramRef: externalDiagramRef, s
       try {
         setError(null);
         setShowErrorPopup(false);
+
+        // First, validate the code by parsing it
+        await mermaidRef.current.parse(code, { suppressErrors: true });
+
+        // Clear container only after successful parse
         container.innerHTML = '';
 
+        // Now render since we know it's valid
         const id = `mermaid-${Date.now()}`;
         const { svg } = await mermaidRef.current.render(id, code);
         container.innerHTML = svg;
@@ -74,16 +80,20 @@ export default function MermaidPreview({ code, diagramRef: externalDiagramRef, s
       } catch (err: any) {
         console.error('Mermaid render error:', err);
 
-        // Clear any partial renders or mermaid error messages
+        // Immediately clear any error messages that Mermaid might have added
         container.innerHTML = '';
+
+        // Also remove any error elements Mermaid might have created
+        const errorElements = document.querySelectorAll('.mermaid-parse-error, #d3-mermaid-error, .error-icon, .error-text');
+        errorElements.forEach(el => el.remove());
 
         // Extract clean error message
         let errorMessage = 'Syntax error in diagram code';
         if (err?.message) {
           errorMessage = err.message
             .replace(/^Error: /, '')
-            .replace(/Lexical error.*$/m, 'Invalid syntax in diagram code')
-            .replace(/Parse error.*$/m, 'Syntax error - check your code')
+            .replace(/Lexical error.*$/m, 'Invalid syntax')
+            .replace(/Parse error.*$/m, 'Syntax error')
             .split('\n')[0];
         }
 
@@ -130,6 +140,18 @@ export default function MermaidPreview({ code, diagramRef: externalDiagramRef, s
 
   return (
     <div className="h-full flex flex-col bg-gray-950">
+      {/* Hide Mermaid's default error messages */}
+      <style jsx global>{`
+        .mermaid-parse-error,
+        #d3-mermaid-error,
+        .error-icon,
+        .error-text,
+        [id^="mermaid-"] .error-icon,
+        [id^="mermaid-"] .error-text {
+          display: none !important;
+        }
+      `}</style>
+
       {/* Toolbar */}
       <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex items-center justify-between">
         <span className="text-white font-semibold">Live Preview</span>
