@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Users, Sparkles, TrendingUp, Zap, Lock, Calendar, Plus, RefreshCw } from 'lucide-react';
+import { Users, Sparkles, TrendingUp, Zap, Lock, Calendar, Plus, RefreshCw, Boxes } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showGanttDialog, setShowGanttDialog] = useState(false);
   const [showRaciDialog, setShowRaciDialog] = useState(false);
+  const [showArchitectureDialog, setShowArchitectureDialog] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
@@ -105,6 +106,32 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         router.push(`/dashboard/raci?projectId=${data.project.id}`);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to create project');
+      }
+    } catch (error) {
+      console.error('Failed to create project:', error);
+      alert('Failed to create project. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const createArchitectureProject = async () => {
+    if (!projectName.trim()) return;
+
+    setIsCreating(true);
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: projectName.trim() }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        router.push(`/dashboard/architecture?projectId=${data.project.id}`);
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to create project');
@@ -327,6 +354,26 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
           </Card>
+
+          {/* Architecture Diagram */}
+          <Card
+            className="group bg-gradient-to-br from-orange-500 to-red-500 border-none text-white hover:shadow-xl transition-all cursor-pointer"
+            onClick={() => setShowArchitectureDialog(true)}
+          >
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Boxes className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl mb-2 text-white">Architecture Diagram</CardTitle>
+                  <CardDescription className="text-white/90">
+                    Design system architecture with visual components
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
         </div>
 
         {/* Features Overview */}
@@ -457,6 +504,44 @@ export default function DashboardPage() {
                   onClick={createRaciProject}
                   disabled={!projectName.trim() || isCreating}
                   className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                >
+                  {isCreating ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Architecture Project Name Dialog */}
+        {showArchitectureDialog && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Create Architecture Diagram</h3>
+              <p className="text-sm text-gray-600 mb-4">Give your project a name to get started</p>
+              <input
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && createArchitectureProject()}
+                placeholder="Enter project name..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
+                autoFocus
+              />
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowArchitectureDialog(false);
+                    setProjectName('');
+                  }}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={isCreating}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createArchitectureProject}
+                  disabled={!projectName.trim() || isCreating}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                 >
                   {isCreating ? 'Creating...' : 'Create'}
                 </button>
