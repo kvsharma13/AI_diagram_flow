@@ -9,7 +9,7 @@ export const WHITELISTED_USERS: string[] = [
 export const TEST_USERS: Record<string, { email: string; testPlan: 'basic' | 'pro' }> = {
   'kavindrash12@gmail.com': {
     email: 'kavindrash12@gmail.com',
-    testPlan: 'basic', // Change to 'pro' to test Pro plan
+    testPlan: 'pro', // Now testing Pro plan with 10 AI generations
   },
 };
 
