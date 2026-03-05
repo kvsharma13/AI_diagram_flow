@@ -98,7 +98,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Main Content */}
-      <div className={`h-screen overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
+      <div className={`h-screen overflow-auto transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
         {children}
       </div>
     </div>
