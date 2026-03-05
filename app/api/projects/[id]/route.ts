@@ -82,6 +82,8 @@ export async function PUT(
         raci_tasks: body.raciTasks,
         raci_stakeholders: body.raciStakeholders,
         raci_assignments: body.raciAssignments,
+        architecture_components: body.architectureComponents,
+        architecture_mermaid_code: body.architectureMermaidCode,
         timeline_months: body.timelineMonths,
         timeline_unit: body.timelineUnit,
       })

@@ -3,10 +3,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Save, Check, FileText, Calendar, Users, Network, GitBranch } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Check, FileText, Calendar, Users, Network, GitBranch, Boxes } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import GanttEditor from '@/editors/GanttEditor';
 import RACIMatrixEditor from '@/editors/RACIMatrixEditor';
+import ArchitectureEditor from '@/editors/ArchitectureEditor';
 import { EditorType } from '@/types/project';
 
 export default function ProjectEditorPage() {
@@ -92,6 +93,8 @@ export default function ProjectEditorPage() {
           raciTasks: project.raciTasks,
           raciStakeholders: project.raciStakeholders,
           raciAssignments: project.raciAssignments,
+          architectureComponents: project.architectureComponents,
+          architectureMermaidCode: project.architectureMermaidCode,
           timelineMonths: project.timelineMonths,
           timelineUnit: project.timelineUnit,
         }),
@@ -127,6 +130,7 @@ export default function ProjectEditorPage() {
   const editors = [
     { type: 'gantt' as EditorType, label: 'Gantt Chart', icon: Calendar },
     { type: 'raci' as EditorType, label: 'RACI Matrix', icon: Users },
+    { type: 'architecture' as EditorType, label: 'Architecture', icon: Boxes },
   ];
 
   return (
@@ -225,6 +229,7 @@ export default function ProjectEditorPage() {
       <div className="h-[calc(100vh-200px)]">
         {activeEditor === 'gantt' && <GanttEditor />}
         {activeEditor === 'raci' && <RACIMatrixEditor />}
+        {activeEditor === 'architecture' && <ArchitectureEditor />}
       </div>
     </div>
   );
