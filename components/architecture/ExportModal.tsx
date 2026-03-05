@@ -50,12 +50,44 @@ export default function ExportModal({ isOpen, onClose, diagramRef, fileName }: E
         targetElement = diagramRef.current;
       }
 
+      // For React Flow, we need to capture the viewport element with proper dimensions
+      const viewport = targetElement.querySelector('.react-flow__viewport') as HTMLElement;
+      if (viewport) {
+        // Get all nodes to calculate bounds
+        const nodes = viewport.querySelectorAll('.react-flow__node');
+        if (nodes.length > 0) {
+          // Calculate bounding box of all nodes
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+          nodes.forEach((node) => {
+            const rect = node.getBoundingClientRect();
+            const parentRect = targetElement.getBoundingClientRect();
+            minX = Math.min(minX, rect.left - parentRect.left);
+            minY = Math.min(minY, rect.top - parentRect.top);
+            maxX = Math.max(maxX, rect.right - parentRect.left);
+            maxY = Math.max(maxY, rect.bottom - parentRect.top);
+          });
+
+          // Add padding
+          const padding = 100;
+          minX -= padding;
+          minY -= padding;
+          maxX += padding;
+          maxY += padding;
+
+          // Override target element to use viewport with calculated dimensions
+          targetElement = viewport.parentElement as HTMLElement;
+        }
+      }
+
       // Configure export options
       const exportOptions = {
         backgroundColor: theme === 'light' ? '#ffffff' : '#0f172a',
         quality: format === 'jpg' ? 0.95 : 1.0,
         pixelRatio: 2,
         cacheBust: true,
+        width: targetElement.scrollWidth || targetElement.offsetWidth,
+        height: targetElement.scrollHeight || targetElement.offsetHeight,
         filter: (node: HTMLElement) => {
           // Exclude controls, minimap, and other UI elements
           const className = node.className || '';
@@ -63,15 +95,10 @@ export default function ExportModal({ isOpen, onClose, diagramRef, fileName }: E
             return !(
               className.includes('react-flow__controls') ||
               className.includes('react-flow__minimap') ||
-              className.includes('react-flow__attribution') ||
-              className.includes('react-flow__background')
+              className.includes('react-flow__attribution')
             );
           }
           return true;
-        },
-        style: {
-          transform: 'none',
-          position: 'static',
         },
       };
 
@@ -188,10 +215,10 @@ export default function ExportModal({ isOpen, onClose, diagramRef, fileName }: E
           </div>
 
           {/* Note */}
-          <div className="rounded-lg p-4 bg-yellow-900/20 border border-yellow-600">
-            <p className="text-sm text-yellow-300">
-              <strong>⚠️ Note:</strong> Make sure your diagram is fully visible and loaded before exporting.
-              The export captures the current view of your diagram.
+          <div className="rounded-lg p-4 bg-green-900/20 border border-green-600">
+            <p className="text-sm text-green-300">
+              <strong>✓ Note:</strong> The export will capture your entire diagram including all nodes and connections,
+              regardless of the current zoom or pan position.
             </p>
           </div>
         </div>

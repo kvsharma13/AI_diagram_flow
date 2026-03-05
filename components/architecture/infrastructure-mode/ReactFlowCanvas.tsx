@@ -104,7 +104,6 @@ interface Props {
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
   showCodePanel: boolean;
-  layoutDirection?: 'horizontal' | 'vertical';
   onDeleteNode?: () => void;
 }
 
@@ -112,7 +111,6 @@ export default function ReactFlowCanvas({
   selectedNodeId,
   onSelectNode,
   showCodePanel,
-  layoutDirection = 'horizontal',
   onDeleteNode,
 }: Props) {
   const { diagram, setNodes: storeSetNodes, setEdges: storeSetEdges } = useArchitectureStore();

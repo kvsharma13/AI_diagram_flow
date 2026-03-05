@@ -10,7 +10,7 @@ import {
   generateNodesAndEdges,
   DEFAULT_INFRASTRUCTURE_CODE,
 } from '@/lib/architecture/infrastructureCodeGenerator';
-import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight } from 'lucide-react';
+import { Download, Code, Trash2, Play, Eye, FileCode } from 'lucide-react';
 
 export default function InfrastructureEditor() {
   const { diagram, setNodes, setEdges } = useArchitectureStore();
@@ -19,7 +19,6 @@ export default function InfrastructureEditor() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [code, setCode] = useState(DEFAULT_INFRASTRUCTURE_CODE);
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
-  const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('horizontal');
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Load default template
@@ -67,73 +66,6 @@ export default function InfrastructureEditor() {
       setEdges(newEdges);
       setSelectedNodeId(null);
     }
-  };
-
-  const handleLayoutChange = () => {
-    const newDirection = layoutDirection === 'horizontal' ? 'vertical' : 'horizontal';
-    setLayoutDirection(newDirection);
-
-    // Apply layout to nodes
-    if (diagram && diagram.nodes.length > 0) {
-      const layoutedNodes = applyDagreLayout(
-        diagram.nodes,
-        diagram.edges,
-        newDirection
-      );
-      setNodes(layoutedNodes);
-    }
-  };
-
-  const applyDagreLayout = (
-    nodes: any[],
-    edges: any[],
-    direction: 'horizontal' | 'vertical'
-  ) => {
-    const dagre = require('dagre');
-    const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setDefaultEdgeLabel(() => ({}));
-
-    const nodeWidth = 200;
-    const nodeHeight = 150;
-
-    dagreGraph.setGraph({
-      rankdir: direction === 'horizontal' ? 'LR' : 'TB',
-      nodesep: 100,
-      ranksep: 150,
-    });
-
-    // Add nodes (skip group nodes for layout)
-    nodes.forEach((node) => {
-      if (node.type !== 'group') {
-        dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-      }
-    });
-
-    // Add edges
-    edges.forEach((edge) => {
-      dagreGraph.setEdge(edge.source, edge.target);
-    });
-
-    dagre.layout(dagreGraph);
-
-    // Update node positions
-    return nodes.map((node) => {
-      if (node.type === 'group') {
-        return node; // Keep group nodes as is
-      }
-
-      const nodeWithPosition = dagreGraph.node(node.id);
-      if (nodeWithPosition) {
-        return {
-          ...node,
-          position: {
-            x: nodeWithPosition.x - nodeWidth / 2,
-            y: nodeWithPosition.y - nodeHeight / 2,
-          },
-        };
-      }
-      return node;
-    });
   };
 
   const loadTemplate = (template: string) => {
@@ -318,25 +250,6 @@ connections:
                 </button>
               </div>
 
-              {/* Layout Direction Toggle */}
-              <button
-                onClick={handleLayoutChange}
-                className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium"
-                title="Toggle layout direction and auto-arrange nodes"
-              >
-                {layoutDirection === 'horizontal' ? (
-                  <>
-                    <ArrowLeftRight className="w-3 h-3" />
-                    Horizontal
-                  </>
-                ) : (
-                  <>
-                    <ArrowDownUp className="w-3 h-3" />
-                    Vertical
-                  </>
-                )}
-              </button>
-
               {selectedNodeId && (
                 <button
                   onClick={handleDeleteSelected}
@@ -370,7 +283,6 @@ connections:
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
             showCodePanel={showCodePanel}
-            layoutDirection={layoutDirection}
             onDeleteNode={handleDeleteSelected}
           />
         </div>
