@@ -51,33 +51,40 @@ export default function ExportModal({ isOpen, onClose, diagramRef, fileName }: E
       }
 
       // For React Flow, we need to capture the viewport element with proper dimensions
-      const viewport = targetElement.querySelector('.react-flow__viewport') as HTMLElement;
-      if (viewport) {
-        // Get all nodes to calculate bounds
-        const nodes = viewport.querySelectorAll('.react-flow__node');
-        if (nodes.length > 0) {
-          // Calculate bounding box of all nodes
-          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      if (targetElement) {
+        const viewport = targetElement.querySelector('.react-flow__viewport') as HTMLElement;
+        if (viewport) {
+          // Get all nodes to calculate bounds
+          const nodes = viewport.querySelectorAll('.react-flow__node');
+          if (nodes.length > 0) {
+            // Calculate bounding box of all nodes
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
-          nodes.forEach((node) => {
-            const rect = node.getBoundingClientRect();
-            const parentRect = targetElement.getBoundingClientRect();
-            minX = Math.min(minX, rect.left - parentRect.left);
-            minY = Math.min(minY, rect.top - parentRect.top);
-            maxX = Math.max(maxX, rect.right - parentRect.left);
-            maxY = Math.max(maxY, rect.bottom - parentRect.top);
-          });
+            nodes.forEach((node) => {
+              const rect = node.getBoundingClientRect();
+              const parentRect = targetElement!.getBoundingClientRect();
+              minX = Math.min(minX, rect.left - parentRect.left);
+              minY = Math.min(minY, rect.top - parentRect.top);
+              maxX = Math.max(maxX, rect.right - parentRect.left);
+              maxY = Math.max(maxY, rect.bottom - parentRect.top);
+            });
 
-          // Add padding
-          const padding = 100;
-          minX -= padding;
-          minY -= padding;
-          maxX += padding;
-          maxY += padding;
+            // Add padding
+            const padding = 100;
+            minX -= padding;
+            minY -= padding;
+            maxX += padding;
+            maxY += padding;
 
-          // Override target element to use viewport with calculated dimensions
-          targetElement = viewport.parentElement as HTMLElement;
+            // Override target element to use viewport with calculated dimensions
+            targetElement = viewport.parentElement as HTMLElement;
+          }
         }
+      }
+
+      // Ensure we have a target element
+      if (!targetElement) {
+        throw new Error('No element to export');
       }
 
       // Configure export options
