@@ -10,7 +10,7 @@ import {
   generateNodesAndEdges,
   DEFAULT_INFRASTRUCTURE_CODE,
 } from '@/lib/architecture/infrastructureCodeGenerator';
-import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight } from 'lucide-react';
+import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight, GripVertical } from 'lucide-react';
 
 export default function InfrastructureEditor() {
   const { diagram, setNodes, setEdges } = useArchitectureStore();
@@ -20,6 +20,8 @@ export default function InfrastructureEditor() {
   const [code, setCode] = useState(DEFAULT_INFRASTRUCTURE_CODE);
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
   const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [codePanelWidth, setCodePanelWidth] = useState(25); // percentage
+  const [isResizing, setIsResizing] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Load default template
@@ -137,6 +139,34 @@ export default function InfrastructureEditor() {
     return [...groupNodes, ...layoutedServiceNodes];
   };
 
+  // Handle panel resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      if (newWidth > 15 && newWidth < 60) {
+        setCodePanelWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isResizing]);
+
+  const handleMouseDown = () => {
+    setIsResizing(true);
+  };
+
   const loadTemplate = (template: string) => {
     const templates: Record<string, string> = {
       aws: DEFAULT_INFRASTRUCTURE_CODE,
@@ -235,7 +265,10 @@ connections:
       {viewMode === 'visual' ? (
         <NodeSidebar />
       ) : (
-        <div className="w-1/2 flex flex-col bg-gray-900 border-r border-gray-700">
+        <div
+          className="flex flex-col bg-gray-900 border-r border-gray-700 relative"
+          style={{ width: `${codePanelWidth}%` }}
+        >
           {/* Code Editor Toolbar */}
           <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
             <div className="flex items-center justify-between mb-3">
@@ -282,6 +315,17 @@ connections:
           {/* Footer */}
           <div className="px-4 py-2 bg-gray-800 border-t border-gray-700 text-gray-400 text-xs">
             <p>💡 Use simple YAML-like syntax to define your infrastructure</p>
+          </div>
+
+          {/* Resize Handle */}
+          <div
+            onMouseDown={handleMouseDown}
+            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 transition-colors group"
+            style={{ cursor: 'col-resize' }}
+          >
+            <div className="absolute top-1/2 -translate-y-1/2 -right-2 bg-gray-700 group-hover:bg-blue-500 rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <GripVertical className="w-3 h-3 text-white" />
+            </div>
           </div>
         </div>
       )}
