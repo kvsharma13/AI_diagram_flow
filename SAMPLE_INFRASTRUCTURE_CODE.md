@@ -2,6 +2,8 @@
 
 Copy and paste these into your Infrastructure Code editor to test grouping and layouts.
 
+**Note**: Node positions are specified as **absolute canvas positions**. The system automatically converts them to relative positions when they're inside groups.
+
 ---
 
 ## 1. Payment Request Platform (Like Your Reference Image)
@@ -812,11 +814,118 @@ connections:
 
 ---
 
+---
+
+## 5. Simple Test Example (Start Here!)
+
+```yaml
+# Quick test to verify grouping works
+# Three horizontal layers with clear grouping
+
+groups:
+  - id: frontend
+    name: FRONTEND LAYER
+    color: "#3b82f6"
+    position: { x: 100, y: 50 }
+    size: { width: 1000, height: 150 }
+
+  - id: backend
+    name: BACKEND LAYER
+    color: "#8b5cf6"
+    position: { x: 100, y: 250 }
+    size: { width: 1000, height: 150 }
+
+  - id: database
+    name: DATABASE LAYER
+    color: "#10b981"
+    position: { x: 100, y: 450 }
+    size: { width: 1000, height: 150 }
+
+nodes:
+  # Frontend nodes - positions are absolute (will be converted to relative)
+  - id: web
+    label: Web App
+    type: server
+    icon: globe
+    iconColor: "#3b82f6"
+    group: frontend
+    position: { x: 250, y: 100 }
+
+  - id: mobile
+    label: Mobile App
+    type: server
+    icon: globe
+    iconColor: "#3b82f6"
+    group: frontend
+    position: { x: 500, y: 100 }
+
+  - id: admin
+    label: Admin Panel
+    type: server
+    icon: globe
+    iconColor: "#3b82f6"
+    group: frontend
+    position: { x: 750, y: 100 }
+
+  # Backend nodes
+  - id: api
+    label: API Server
+    type: server
+    icon: server
+    iconColor: "#8b5cf6"
+    group: backend
+    position: { x: 350, y: 300 }
+
+  - id: worker
+    label: Worker
+    type: worker
+    icon: worker
+    iconColor: "#f97316"
+    group: backend
+    position: { x: 650, y: 300 }
+
+  # Database nodes
+  - id: db
+    label: PostgreSQL
+    type: database
+    icon: database
+    iconColor: "#10b981"
+    group: database
+    position: { x: 350, y: 500 }
+
+  - id: cache
+    label: Redis Cache
+    type: redis
+    icon: redis
+    iconColor: "#ef4444"
+    group: database
+    position: { x: 650, y: 500 }
+
+connections:
+  - from: web
+    to: api
+    animated: true
+  - from: mobile
+    to: api
+    animated: true
+  - from: admin
+    to: api
+    animated: true
+  - from: api
+    to: db
+  - from: api
+    to: cache
+  - from: worker
+    to: db
+```
+
+---
+
 ## How to Test
 
 1. **Open** your Architecture > Infrastructure page
 2. **Click** the "Code" button to show the code editor
-3. **Copy** any of the sample codes above
+3. **Copy** Example #5 (Simple Test) above - it's designed to work perfectly!
 4. **Paste** into the Infrastructure Code editor (replace existing code)
 5. **Click** "Generate" button
 6. **Drag** the resize handle (right edge of code panel) to adjust panel width
@@ -830,3 +939,10 @@ connections:
 - ✅ You can drag nodes within groups
 - ✅ Layout respects hierarchy
 - ✅ Colors match the defined color scheme
+
+## Troubleshooting
+
+If nodes appear outside groups:
+- Make sure node positions fall within the group's boundaries
+- Group at `{ x: 100, y: 50 }` with `size: { width: 1000, height: 150 }` contains area from (100,50) to (1100,200)
+- Node positions should be absolute - the system converts them automatically

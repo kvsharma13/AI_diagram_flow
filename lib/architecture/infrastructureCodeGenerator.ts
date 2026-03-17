@@ -260,8 +260,13 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
+  // Create a map of group positions for calculating relative positions
+  const groupPositions = new Map<string, { x: number; y: number }>();
+
   // Create group nodes
   infraCode.groups.forEach((group) => {
+    groupPositions.set(group.id, group.position);
+
     nodes.push({
       id: group.id,
       label: group.name,
@@ -279,11 +284,22 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
 
   // Create service nodes
   infraCode.nodes.forEach((node) => {
+    let position = node.position || { x: 0, y: 0 };
+
+    // If node belongs to a group, calculate relative position
+    if (node.group && groupPositions.has(node.group)) {
+      const groupPos = groupPositions.get(node.group)!;
+      position = {
+        x: position.x - groupPos.x,
+        y: position.y - groupPos.y,
+      };
+    }
+
     const reactFlowNode: Node = {
       id: node.id,
       label: node.label,
       type: 'service',
-      position: node.position || { x: 0, y: 0 },
+      position: position,
       data: {
         label: node.label,
         icon: node.icon,
