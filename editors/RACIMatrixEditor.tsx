@@ -261,9 +261,9 @@ export default function RACIMatrixEditor() {
                       {stakeholders.map((sh) => {
                         const value = getRACIValue(task.id, sh.id);
                         return (
-                          <td key={sh.id} className="px-4 py-4 text-center border-b border-r border-gray-300 last:border-r-0">
+                          <td key={sh.id} className="px-3 py-3 text-center border-b border-r border-gray-300 last:border-r-0">
                             {value && (
-                              <div className={`inline-flex items-center justify-center w-14 h-9 rounded-lg font-bold text-sm ${getRACIColor(value)}`}>
+                              <div className={`inline-flex items-center justify-center w-20 h-9 rounded-lg font-bold text-sm ${getRACIColor(value)}`}>
                                 {value}
                               </div>
                             )}
