@@ -726,7 +726,7 @@ export default function GanttEditor() {
 
                     {/* Deliverables Preview */}
                     {phase.deliverables && (
-                      <p className="text-xs text-gray-600 line-clamp-2">{phase.deliverables}</p>
+                      <p className="text-xs text-gray-600">{phase.deliverables}</p>
                     )}
 
                     {/* Actions */}
@@ -1076,7 +1076,7 @@ export default function GanttEditor() {
                               />
                             ) : (
                               <div
-                                className="text-xs line-clamp-1 cursor-text hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                className="text-xs cursor-text hover:bg-blue-50 px-2 py-1 rounded transition-colors whitespace-normal"
                                 style={{ color: templateStyle?.monthHeaderText || '#6b7280' }}
                                 onClick={() => setEditingPhaseDeliverables(phase.id)}
                                 title="Click to edit deliverables"
