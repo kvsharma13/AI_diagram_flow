@@ -1,7 +1,7 @@
 // Whitelisted users (full access, no payment required)
 // Add user IDs or emails here for testing/admin access
 export const WHITELISTED_USERS: string[] = [
-  // 'user_xxx' // Example: add test user IDs here
+  'kavindra.work13@gmail.com', // Admin user with unlimited AI generations
 ];
 
 // Test users - can manually set plan type for testing without payment
