@@ -236,17 +236,17 @@ export default function RACIMatrixEditor() {
               </p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border-2 border-gray-300 overflow-hidden">
-              <table className="w-full">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-6 py-4 text-left border-b-2 border-r-2 border-gray-300 font-bold text-gray-800 uppercase tracking-wide">
-                      Task / Stakeholder
+                  <tr className="bg-gradient-to-r from-blue-900 to-blue-800">
+                    <th className="px-4 py-3 text-left border border-gray-400 font-bold text-white text-sm uppercase tracking-wide">
+                      Task / Activity
                     </th>
                     {stakeholders.map((sh) => (
-                      <th key={sh.id} className="px-4 py-4 text-center border-b-2 border-r-2 border-gray-300 last:border-r-0">
-                        <div className="font-bold text-gray-900">{sh.name}</div>
-                        {sh.role && <div className="text-xs text-gray-600 font-normal mt-1">{sh.role}</div>}
+                      <th key={sh.id} className="px-3 py-3 text-center border border-gray-400">
+                        <div className="font-bold text-white text-sm">{sh.name}</div>
+                        {sh.role && <div className="text-xs text-blue-200 font-normal mt-0.5">{sh.role}</div>}
                       </th>
                     ))}
                   </tr>
@@ -254,18 +254,27 @@ export default function RACIMatrixEditor() {
                 <tbody>
                   {tasks.map((task, idx) => (
                     <tr key={task.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 border-b border-r-2 border-gray-300">
-                        <div className="font-semibold text-gray-900">{task.taskName}</div>
-                        {task.description && <div className="text-sm text-gray-600 mt-1">{task.description}</div>}
+                      <td className="px-4 py-2.5 border border-gray-300">
+                        <div className="font-semibold text-gray-900 text-sm">{task.taskName}</div>
+                        {task.description && <div className="text-xs text-gray-600 mt-0.5">{task.description}</div>}
                       </td>
                       {stakeholders.map((sh) => {
                         const value = getRACIValue(task.id, sh.id);
+                        const getTextColor = (val: RACIValue) => {
+                          if (!val) return '';
+                          const letters = val.split('/');
+                          if (letters.includes('R')) return 'text-blue-600';
+                          if (letters.includes('A')) return 'text-green-600';
+                          if (letters.includes('C')) return 'text-orange-600';
+                          if (letters.includes('I')) return 'text-purple-600';
+                          return 'text-gray-900';
+                        };
                         return (
-                          <td key={sh.id} className="px-3 py-3 text-center border-b border-r border-gray-300 last:border-r-0">
+                          <td key={sh.id} className="px-3 py-2.5 text-center border border-gray-300">
                             {value && (
-                              <div className={`inline-flex items-center justify-center w-20 h-9 rounded-lg font-bold text-sm ${getRACIColor(value)}`}>
+                              <span className={`font-bold text-base ${getTextColor(value)}`}>
                                 {value}
-                              </div>
+                              </span>
                             )}
                           </td>
                         );
@@ -276,23 +285,23 @@ export default function RACIMatrixEditor() {
               </table>
             </div>
 
-            <div className="mt-6">
-              <div className="flex gap-4">
+            <div className="mt-4 pt-4 border-t border-gray-300">
+              <div className="flex gap-6 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-blue-500"></div>
-                  <span className="text-sm text-gray-700">Responsible (R)</span>
+                  <span className="font-bold text-blue-600 text-lg">R</span>
+                  <span className="text-gray-700">= Responsible</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-green-500"></div>
-                  <span className="text-sm text-gray-700">Accountable (A)</span>
+                  <span className="font-bold text-green-600 text-lg">A</span>
+                  <span className="text-gray-700">= Accountable</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-yellow-500"></div>
-                  <span className="text-sm text-gray-700">Consulted (C)</span>
+                  <span className="font-bold text-orange-600 text-lg">C</span>
+                  <span className="text-gray-700">= Consulted</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-purple-500"></div>
-                  <span className="text-sm text-gray-700">Informed (I)</span>
+                  <span className="font-bold text-purple-600 text-lg">I</span>
+                  <span className="text-gray-700">= Informed</span>
                 </div>
               </div>
             </div>
