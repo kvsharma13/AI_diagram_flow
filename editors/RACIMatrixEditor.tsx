@@ -263,7 +263,7 @@ export default function RACIMatrixEditor() {
                         return (
                           <td key={sh.id} className="px-4 py-4 text-center border-b border-r border-gray-300 last:border-r-0">
                             {value && (
-                              <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg font-bold text-sm ${getRACIColor(value)}`}>
+                              <div className={`inline-flex items-center justify-center w-14 h-9 rounded-lg font-bold text-sm ${getRACIColor(value)}`}>
                                 {value}
                               </div>
                             )}
@@ -467,7 +467,7 @@ export default function RACIMatrixEditor() {
                               {/* Main cell display */}
                               <div
                                 onClick={() => handleCellClick(task.id, sh.id)}
-                                className={`w-12 h-12 rounded-lg font-bold text-sm transition-all hover:scale-105 hover:shadow-md cursor-pointer flex items-center justify-center ${getRACIColor(value)}`}
+                                className={`w-16 h-10 rounded-lg font-bold text-sm transition-all hover:scale-105 hover:shadow-md cursor-pointer flex items-center justify-center ${getRACIColor(value)}`}
                               >
                                 {value || ''}
                               </div>
