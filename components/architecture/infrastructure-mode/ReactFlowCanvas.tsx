@@ -20,7 +20,7 @@ import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
 import { Server, Database, Workflow, Cpu, HardDrive, Globe, Zap, Activity, Cloud } from 'lucide-react';
 
-// Custom Node Component - Clean Eraser.io style
+// Custom Node Component - Eraser.io aesthetic
 const ServiceNode = ({ data, selected }: any) => {
   const iconMap: Record<string, any> = {
     'api-gateway': Globe,
@@ -40,55 +40,68 @@ const ServiceNode = ({ data, selected }: any) => {
   };
 
   const Icon = iconMap[data.icon] || Server;
+  const accentColor = data.iconColor || '#60a5fa';
+  const useLeftAccent = data.type === 'database' || data.type === 'redis' || data.type === 's3';
 
   return (
     <div
-      className={`relative flex items-center justify-center px-4 py-3 rounded-lg border-2 transition-all ${
-        selected ? 'ring-2 ring-blue-400' : ''
+      className={`relative bg-white rounded border transition-all font-mono ${
+        selected ? 'ring-2 ring-blue-400 ring-offset-2' : ''
       }`}
       style={{
-        backgroundColor: data.bgColor || '#374151',
-        borderColor: data.borderColor || '#4b5563',
-        minWidth: '140px',
-        minHeight: '50px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+        borderColor: '#d1d5db',
+        width: '110px',
+        height: '110px',
+        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
       }}
     >
-      {/* Connection Handles - Smaller and more subtle */}
-      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-gray-400 border-none" />
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-gray-400 border-none" />
-      <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-gray-400 border-none" />
-      <Handle type="source" position={Position.Right} className="w-2 h-2 !bg-gray-400 border-none" />
+      {/* Thin colored accent bar - top OR left */}
+      {useLeftAccent ? (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l"
+          style={{ backgroundColor: accentColor }}
+        />
+      ) : (
+        <div
+          className="absolute top-0 left-0 right-0 h-1 rounded-t"
+          style={{ backgroundColor: accentColor }}
+        />
+      )}
 
-      {/* Compact layout with small icon and text */}
-      <div className="flex items-center gap-2">
-        <Icon className="w-5 h-5 flex-shrink-0" style={{ color: data.iconColor || '#60a5fa' }} />
-        <div className="text-white font-medium text-sm whitespace-nowrap">{data.label}</div>
+      {/* Connection Handles - Minimal */}
+      <Handle type="target" position={Position.Top} className="w-1.5 h-1.5 !bg-gray-300 border-none opacity-0 hover:opacity-100" />
+      <Handle type="source" position={Position.Bottom} className="w-1.5 h-1.5 !bg-gray-300 border-none opacity-0 hover:opacity-100" />
+      <Handle type="target" position={Position.Left} className="w-1.5 h-1.5 !bg-gray-300 border-none opacity-0 hover:opacity-100" />
+      <Handle type="source" position={Position.Right} className="w-1.5 h-1.5 !bg-gray-300 border-none opacity-0 hover:opacity-100" />
+
+      {/* Content - square layout with icon and text */}
+      <div className={`flex flex-col items-center justify-center h-full gap-2 ${useLeftAccent ? 'pl-2' : 'pt-2'}`}>
+        <Icon className="w-6 h-6 flex-shrink-0 text-gray-600" />
+        <div className="text-gray-900 font-medium text-xs text-center px-2 leading-tight">{data.label}</div>
       </div>
     </div>
   );
 };
 
-// Group Node Component - Swimlane style like Eraser.io
+// Group Node Component - Eraser.io dashed container style
 const GroupNode = ({ data }: any) => {
   return (
     <div
-      className="rounded-lg border-2 relative"
+      className="rounded border-2 relative font-mono"
       style={{
-        backgroundColor: data.bgColor || 'rgba(55, 65, 81, 0.15)',
-        borderColor: data.borderColor || '#4b5563',
+        backgroundColor: 'transparent',
+        borderColor: '#d1d5db',
         borderStyle: 'dashed',
         minWidth: data.width || '400px',
         minHeight: data.height || '300px',
         padding: '8px',
       }}
     >
-      {/* Label badge in top-left corner */}
+      {/* Small mono label in top-left corner - no background */}
       <div
-        className="absolute top-2 left-2 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider"
+        className="absolute top-2 left-2 text-xs font-semibold uppercase tracking-wide"
         style={{
-          backgroundColor: data.borderColor || '#4b5563',
-          color: '#ffffff',
+          color: '#9ca3af',
         }}
       >
         {data.label}
@@ -159,7 +172,11 @@ export default function ReactFlowCanvas({
       source: edge.source,
       target: edge.target,
       animated: edge.animated,
-      style: { stroke: '#60a5fa', strokeWidth: 2 },
+      style: {
+        stroke: edge.style?.stroke || '#d1d5db',
+        strokeWidth: 1,
+        strokeDasharray: edge.style?.strokeDasharray || undefined,
+      },
     })) || [];
 
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
@@ -214,8 +231,8 @@ export default function ReactFlowCanvas({
     (connection: Connection) => {
       const newEdge = {
         ...connection,
-        animated: true,
-        style: { stroke: '#60a5fa', strokeWidth: 2 },
+        animated: false,
+        style: { stroke: '#d1d5db', strokeWidth: 1 },
       };
       setEdges((eds) => addEdge(newEdge, eds));
 
@@ -227,7 +244,7 @@ export default function ReactFlowCanvas({
             id: `${connection.source}-${connection.target}`,
             source: connection.source!,
             target: connection.target!,
-            animated: true,
+            animated: false,
           },
         ]);
       }
@@ -288,20 +305,20 @@ export default function ReactFlowCanvas({
       nodesConnectable={true}
       defaultEdgeOptions={{
         animated: false,
-        style: { stroke: '#6b7280', strokeWidth: 2 },
+        style: { stroke: '#d1d5db', strokeWidth: 1 },
         type: 'smoothstep',
       }}
-      connectionLineStyle={{ stroke: '#6b7280', strokeWidth: 2 }}
+      connectionLineStyle={{ stroke: '#d1d5db', strokeWidth: 1 }}
       connectionLineType={ConnectionLineType.SmoothStep}
     >
-      <Background color="#374151" variant={BackgroundVariant.Dots} gap={16} size={1} />
-      <Controls showInteractive={false} className="!bg-gray-800 !border-gray-700" />
+      <Background color="#f3f4f6" variant={BackgroundVariant.Dots} gap={20} size={0.5} />
+      <Controls showInteractive={false} className="!bg-white !border-gray-300" />
       <MiniMap
-        nodeColor={(node) => node.type === 'group' ? '#4b5563' : '#60a5fa'}
-        maskColor="rgba(17, 24, 39, 0.8)"
+        nodeColor={(node) => node.type === 'group' ? '#e5e7eb' : '#ffffff'}
+        maskColor="rgba(249, 250, 251, 0.9)"
         style={{
-          backgroundColor: '#1f2937',
-          border: '1px solid #374151',
+          backgroundColor: '#ffffff',
+          border: '1px solid #d1d5db',
         }}
       />
     </ReactFlow>
