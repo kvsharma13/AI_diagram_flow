@@ -276,8 +276,8 @@ export default function GanttEditor() {
         }
       });
 
-      // Wait for layout to fully adjust
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Wait for layout to fully adjust (longer wait for wide timelines)
+      await new Promise(resolve => setTimeout(resolve, 1200));
 
       console.log('Capturing full content...');
 
@@ -386,7 +386,7 @@ export default function GanttEditor() {
           </div>
 
           {/* Clean Export View - Landscape Format */}
-          <div ref={exportRef} className="p-8 bg-white" style={{ minWidth: '1200px', maxWidth: '100%' }}>
+          <div ref={exportRef} className="p-8 bg-white" style={{ minWidth: '1200px', width: 'max-content' }}>
             {/* Project Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{exportHeading || project.name}</h1>
@@ -403,8 +403,8 @@ export default function GanttEditor() {
                 borderColor: templateStyle?.rowBorder || '#e5e7eb',
               }}
             >
-              <div className="overflow-x-auto">
-                <div className="min-w-max">
+              <div className="overflow-visible">
+                <div className="w-full">
                   {/* Month Headers */}
                   <div
                     className="flex border-b-2"
