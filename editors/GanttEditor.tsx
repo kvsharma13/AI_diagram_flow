@@ -75,7 +75,7 @@ export default function GanttEditor() {
   };
 
   const getColorConfig = (colorName?: PhaseColor) => {
-    return colorConfig[colorName || 'purple'];
+    return colorConfig[colorName || 'purple'] || colorConfig.purple;
   };
 
   // Get template style or default
