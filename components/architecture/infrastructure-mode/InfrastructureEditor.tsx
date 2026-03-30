@@ -272,32 +272,26 @@ connections:
           {/* Code Editor Toolbar */}
           <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
             <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <FileCode className="w-4 h-4 text-purple-400 flex-shrink-0" />
                   <span className="text-white font-semibold text-sm truncate">Infrastructure Code</span>
                 </div>
-                <button
-                  onClick={handleGenerateFromCode}
-                  className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded text-xs font-medium flex-shrink-0"
-                >
-                  <Play className="w-3 h-3" />
-                  Generate
-                </button>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => loadTemplate('aws')}
-                  className="flex-1 px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-medium"
-                >
-                  AWS
-                </button>
-                <button
-                  onClick={() => loadTemplate('microservices')}
-                  className="flex-1 px-2 py-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded text-xs font-medium"
-                >
-                  Microservices
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => loadTemplate('aws')}
+                    className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-medium"
+                  >
+                    Template
+                  </button>
+                  <button
+                    onClick={handleGenerateFromCode}
+                    className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded text-xs font-medium"
+                  >
+                    <Play className="w-3 h-3" />
+                    Generate
+                  </button>
+                </div>
               </div>
               <p className="text-xs text-gray-400">
                 Define groups, nodes, and connections. Click Generate to create diagram.
