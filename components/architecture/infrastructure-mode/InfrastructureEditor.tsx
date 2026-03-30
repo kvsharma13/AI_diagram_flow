@@ -273,7 +273,7 @@ connections:
           <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-blue-400" />
+                <FileCode className="w-4 h-4 text-purple-400" />
                 <span className="text-white font-semibold">Infrastructure Code</span>
               </div>
               <div className="flex gap-2">
@@ -285,13 +285,13 @@ connections:
                 </button>
                 <button
                   onClick={() => loadTemplate('microservices')}
-                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium"
+                  className="px-3 py-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded text-xs font-medium"
                 >
                   Microservices
                 </button>
                 <button
                   onClick={handleGenerateFromCode}
-                  className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium"
+                  className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded text-xs font-medium"
                 >
                   <Play className="w-3 h-3" />
                   Generate
@@ -320,10 +320,10 @@ connections:
           {/* Resize Handle */}
           <div
             onMouseDown={handleMouseDown}
-            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 transition-colors group"
+            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-purple-500 transition-colors group"
             style={{ cursor: 'col-resize' }}
           >
-            <div className="absolute top-1/2 -translate-y-1/2 -right-2 bg-gray-700 group-hover:bg-blue-500 rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-1/2 -translate-y-1/2 -right-2 bg-gray-700 group-hover:bg-purple-500 rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <GripVertical className="w-3 h-3 text-white" />
             </div>
           </div>
@@ -332,18 +332,18 @@ connections:
 
       {/* Main Canvas */}
       <div className="flex-1 flex flex-col bg-gray-950">
-        {/* Toolbar */}
-        <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
+        {/* Compact Toolbar */}
+        <div className="bg-gray-800/50 px-4 py-2 border-b border-gray-700/50">
           <div className="flex items-center justify-between">
-            <span className="text-white font-semibold">Infrastructure Architecture</span>
-            <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-300 font-medium">Cloud infrastructure deployment view</span>
+            <div className="flex items-center gap-1.5">
               {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-gray-900 p-1 rounded">
+              <div className="flex items-center gap-1 bg-gray-900/50 p-0.5 rounded">
                 <button
                   onClick={() => setViewMode('visual')}
-                  className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                     viewMode === 'visual'
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
@@ -352,9 +352,9 @@ connections:
                 </button>
                 <button
                   onClick={() => setViewMode('code')}
-                  className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                     viewMode === 'code'
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
@@ -366,7 +366,7 @@ connections:
               {/* Layout Direction Toggle */}
               <button
                 onClick={handleLayoutChange}
-                className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium"
+                className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded text-xs font-medium"
                 title="Toggle layout direction and auto-arrange nodes"
               >
                 {layoutDirection === 'horizontal' ? (
@@ -385,7 +385,7 @@ connections:
               {selectedNodeId && (
                 <button
                   onClick={handleDeleteSelected}
-                  className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium"
+                  className="flex items-center gap-1 px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium"
                 >
                   <Trash2 className="w-3 h-3" />
                   Delete
@@ -393,14 +393,14 @@ connections:
               )}
               <button
                 onClick={handleExportJSON}
-                className="flex items-center gap-1 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs font-medium"
+                className="flex items-center gap-1 px-2.5 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs font-medium"
               >
                 <Code className="w-3 h-3" />
                 JSON
               </button>
               <button
                 onClick={() => setShowExportModal(true)}
-                className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium"
+                className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded text-xs font-medium"
               >
                 <Download className="w-3 h-3" />
                 Export

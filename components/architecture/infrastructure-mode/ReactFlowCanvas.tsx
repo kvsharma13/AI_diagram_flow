@@ -20,7 +20,7 @@ import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
 import { Server, Database, Workflow, Cpu, HardDrive, Globe, Zap, Activity, Cloud } from 'lucide-react';
 
-// Custom Node Component - Clean Eraser.io style
+// Custom Node Component - Spacious and clean
 const ServiceNode = ({ data, selected }: any) => {
   const iconMap: Record<string, any> = {
     'api-gateway': Globe,
@@ -43,27 +43,29 @@ const ServiceNode = ({ data, selected }: any) => {
 
   return (
     <div
-      className={`relative flex items-center justify-center px-4 py-3 rounded-lg border-2 transition-all ${
-        selected ? 'ring-2 ring-blue-400' : ''
+      className={`relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all ${
+        selected ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-gray-950' : ''
       }`}
       style={{
         backgroundColor: data.bgColor || '#374151',
         borderColor: data.borderColor || '#4b5563',
-        minWidth: '140px',
-        minHeight: '50px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+        minWidth: '220px',
+        minHeight: '80px',
+        boxShadow: selected
+          ? '0 8px 20px rgba(168, 85, 247, 0.3)'
+          : '0 2px 8px rgba(0, 0, 0, 0.4)',
       }}
     >
-      {/* Connection Handles - Smaller and more subtle */}
-      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-gray-400 border-none" />
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-gray-400 border-none" />
-      <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-gray-400 border-none" />
-      <Handle type="source" position={Position.Right} className="w-2 h-2 !bg-gray-400 border-none" />
+      {/* Connection Handles - Subtle purple tint */}
+      <Handle type="target" position={Position.Top} className="w-2.5 h-2.5 !bg-purple-400 border-none opacity-60 hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Bottom} className="w-2.5 h-2.5 !bg-purple-400 border-none opacity-60 hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Left} className="w-2.5 h-2.5 !bg-purple-400 border-none opacity-60 hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Right} className="w-2.5 h-2.5 !bg-purple-400 border-none opacity-60 hover:opacity-100 transition-opacity" />
 
-      {/* Compact layout with small icon and text */}
-      <div className="flex items-center gap-2">
-        <Icon className="w-5 h-5 flex-shrink-0" style={{ color: data.iconColor || '#60a5fa' }} />
-        <div className="text-white font-medium text-sm whitespace-nowrap">{data.label}</div>
+      {/* Spacious layout with icon and text */}
+      <div className="flex items-center gap-3">
+        <Icon className="w-6 h-6 flex-shrink-0" style={{ color: data.iconColor || '#a78bfa' }} />
+        <div className="text-white font-semibold text-sm text-center">{data.label}</div>
       </div>
     </div>
   );
@@ -159,7 +161,7 @@ export default function ReactFlowCanvas({
       source: edge.source,
       target: edge.target,
       animated: edge.animated,
-      style: { stroke: '#60a5fa', strokeWidth: 2 },
+      style: { stroke: '#a78bfa', strokeWidth: 2 },
     })) || [];
 
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
@@ -215,7 +217,7 @@ export default function ReactFlowCanvas({
       const newEdge = {
         ...connection,
         animated: true,
-        style: { stroke: '#60a5fa', strokeWidth: 2 },
+        style: { stroke: '#a78bfa', strokeWidth: 2 },
       };
       setEdges((eds) => addEdge(newEdge, eds));
 
@@ -291,13 +293,13 @@ export default function ReactFlowCanvas({
         style: { stroke: '#6b7280', strokeWidth: 2 },
         type: 'smoothstep',
       }}
-      connectionLineStyle={{ stroke: '#6b7280', strokeWidth: 2 }}
+      connectionLineStyle={{ stroke: '#a78bfa', strokeWidth: 2 }}
       connectionLineType={ConnectionLineType.SmoothStep}
     >
-      <Background color="#374151" variant={BackgroundVariant.Dots} gap={16} size={1} />
-      <Controls showInteractive={false} className="!bg-gray-800 !border-gray-700" />
+      <Background color="#374151" variant={BackgroundVariant.Dots} gap={20} size={1.5} />
+      <Controls showInteractive={false} className="!bg-gray-800 !border-gray-700 [&_button]:!border-gray-600 [&_button:hover]:!bg-purple-600" />
       <MiniMap
-        nodeColor={(node) => node.type === 'group' ? '#4b5563' : '#60a5fa'}
+        nodeColor={(node) => node.type === 'group' ? '#4b5563' : '#a78bfa'}
         maskColor="rgba(17, 24, 39, 0.8)"
         style={{
           backgroundColor: '#1f2937',

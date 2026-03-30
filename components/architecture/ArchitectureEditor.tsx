@@ -51,17 +51,14 @@ export default function ArchitectureEditor() {
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Header with Mode Selector */}
-      <div className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700/50 px-6 py-4 shadow-lg">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Architecture Diagram
-            </h2>
-            <p className="text-sm text-gray-400 mt-1">Design and visualize your system architecture</p>
-          </div>
+      {/* Compact Header with Mode Selector */}
+      <div className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700/50 px-6 py-2.5 shadow-lg">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-lg font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent whitespace-nowrap">
+            Architecture Diagram
+          </h2>
+          <ModeSelector />
         </div>
-        <ModeSelector />
       </div>
 
       {/* Mode Content */}
