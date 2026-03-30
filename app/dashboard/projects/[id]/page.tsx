@@ -137,8 +137,8 @@ export default function ProjectEditorPage() {
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="px-6 py-3">
+          <div className="flex items-center justify-between mb-2.5">
             <Link
               href="/dashboard/projects"
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -172,55 +172,58 @@ export default function ProjectEditorPage() {
             </div>
           </div>
 
-          {/* Project Name */}
-          <div className="mb-4">
-            {isEditingName ? (
-              <input
-                type="text"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                onBlur={handleNameUpdate}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleNameUpdate();
-                  if (e.key === 'Escape') {
-                    setProjectName(project?.name || '');
-                    setIsEditingName(false);
-                  }
-                }}
-                className="text-2xl font-bold text-gray-900 px-3 py-1 border-2 border-purple-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                autoFocus
-              />
-            ) : (
-              <h1
-                onClick={() => setIsEditingName(true)}
-                className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-purple-600 transition-colors px-3 py-1 rounded-lg hover:bg-purple-50"
-              >
-                {project?.name}
-              </h1>
-            )}
-          </div>
-
-          {/* Editor Tabs */}
-          <div className="flex items-center gap-2">
-            {editors.map((editor) => {
-              const Icon = editor.icon;
-              const isActive = activeEditor === editor.type;
-
-              return (
-                <button
-                  key={editor.type}
-                  onClick={() => setActiveEditor(editor.type)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    isActive
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+          {/* Project Name & Editor Tabs - Single Row */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Project Name */}
+            <div>
+              {isEditingName ? (
+                <input
+                  type="text"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  onBlur={handleNameUpdate}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleNameUpdate();
+                    if (e.key === 'Escape') {
+                      setProjectName(project?.name || '');
+                      setIsEditingName(false);
+                    }
+                  }}
+                  className="text-2xl font-bold text-gray-900 px-3 py-1 border-2 border-purple-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  autoFocus
+                />
+              ) : (
+                <h1
+                  onClick={() => setIsEditingName(true)}
+                  className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-purple-600 transition-colors px-3 py-1 rounded-lg hover:bg-purple-50"
                 >
-                  <Icon className="w-4 h-4" />
-                  {editor.label}
-                </button>
-              );
-            })}
+                  {project?.name}
+                </h1>
+              )}
+            </div>
+
+            {/* Editor Tabs */}
+            <div className="flex items-center gap-2">
+              {editors.map((editor) => {
+                const Icon = editor.icon;
+                const isActive = activeEditor === editor.type;
+
+                return (
+                  <button
+                    key={editor.type}
+                    onClick={() => setActiveEditor(editor.type)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      isActive
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {editor.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
