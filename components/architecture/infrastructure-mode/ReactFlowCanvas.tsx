@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import ReactFlow, {
   Node as RFNode,
   Edge as RFEdge,
@@ -167,23 +167,34 @@ export default function ReactFlowCanvas({
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
 
-  // Sync nodes and edges when diagram changes
+  // Only sync nodes on initial load or when node count changes (add/delete)
+  // Don't sync on every change to preserve drag positions
+  const prevNodeCountRef = useRef(diagram?.nodes.length || 0);
+
   useEffect(() => {
-    setNodes(convertedNodes);
-  }, [diagram?.nodes, setNodes]);
+    const currentNodeCount = diagram?.nodes.length || 0;
+
+    // Only update if nodes were added or removed, not just repositioned
+    if (currentNodeCount !== prevNodeCountRef.current) {
+      setNodes(convertedNodes);
+      prevNodeCountRef.current = currentNodeCount;
+    }
+  }, [diagram?.nodes.length, setNodes]);
 
   useEffect(() => {
     setEdges(rfEdges);
   }, [diagram?.edges, setEdges]);
 
-  // Handle node changes and sync deletions to store
+  // Handle node changes and sync to store
   const handleNodesChange = useCallback(
     (changes: any[]) => {
       onNodesChange(changes);
 
+      if (!diagram) return;
+
       // Check for node removals
       const removeChanges = changes.filter((change) => change.type === 'remove');
-      if (removeChanges.length > 0 && diagram) {
+      if (removeChanges.length > 0) {
         const removedIds = new Set(removeChanges.map((change) => change.id));
         const newNodes = diagram.nodes.filter((node) => !removedIds.has(node.id));
         const newEdges = diagram.edges.filter(
@@ -191,6 +202,22 @@ export default function ReactFlowCanvas({
         );
         storeSetNodes(newNodes);
         storeSetEdges(newEdges);
+      }
+
+      // Check for position changes (when dragging ends)
+      const positionChanges = changes.filter(
+        (change) => change.type === 'position' && change.dragging === false
+      );
+
+      if (positionChanges.length > 0) {
+        const updatedNodes = diagram.nodes.map((node) => {
+          const positionChange = positionChanges.find((c) => c.id === node.id);
+          if (positionChange && positionChange.position) {
+            return { ...node, position: positionChange.position };
+          }
+          return node;
+        });
+        storeSetNodes(updatedNodes);
       }
     },
     [onNodesChange, diagram, storeSetNodes, storeSetEdges]
