@@ -71,7 +71,7 @@ const ServiceNode = ({ data, selected }: any) => {
   );
 };
 
-// Group Node Component - Swimlane style like Eraser.io
+// Group Node Component - Swimlane style with proper spacing
 const GroupNode = ({ data }: any) => {
   return (
     <div
@@ -82,12 +82,12 @@ const GroupNode = ({ data }: any) => {
         borderStyle: 'dashed',
         minWidth: data.width || '400px',
         minHeight: data.height || '300px',
-        padding: '8px',
+        padding: '40px 20px 20px 20px', // More top padding for nodes
       }}
     >
       {/* Label badge in top-left corner */}
       <div
-        className="absolute top-2 left-2 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider"
+        className="absolute top-3 left-3 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
         style={{
           backgroundColor: data.borderColor || '#4b5563',
           color: '#ffffff',

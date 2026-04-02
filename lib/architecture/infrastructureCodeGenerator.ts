@@ -32,43 +32,43 @@ export interface InfrastructureConnection {
 }
 
 export const DEFAULT_INFRASTRUCTURE_CODE = `# Clean Architecture - Horizontal Swimlanes
-# Professional diagram like Eraser.io
+# Professional diagram with proper spacing
 
 groups:
-  # Horizontal swimlanes
+  # Horizontal swimlanes with more height
   - id: client-layer
     name: CLIENT LAYER
     color: "#3b82f6"
     position: { x: 50, y: 50 }
-    size: { width: 1400, height: 100 }
+    size: { width: 1400, height: 160 }
 
   - id: api-layer
     name: API GATEWAY LAYER
     color: "#8b5cf6"
-    position: { x: 50, y: 180 }
-    size: { width: 1400, height: 100 }
+    position: { x: 50, y: 240 }
+    size: { width: 1400, height: 160 }
 
   - id: service-layer
     name: SERVICE LAYER
     color: "#ec4899"
-    position: { x: 50, y: 310 }
-    size: { width: 1400, height: 100 }
+    position: { x: 50, y: 430 }
+    size: { width: 1400, height: 160 }
 
   - id: data-layer
     name: DATA LAYER
     color: "#10b981"
-    position: { x: 50, y: 440 }
-    size: { width: 1400, height: 100 }
+    position: { x: 50, y: 620 }
+    size: { width: 1400, height: 160 }
 
 nodes:
-  # Client Layer
+  # Client Layer - centered vertically in group
   - id: web-app
     label: Web App
     type: server
     icon: globe
     iconColor: "#60a5fa"
     group: client-layer
-    position: { x: 200, y: 75 }
+    position: { x: 200, y: 90 }
 
   - id: mobile-app
     label: Mobile App
@@ -76,7 +76,7 @@ nodes:
     icon: globe
     iconColor: "#60a5fa"
     group: client-layer
-    position: { x: 450, y: 75 }
+    position: { x: 500, y: 90 }
 
   - id: admin-panel
     label: Admin Panel
@@ -84,16 +84,16 @@ nodes:
     icon: globe
     iconColor: "#60a5fa"
     group: client-layer
-    position: { x: 700, y: 75 }
+    position: { x: 800, y: 90 }
 
-  # API Layer
+  # API Layer - centered vertically in group
   - id: load-balancer
     label: Load Balancer
     type: load-balancer
     icon: cloud
     iconColor: "#a78bfa"
     group: api-layer
-    position: { x: 200, y: 205 }
+    position: { x: 200, y: 280 }
 
   - id: api-gateway
     label: API Gateway
@@ -101,7 +101,7 @@ nodes:
     icon: globe
     iconColor: "#a78bfa"
     group: api-layer
-    position: { x: 500, y: 205 }
+    position: { x: 600, y: 280 }
 
   - id: auth-service
     label: Auth Service
@@ -109,16 +109,16 @@ nodes:
     icon: server
     iconColor: "#a78bfa"
     group: api-layer
-    position: { x: 800, y: 205 }
+    position: { x: 1000, y: 280 }
 
-  # Service Layer
+  # Service Layer - centered vertically in group
   - id: user-service
     label: User Service
     type: server
     icon: server
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 150, y: 335 }
+    position: { x: 150, y: 470 }
 
   - id: product-service
     label: Product Service
@@ -126,7 +126,7 @@ nodes:
     icon: server
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 400, y: 335 }
+    position: { x: 450, y: 470 }
 
   - id: order-service
     label: Order Service
@@ -134,7 +134,7 @@ nodes:
     icon: server
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 650, y: 335 }
+    position: { x: 750, y: 470 }
 
   - id: payment-service
     label: Payment Service
@@ -142,7 +142,7 @@ nodes:
     icon: server
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 900, y: 335 }
+    position: { x: 1050, y: 470 }
 
   - id: notification
     label: Notification
@@ -150,16 +150,16 @@ nodes:
     icon: server
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 1150, y: 335 }
+    position: { x: 1350, y: 470 }
 
-  # Data Layer
+  # Data Layer - centered vertically in group
   - id: postgres
     label: PostgreSQL
     type: database
     icon: database
     iconColor: "#34d399"
     group: data-layer
-    position: { x: 200, y: 465 }
+    position: { x: 200, y: 660 }
 
   - id: mongodb
     label: MongoDB
@@ -167,7 +167,7 @@ nodes:
     icon: database
     iconColor: "#34d399"
     group: data-layer
-    position: { x: 500, y: 465 }
+    position: { x: 550, y: 660 }
 
   - id: redis
     label: Redis Cache
@@ -175,7 +175,7 @@ nodes:
     icon: database
     iconColor: "#34d399"
     group: data-layer
-    position: { x: 800, y: 465 }
+    position: { x: 900, y: 660 }
 
   - id: s3
     label: S3 Storage
@@ -183,7 +183,7 @@ nodes:
     icon: s3
     iconColor: "#34d399"
     group: data-layer
-    position: { x: 1100, y: 465 }
+    position: { x: 1250, y: 660 }
 
 connections:
   # Client to API
