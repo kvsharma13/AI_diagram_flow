@@ -167,14 +167,23 @@ export default function ReactFlowCanvas({
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
   const isInitialMount = useRef(true);
+  const prevNodeIdsRef = useRef<string>('');
 
-  // Only sync on initial mount - after that, all changes happen through interactions
+  // Sync when:
+  // 1. Initial mount
+  // 2. Node IDs completely change (new diagram generated from code)
   useEffect(() => {
-    if (isInitialMount.current) {
+    const currentNodeIds = (diagram?.nodes || []).map(n => n.id).sort().join(',');
+
+    if (isInitialMount.current || prevNodeIdsRef.current !== currentNodeIds) {
       setNodes(convertedNodes);
-      isInitialMount.current = false;
+      prevNodeIdsRef.current = currentNodeIds;
+
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+      }
     }
-  }, []);
+  }, [diagram?.nodes, setNodes]);
 
   // Sync edges when they change
   useEffect(() => {
