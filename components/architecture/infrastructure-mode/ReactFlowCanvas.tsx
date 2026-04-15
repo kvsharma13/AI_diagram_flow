@@ -251,7 +251,7 @@ export default function ReactFlowCanvas({
         rfNode.style = {
           width: parseInt(nodeData.data.width),
           height: parseInt(nodeData.data.height),
-          zIndex: nodeData.layerId ? 1 : 0,
+          zIndex: nodeData.layerId ? -1 : -2,
         };
       }
 

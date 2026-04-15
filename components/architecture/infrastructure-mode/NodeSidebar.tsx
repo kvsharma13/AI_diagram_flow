@@ -3,7 +3,8 @@
 import { useArchitectureStore } from '@/store/architectureStore';
 import {
   Server, Database, Cloud, Zap, Globe, HardDrive, Workflow, Cpu, Activity,
-  Lock, Shield, Users, Monitor, Network, CreditCard, Mail, Box,
+  Lock, Shield, Users, Monitor, Network, CreditCard, Mail, Box, Bell,
+  Smartphone, Key, Settings, Clipboard,
 } from 'lucide-react';
 
 const nodeTemplates = [
@@ -11,12 +12,13 @@ const nodeTemplates = [
   { id: 'lambda', label: 'Lambda', icon: Zap, color: '#f97316' },
   { id: 'api-gateway', label: 'API Gateway', icon: Globe, color: '#ec4899' },
   { id: 'database', label: 'Database', icon: Database, color: '#3b82f6' },
-  { id: 's3', label: 'S3', icon: HardDrive, color: '#22c55e' },
+  { id: 's3', label: 'S3 Storage', icon: HardDrive, color: '#22c55e' },
   { id: 'redis', label: 'Redis', icon: Database, color: '#dc382d' },
   { id: 'queue', label: 'Queue', icon: Workflow, color: '#ec4899' },
   { id: 'worker', label: 'Worker', icon: Cpu, color: '#f97316' },
   { id: 'analytics', label: 'Analytics', icon: Activity, color: '#8b5cf6' },
   { id: 'load-balancer', label: 'Load Balancer', icon: Cloud, color: '#10b981' },
+  { id: 'cloud', label: 'Cloud', icon: Cloud, color: '#06b6d4' },
   { id: 'auth', label: 'Auth', icon: Lock, color: '#eab308' },
   { id: 'shield', label: 'Firewall', icon: Shield, color: '#06b6d4' },
   { id: 'users', label: 'Users', icon: Users, color: '#8b5cf6' },
@@ -25,9 +27,18 @@ const nodeTemplates = [
   { id: 'credit-card', label: 'Payment', icon: CreditCard, color: '#f43f5e' },
   { id: 'mail', label: 'Email', icon: Mail, color: '#0ea5e9' },
   { id: 'box', label: 'Container', icon: Box, color: '#a855f7' },
+  { id: 'bell', label: 'Notification', icon: Bell, color: '#f59e0b' },
+  { id: 'smartphone', label: 'Mobile', icon: Smartphone, color: '#60a5fa' },
+  { id: 'key', label: 'Key', icon: Key, color: '#eab308' },
+  { id: 'settings', label: 'Settings', icon: Settings, color: '#64748b' },
+  { id: 'clipboard', label: 'Clipboard', icon: Clipboard, color: '#34d399' },
 ];
 
-export default function NodeSidebar() {
+interface Props {
+  onClose: () => void;
+}
+
+export default function NodeSidebarDropdown({ onClose }: Props) {
   const { addNode } = useArchitectureStore();
 
   const handleAddNode = (template: typeof nodeTemplates[0]) => {
@@ -45,24 +56,23 @@ export default function NodeSidebar() {
   };
 
   return (
-    <div className="w-14 bg-slate-900/80 border-r border-slate-800/50 flex flex-col items-center py-2 gap-1 overflow-y-auto">
-      {nodeTemplates.map((template) => {
-        const Icon = template.icon;
-        return (
-          <button
-            key={template.id}
-            onClick={() => handleAddNode(template)}
-            className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-800 transition-colors group relative"
-            title={template.label}
-          >
-            <Icon className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" style={{ color: undefined }} />
-            {/* Tooltip */}
-            <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-slate-200 text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
-              {template.label}
-            </div>
-          </button>
-        );
-      })}
+    <div className="bg-slate-900/95 border-b border-slate-800/50 px-3 py-2">
+      <div className="flex flex-wrap gap-1">
+        {nodeTemplates.map((template) => {
+          const Icon = template.icon;
+          return (
+            <button
+              key={template.id}
+              onClick={() => handleAddNode(template)}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-slate-800 transition-colors group"
+              title={template.label}
+            >
+              <Icon className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 transition-colors" />
+              <span className="text-[10px] text-slate-500 group-hover:text-slate-300 transition-colors">{template.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

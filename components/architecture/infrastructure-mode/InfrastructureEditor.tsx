@@ -3,20 +3,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { useArchitectureStore } from '@/store/architectureStore';
 import ReactFlowCanvas from './ReactFlowCanvas';
-import NodeSidebar from './NodeSidebar';
 import ExportModal from '../ExportModal';
 import {
   parseInfrastructureCode,
   generateNodesAndEdges,
   DEFAULT_INFRASTRUCTURE_CODE,
 } from '@/lib/architecture/infrastructureCodeGenerator';
-import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight, X } from 'lucide-react';
+import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight, X, Shapes } from 'lucide-react';
 import { applyElkLayout } from '@/lib/architecture/elkLayout';
+import NodeSidebarDropdown from './NodeSidebar';
 
 export default function InfrastructureEditor() {
   const { diagram, setNodes, setEdges } = useArchitectureStore();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showIcons, setShowIcons] = useState(false);
   const [code, setCode] = useState(DEFAULT_INFRASTRUCTURE_CODE);
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
   const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('horizontal');
@@ -182,87 +183,105 @@ connections:
 
   return (
     <div className="h-full flex relative">
-      {/* Always-visible icon sidebar */}
-      <NodeSidebar />
-
       {/* Main Canvas */}
       <div className="flex-1 flex flex-col bg-slate-950">
-        {/* Compact Icon-Only Toolbar */}
+        {/* Toolbar */}
         <div className="bg-slate-900/60 px-3 py-1.5 border-b border-slate-800/50">
-          <div className="flex items-center justify-end gap-0.5">
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-slate-800/50 p-0.5 rounded">
+          <div className="flex items-center justify-between">
+            {/* Left — Icons toggle */}
+            <button
+              onClick={() => setShowIcons(!showIcons)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                showIcons
+                  ? 'bg-slate-700 text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <Shapes className="w-3.5 h-3.5" />
+              Icons
+            </button>
+
+            {/* Right — actions */}
+            <div className="flex items-center gap-0.5">
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-slate-800/50 p-0.5 rounded">
+                <button
+                  onClick={() => setViewMode('visual')}
+                  className={`p-1.5 rounded transition-colors ${
+                    viewMode === 'visual'
+                      ? 'bg-slate-700 text-white'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                  title="Visual mode"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('code')}
+                  className={`p-1.5 rounded transition-colors ${
+                    viewMode === 'code'
+                      ? 'bg-slate-700 text-white'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                  title="Code editor"
+                >
+                  <Code className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="w-px h-4 bg-slate-700/50 mx-1" />
+
+              {/* Layout */}
               <button
-                onClick={() => setViewMode('visual')}
-                className={`p-1.5 rounded transition-colors ${
-                  viewMode === 'visual'
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-500 hover:text-slate-300'
-                }`}
-                title="Visual mode"
+                onClick={handleLayoutChange}
+                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+                title={`Auto-layout: ${layoutDirection}`}
               >
-                <Eye className="w-3.5 h-3.5" />
+                {layoutDirection === 'horizontal' ? (
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                ) : (
+                  <ArrowDownUp className="w-3.5 h-3.5" />
+                )}
+              </button>
+
+              {selectedNodeId && (
+                <>
+                  <div className="w-px h-4 bg-slate-700/50 mx-1" />
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="p-1.5 rounded text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors"
+                    title="Delete selected"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+
+              <div className="w-px h-4 bg-slate-700/50 mx-1" />
+
+              {/* Export */}
+              <button
+                onClick={handleExportJSON}
+                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+                title="Export JSON"
+              >
+                <FileCode className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={() => setViewMode('code')}
-                className={`p-1.5 rounded transition-colors ${
-                  viewMode === 'code'
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-500 hover:text-slate-300'
-                }`}
-                title="Code editor"
+                onClick={() => setShowExportModal(true)}
+                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+                title="Export image"
               >
-                <Code className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5" />
               </button>
             </div>
-
-            <div className="w-px h-4 bg-slate-700/50 mx-1" />
-
-            {/* Layout */}
-            <button
-              onClick={handleLayoutChange}
-              className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
-              title={`Auto-layout: ${layoutDirection}`}
-            >
-              {layoutDirection === 'horizontal' ? (
-                <ArrowLeftRight className="w-3.5 h-3.5" />
-              ) : (
-                <ArrowDownUp className="w-3.5 h-3.5" />
-              )}
-            </button>
-
-            {selectedNodeId && (
-              <>
-                <div className="w-px h-4 bg-slate-700/50 mx-1" />
-                <button
-                  onClick={handleDeleteSelected}
-                  className="p-1.5 rounded text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors"
-                  title="Delete selected"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </>
-            )}
-
-            <div className="w-px h-4 bg-slate-700/50 mx-1" />
-
-            {/* Export */}
-            <button
-              onClick={handleExportJSON}
-              className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
-              title="Export JSON"
-            >
-              <FileCode className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setShowExportModal(true)}
-              className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
-              title="Export image"
-            >
-              <Download className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
+
+        {/* Icons dropdown panel */}
+        {showIcons && (
+          <NodeSidebarDropdown onClose={() => setShowIcons(false)} />
+        )}
 
         {/* Canvas */}
         <div className="flex-1" ref={canvasRef}>

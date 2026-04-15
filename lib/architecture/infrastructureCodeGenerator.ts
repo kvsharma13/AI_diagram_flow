@@ -341,7 +341,7 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
       data: {
         label: group.name,
         borderColor: group.color,
-        bgColor: 'rgba(30, 41, 59, 0.3)',
+        bgColor: 'transparent',
         width: group.size.width + 'px',
         height: group.size.height + 'px',
       },
