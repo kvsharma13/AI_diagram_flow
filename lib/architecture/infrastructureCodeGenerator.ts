@@ -29,71 +29,69 @@ export interface InfrastructureConnection {
   from: string;
   to: string;
   animated?: boolean;
+  label?: string;
 }
 
-export const DEFAULT_INFRASTRUCTURE_CODE = `# Clean Architecture - Horizontal Swimlanes
-# Professional diagram with proper spacing
+export const DEFAULT_INFRASTRUCTURE_CODE = `# Clean Architecture
+# Groups, nodes, connections with edge labels
 
 groups:
-  # Horizontal swimlanes with more height
   - id: client-layer
-    name: CLIENT LAYER
+    name: Clients
     color: "#3b82f6"
     position: { x: 50, y: 50 }
-    size: { width: 1400, height: 160 }
+    size: { width: 900, height: 120 }
 
   - id: api-layer
-    name: API GATEWAY LAYER
+    name: API Layer
     color: "#8b5cf6"
-    position: { x: 50, y: 240 }
-    size: { width: 1400, height: 160 }
+    position: { x: 50, y: 200 }
+    size: { width: 900, height: 120 }
 
   - id: service-layer
-    name: SERVICE LAYER
+    name: Services
     color: "#ec4899"
-    position: { x: 50, y: 430 }
-    size: { width: 1400, height: 160 }
+    position: { x: 50, y: 360 }
+    size: { width: 1100, height: 120 }
 
   - id: data-layer
-    name: DATA LAYER
+    name: Data
     color: "#10b981"
-    position: { x: 50, y: 620 }
-    size: { width: 1400, height: 160 }
+    position: { x: 50, y: 520 }
+    size: { width: 1100, height: 120 }
 
 nodes:
-  # Client Layer - centered vertically in group
   - id: web-app
     label: Web App
     type: server
     icon: globe
     iconColor: "#60a5fa"
     group: client-layer
-    position: { x: 200, y: 90 }
+    position: { x: 150, y: 80 }
 
   - id: mobile-app
     label: Mobile App
     type: server
-    icon: globe
+    icon: smartphone
     iconColor: "#60a5fa"
     group: client-layer
-    position: { x: 500, y: 90 }
+    position: { x: 450, y: 80 }
 
   - id: admin-panel
     label: Admin Panel
     type: server
-    icon: globe
+    icon: monitor
     iconColor: "#60a5fa"
     group: client-layer
-    position: { x: 800, y: 90 }
+    position: { x: 700, y: 80 }
 
-  # API Layer - centered vertically in group
   - id: load-balancer
     label: Load Balancer
-    type: load-balancer
+    type: cloud
     icon: cloud
     iconColor: "#a78bfa"
     group: api-layer
-    position: { x: 200, y: 280 }
+    position: { x: 150, y: 230 }
 
   - id: api-gateway
     label: API Gateway
@@ -101,65 +99,63 @@ nodes:
     icon: globe
     iconColor: "#a78bfa"
     group: api-layer
-    position: { x: 600, y: 280 }
+    position: { x: 450, y: 230 }
 
   - id: auth-service
     label: Auth Service
     type: server
-    icon: server
+    icon: lock
     iconColor: "#a78bfa"
     group: api-layer
-    position: { x: 1000, y: 280 }
+    position: { x: 700, y: 230 }
 
-  # Service Layer - centered vertically in group
   - id: user-service
     label: User Service
     type: server
-    icon: server
+    icon: users
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 150, y: 470 }
+    position: { x: 100, y: 390 }
 
   - id: product-service
     label: Product Service
     type: server
-    icon: server
+    icon: box
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 450, y: 470 }
+    position: { x: 330, y: 390 }
 
   - id: order-service
     label: Order Service
     type: server
-    icon: server
+    icon: clipboard
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 750, y: 470 }
+    position: { x: 560, y: 390 }
 
   - id: payment-service
     label: Payment Service
     type: server
-    icon: server
+    icon: credit-card
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 1050, y: 470 }
+    position: { x: 790, y: 390 }
 
   - id: notification
-    label: Notification
+    label: Notifications
     type: server
-    icon: server
+    icon: bell
     iconColor: "#f472b6"
     group: service-layer
-    position: { x: 1350, y: 470 }
+    position: { x: 1020, y: 390 }
 
-  # Data Layer - centered vertically in group
   - id: postgres
     label: PostgreSQL
     type: database
     icon: database
     iconColor: "#34d399"
     group: data-layer
-    position: { x: 200, y: 660 }
+    position: { x: 150, y: 555 }
 
   - id: mongodb
     label: MongoDB
@@ -167,7 +163,7 @@ nodes:
     icon: database
     iconColor: "#34d399"
     group: data-layer
-    position: { x: 550, y: 660 }
+    position: { x: 420, y: 555 }
 
   - id: redis
     label: Redis Cache
@@ -175,7 +171,7 @@ nodes:
     icon: database
     iconColor: "#34d399"
     group: data-layer
-    position: { x: 900, y: 660 }
+    position: { x: 700, y: 555 }
 
   - id: s3
     label: S3 Storage
@@ -183,22 +179,24 @@ nodes:
     icon: s3
     iconColor: "#34d399"
     group: data-layer
-    position: { x: 1250, y: 660 }
+    position: { x: 960, y: 555 }
 
 connections:
-  # Client to API
   - from: web-app
     to: load-balancer
+    label: HTTPS
   - from: mobile-app
     to: load-balancer
+    label: HTTPS
   - from: admin-panel
     to: api-gateway
+    label: REST
 
-  # API to Services
   - from: load-balancer
     to: api-gateway
   - from: api-gateway
     to: auth-service
+    label: JWT
   - from: api-gateway
     to: user-service
   - from: api-gateway
@@ -206,7 +204,6 @@ connections:
   - from: api-gateway
     to: order-service
 
-  # Services to Data
   - from: user-service
     to: postgres
   - from: product-service
@@ -217,8 +214,10 @@ connections:
     to: postgres
   - from: user-service
     to: redis
+    label: cache
   - from: product-service
     to: redis
+    label: cache
   - from: notification
     to: s3
 `;
@@ -326,15 +325,19 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
   // Create a map of group positions for calculating relative positions
   const groupPositions = new Map<string, { x: number; y: number }>();
 
-  // Create group nodes
-  infraCode.groups.forEach((group) => {
+  // Create group nodes — parent groups first, then child groups
+  const parentGroups = infraCode.groups.filter((g) => !g.parentGroup);
+  const childGroups = infraCode.groups.filter((g) => g.parentGroup);
+
+  for (const group of [...parentGroups, ...childGroups]) {
     groupPositions.set(group.id, group.position);
 
-    nodes.push({
+    let position = group.position;
+    const groupNode: Node = {
       id: group.id,
       label: group.name,
       type: 'group',
-      position: group.position,
+      position,
       data: {
         label: group.name,
         borderColor: group.color,
@@ -342,8 +345,20 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
         width: group.size.width + 'px',
         height: group.size.height + 'px',
       },
-    });
-  });
+    };
+
+    // Nested group — set parent and calculate relative position
+    if (group.parentGroup && groupPositions.has(group.parentGroup)) {
+      const parentPos = groupPositions.get(group.parentGroup)!;
+      groupNode.position = {
+        x: position.x - parentPos.x,
+        y: position.y - parentPos.y,
+      };
+      groupNode.layerId = group.parentGroup;
+    }
+
+    nodes.push(groupNode);
+  }
 
   // Create service nodes
   infraCode.nodes.forEach((node) => {
@@ -381,12 +396,16 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
 
   // Create edges
   infraCode.connections.forEach((conn, index) => {
-    edges.push({
+    const edge: Edge = {
       id: `e${index + 1}`,
       source: conn.from,
       target: conn.to,
       animated: conn.animated || false,
-    });
+    };
+    if (conn.label) {
+      edge.label = conn.label;
+    }
+    edges.push(edge);
   });
 
   return { nodes, edges };

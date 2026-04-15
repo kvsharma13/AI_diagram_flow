@@ -23,6 +23,7 @@ export interface Edge {
   source: string;
   target: string;
   animated?: boolean;
+  label?: string;
   style?: any;
 }
 

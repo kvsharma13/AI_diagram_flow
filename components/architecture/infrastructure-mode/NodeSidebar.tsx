@@ -1,7 +1,10 @@
 'use client';
 
 import { useArchitectureStore } from '@/store/architectureStore';
-import { Server, Database, Cloud, Zap, Globe, HardDrive, Workflow, Cpu, Activity } from 'lucide-react';
+import {
+  Server, Database, Cloud, Zap, Globe, HardDrive, Workflow, Cpu, Activity,
+  Lock, Shield, Users, Monitor, Network, CreditCard, Mail, Box,
+} from 'lucide-react';
 
 const nodeTemplates = [
   { id: 'ec2', label: 'EC2', icon: Server, color: '#f97316' },
@@ -14,6 +17,14 @@ const nodeTemplates = [
   { id: 'worker', label: 'Worker', icon: Cpu, color: '#f97316' },
   { id: 'analytics', label: 'Analytics', icon: Activity, color: '#8b5cf6' },
   { id: 'load-balancer', label: 'Load Balancer', icon: Cloud, color: '#10b981' },
+  { id: 'auth', label: 'Auth', icon: Lock, color: '#eab308' },
+  { id: 'shield', label: 'Firewall', icon: Shield, color: '#06b6d4' },
+  { id: 'users', label: 'Users', icon: Users, color: '#8b5cf6' },
+  { id: 'monitor', label: 'Monitor', icon: Monitor, color: '#14b8a6' },
+  { id: 'network', label: 'Network', icon: Network, color: '#6366f1' },
+  { id: 'credit-card', label: 'Payment', icon: CreditCard, color: '#f43f5e' },
+  { id: 'mail', label: 'Email', icon: Mail, color: '#0ea5e9' },
+  { id: 'box', label: 'Container', icon: Box, color: '#a855f7' },
 ];
 
 export default function NodeSidebar() {
@@ -34,39 +45,24 @@ export default function NodeSidebar() {
   };
 
   return (
-    <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
-      <div className="px-4 py-3 border-b border-gray-700">
-        <h3 className="text-white font-semibold text-sm">Components</h3>
-        <p className="text-gray-400 text-xs mt-1">Click to add to canvas</p>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-2">
-          {nodeTemplates.map((template) => {
-            const Icon = template.icon;
-            return (
-              <button
-                key={template.id}
-                onClick={() => handleAddNode(template)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-900 hover:bg-gray-700 transition-colors text-left"
-              >
-                <div
-                  className="p-2 rounded"
-                  style={{ backgroundColor: template.color }}
-                >
-                  <Icon className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white text-sm font-medium">{template.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="px-4 py-3 border-t border-gray-700 text-xs text-gray-400">
-        <p>💡 Drag nodes to position</p>
-        <p>🔗 Connect nodes by dragging</p>
-      </div>
+    <div className="w-14 bg-slate-900/80 border-r border-slate-800/50 flex flex-col items-center py-2 gap-1 overflow-y-auto">
+      {nodeTemplates.map((template) => {
+        const Icon = template.icon;
+        return (
+          <button
+            key={template.id}
+            onClick={() => handleAddNode(template)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-800 transition-colors group relative"
+            title={template.label}
+          >
+            <Icon className="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" style={{ color: undefined }} />
+            {/* Tooltip */}
+            <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-slate-200 text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
+              {template.label}
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

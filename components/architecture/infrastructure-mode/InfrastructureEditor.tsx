@@ -10,18 +10,16 @@ import {
   generateNodesAndEdges,
   DEFAULT_INFRASTRUCTURE_CODE,
 } from '@/lib/architecture/infrastructureCodeGenerator';
-import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight, GripVertical } from 'lucide-react';
+import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight, X } from 'lucide-react';
+import { applyElkLayout } from '@/lib/architecture/elkLayout';
 
 export default function InfrastructureEditor() {
   const { diagram, setNodes, setEdges } = useArchitectureStore();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [showCodePanel, setShowCodePanel] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [code, setCode] = useState(DEFAULT_INFRASTRUCTURE_CODE);
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
   const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('horizontal');
-  const [codePanelWidth, setCodePanelWidth] = useState(25); // percentage
-  const [isResizing, setIsResizing] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Load default template
@@ -71,100 +69,23 @@ export default function InfrastructureEditor() {
     }
   };
 
-  const handleLayoutChange = () => {
+  const handleLayoutChange = async () => {
     const newDirection = layoutDirection === 'horizontal' ? 'vertical' : 'horizontal';
     setLayoutDirection(newDirection);
 
-    // Apply layout to nodes
+    // Apply ELK layout to nodes
     if (diagram && diagram.nodes.length > 0) {
-      const layoutedNodes = applyDagreLayout(
-        diagram.nodes,
-        diagram.edges,
-        newDirection
-      );
-      setNodes(layoutedNodes);
-    }
-  };
-
-  const applyDagreLayout = (
-    nodes: any[],
-    edges: any[],
-    direction: 'horizontal' | 'vertical'
-  ) => {
-    const dagre = require('dagre');
-    const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setDefaultEdgeLabel(() => ({}));
-
-    const nodeWidth = 200;
-    const nodeHeight = 150;
-
-    dagreGraph.setGraph({
-      rankdir: direction === 'horizontal' ? 'LR' : 'TB',
-      nodesep: 100,
-      ranksep: 150,
-    });
-
-    // Separate group and service nodes
-    const groupNodes = nodes.filter((node) => node.type === 'group');
-    const serviceNodes = nodes.filter((node) => node.type !== 'group');
-
-    // Add only service nodes to dagre for layout
-    serviceNodes.forEach((node) => {
-      dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-    });
-
-    // Add edges
-    edges.forEach((edge) => {
-      dagreGraph.setEdge(edge.source, edge.target);
-    });
-
-    dagre.layout(dagreGraph);
-
-    // Update positions for service nodes only
-    const layoutedServiceNodes = serviceNodes.map((node) => {
-      const nodeWithPosition = dagreGraph.node(node.id);
-      if (nodeWithPosition) {
-        return {
-          ...node,
-          position: {
-            x: nodeWithPosition.x - nodeWidth / 2,
-            y: nodeWithPosition.y - nodeHeight / 2,
-          },
-        };
+      try {
+        const result = await applyElkLayout(
+          diagram.nodes,
+          diagram.edges,
+          newDirection
+        );
+        setNodes(result.nodes);
+      } catch (error) {
+        console.error('ELK layout failed:', error);
       }
-      return node;
-    });
-
-    // Combine group nodes (unchanged) with layouted service nodes
-    return [...groupNodes, ...layoutedServiceNodes];
-  };
-
-  // Handle panel resizing
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-      const newWidth = (e.clientX / window.innerWidth) * 100;
-      if (newWidth > 15 && newWidth < 60) {
-        setCodePanelWidth(newWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
     }
-  }, [isResizing]);
-
-  const handleMouseDown = () => {
-    setIsResizing(true);
   };
 
   const loadTemplate = (template: string) => {
@@ -260,148 +181,86 @@ connections:
   };
 
   return (
-    <div className="h-full flex">
-      {/* Sidebar or Code Panel */}
-      {viewMode === 'visual' ? (
-        <NodeSidebar />
-      ) : (
-        <div
-          className="flex flex-col bg-gray-900 border-r border-gray-700 relative"
-          style={{ width: `${codePanelWidth}%` }}
-        >
-          {/* Code Editor Toolbar */}
-          <div className="bg-gray-800 px-4 py-3 border-b border-gray-700">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <FileCode className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                  <span className="text-white font-semibold text-sm truncate">Infrastructure Code</span>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => loadTemplate('aws')}
-                    className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-medium"
-                  >
-                    Template
-                  </button>
-                  <button
-                    onClick={handleGenerateFromCode}
-                    className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded text-xs font-medium"
-                  >
-                    <Play className="w-3 h-3" />
-                    Generate
-                  </button>
-                </div>
-              </div>
-              <p className="text-xs text-gray-400">
-                Define groups, nodes, and connections. Click Generate to create diagram.
-              </p>
-            </div>
-          </div>
-
-          {/* Code Editor */}
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="flex-1 w-full p-6 font-mono text-sm resize-none focus:outline-none bg-gray-900 text-gray-100"
-            style={{ lineHeight: '1.6', tabSize: 2 }}
-            spellCheck={false}
-          />
-
-          {/* Footer */}
-          <div className="px-4 py-2 bg-gray-800 border-t border-gray-700 text-gray-400 text-xs">
-            <p>💡 Use simple YAML-like syntax to define your infrastructure</p>
-          </div>
-
-          {/* Resize Handle */}
-          <div
-            onMouseDown={handleMouseDown}
-            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-purple-500 transition-colors group"
-            style={{ cursor: 'col-resize' }}
-          >
-            <div className="absolute top-1/2 -translate-y-1/2 -right-2 bg-gray-700 group-hover:bg-purple-500 rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <GripVertical className="w-3 h-3 text-white" />
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="h-full flex relative">
+      {/* Always-visible icon sidebar */}
+      <NodeSidebar />
 
       {/* Main Canvas */}
-      <div className="flex-1 flex flex-col bg-gray-950">
-        {/* Compact Toolbar */}
-        <div className="bg-gray-800/50 px-4 py-2 border-b border-gray-700/50">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-300 font-medium">Cloud infrastructure deployment view</span>
-            <div className="flex items-center gap-1.5">
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-gray-900/50 p-0.5 rounded">
-                <button
-                  onClick={() => setViewMode('visual')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                    viewMode === 'visual'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <Eye className="w-3 h-3" />
-                  Visual
-                </button>
-                <button
-                  onClick={() => setViewMode('code')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                    viewMode === 'code'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <Code className="w-3 h-3" />
-                  Code
-                </button>
-              </div>
-
-              {/* Layout Direction Toggle */}
+      <div className="flex-1 flex flex-col bg-slate-950">
+        {/* Compact Icon-Only Toolbar */}
+        <div className="bg-slate-900/60 px-3 py-1.5 border-b border-slate-800/50">
+          <div className="flex items-center justify-end gap-0.5">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-slate-800/50 p-0.5 rounded">
               <button
-                onClick={handleLayoutChange}
-                className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded text-xs font-medium"
-                title="Toggle layout direction and auto-arrange nodes"
+                onClick={() => setViewMode('visual')}
+                className={`p-1.5 rounded transition-colors ${
+                  viewMode === 'visual'
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+                title="Visual mode"
               >
-                {layoutDirection === 'horizontal' ? (
-                  <>
-                    <ArrowLeftRight className="w-3 h-3" />
-                    Horizontal
-                  </>
-                ) : (
-                  <>
-                    <ArrowDownUp className="w-3 h-3" />
-                    Vertical
-                  </>
-                )}
-              </button>
-
-              {selectedNodeId && (
-                <button
-                  onClick={handleDeleteSelected}
-                  className="flex items-center gap-1 px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  Delete
-                </button>
-              )}
-              <button
-                onClick={handleExportJSON}
-                className="flex items-center gap-1 px-2.5 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs font-medium"
-              >
-                <Code className="w-3 h-3" />
-                JSON
+                <Eye className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={() => setShowExportModal(true)}
-                className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded text-xs font-medium"
+                onClick={() => setViewMode('code')}
+                className={`p-1.5 rounded transition-colors ${
+                  viewMode === 'code'
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+                title="Code editor"
               >
-                <Download className="w-3 h-3" />
-                Export
+                <Code className="w-3.5 h-3.5" />
               </button>
             </div>
+
+            <div className="w-px h-4 bg-slate-700/50 mx-1" />
+
+            {/* Layout */}
+            <button
+              onClick={handleLayoutChange}
+              className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+              title={`Auto-layout: ${layoutDirection}`}
+            >
+              {layoutDirection === 'horizontal' ? (
+                <ArrowLeftRight className="w-3.5 h-3.5" />
+              ) : (
+                <ArrowDownUp className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {selectedNodeId && (
+              <>
+                <div className="w-px h-4 bg-slate-700/50 mx-1" />
+                <button
+                  onClick={handleDeleteSelected}
+                  className="p-1.5 rounded text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors"
+                  title="Delete selected"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+
+            <div className="w-px h-4 bg-slate-700/50 mx-1" />
+
+            {/* Export */}
+            <button
+              onClick={handleExportJSON}
+              className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+              title="Export JSON"
+            >
+              <FileCode className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+              title="Export image"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
@@ -410,8 +269,58 @@ connections:
           <ReactFlowCanvas
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
-            showCodePanel={showCodePanel}
+            showCodePanel={viewMode === 'code'}
             onDeleteNode={handleDeleteSelected}
+          />
+        </div>
+      </div>
+
+      {/* Slide-over Code Panel */}
+      <div
+        className="absolute top-0 right-0 h-full z-40 flex transition-transform duration-300 ease-in-out"
+        style={{
+          width: '480px',
+          transform: viewMode === 'code' ? 'translateX(0)' : 'translateX(100%)',
+        }}
+      >
+        <div className="flex-1 flex flex-col bg-slate-900 border-l border-slate-800/50 shadow-2xl">
+          {/* Code Editor Header */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/50">
+            <div className="flex items-center gap-2">
+              <FileCode className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-slate-300 font-medium text-xs">Infrastructure Code</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => loadTemplate('aws')}
+                className="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded text-[10px] font-medium transition-colors"
+              >
+                Template
+              </button>
+              <button
+                onClick={handleGenerateFromCode}
+                className="flex items-center gap-1 px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-[10px] font-medium transition-colors"
+              >
+                <Play className="w-3 h-3" />
+                Generate
+              </button>
+              <button
+                onClick={() => setViewMode('visual')}
+                className="p-1 text-slate-500 hover:text-white hover:bg-slate-800 rounded transition-colors"
+                title="Close"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Code Editor */}
+          <textarea
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className="flex-1 w-full p-4 font-mono text-xs resize-none focus:outline-none bg-slate-900 text-slate-300"
+            style={{ lineHeight: '1.6', tabSize: 2 }}
+            spellCheck={false}
           />
         </div>
       </div>

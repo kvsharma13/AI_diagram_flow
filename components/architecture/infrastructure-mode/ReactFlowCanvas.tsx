@@ -18,9 +18,15 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
-import { Server, Database, Workflow, Cpu, HardDrive, Globe, Zap, Activity, Cloud } from 'lucide-react';
+import { SmartEdge } from '@/lib/architecture/smartEdge';
+import {
+  Server, Database, Workflow, Cpu, HardDrive, Globe, Zap, Activity, Cloud,
+  Lock, Shield, Bell, Users, Monitor, Smartphone, CreditCard, BarChart3,
+  FileText, Key, Mail, Search, GitBranch, Layers, Network, Settings,
+  Box, Eye, Clipboard, Repeat, Triangle,
+} from 'lucide-react';
 
-// Custom Node Component - Spacious and clean
+// Custom Node Component - Compact eraser.io style
 const ServiceNode = ({ data, selected }: any) => {
   const iconMap: Record<string, any> = {
     'api-gateway': Globe,
@@ -36,64 +42,145 @@ const ServiceNode = ({ data, selected }: any) => {
     cloud: Cloud,
     'load-balancer': Cloud,
     globe: Globe,
-    auth: Server,
+    auth: Lock,
+    lock: Lock,
+    shield: Shield,
+    bell: Bell,
+    users: Users,
+    monitor: Monitor,
+    smartphone: Smartphone,
+    'credit-card': CreditCard,
+    'bar-chart': BarChart3,
+    'file-text': FileText,
+    key: Key,
+    mail: Mail,
+    search: Search,
+    'git-branch': GitBranch,
+    layers: Layers,
+    network: Network,
+    settings: Settings,
+    box: Box,
+    eye: Eye,
+    clipboard: Clipboard,
+    repeat: Repeat,
+    triangle: Triangle,
   };
 
   const Icon = iconMap[data.icon] || Server;
 
   return (
     <div
-      className={`relative flex items-center justify-center px-6 py-4 rounded-xl border-2 transition-all ${
-        selected ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-gray-950' : ''
+      className={`group relative flex items-center px-3 py-2 rounded-lg border transition-all ${
+        selected ? 'ring-1 ring-slate-400 ring-offset-1 ring-offset-gray-950' : ''
       }`}
       style={{
-        backgroundColor: data.bgColor || '#374151',
-        borderColor: data.borderColor || '#4b5563',
-        minWidth: '220px',
-        minHeight: '80px',
+        backgroundColor: 'rgba(30,41,59,0.8)',
+        borderColor: selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)',
+        borderWidth: '1px',
+        minWidth: '160px',
+        minHeight: '56px',
         boxShadow: selected
-          ? '0 8px 20px rgba(168, 85, 247, 0.3)'
-          : '0 2px 8px rgba(0, 0, 0, 0.4)',
+          ? '0 2px 8px rgba(100,116,139,0.2)'
+          : '0 1px 3px rgba(0,0,0,0.3)',
       }}
     >
-      {/* Connection Handles - Subtle purple tint */}
-      <Handle type="target" position={Position.Top} className="w-2.5 h-2.5 !bg-purple-400 border-none opacity-60 hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Bottom} className="w-2.5 h-2.5 !bg-purple-400 border-none opacity-60 hover:opacity-100 transition-opacity" />
-      <Handle type="target" position={Position.Left} className="w-2.5 h-2.5 !bg-purple-400 border-none opacity-60 hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Right} className="w-2.5 h-2.5 !bg-purple-400 border-none opacity-60 hover:opacity-100 transition-opacity" />
+      {/* Handles - hidden by default, show on hover */}
+      <Handle type="target" position={Position.Top} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="source" position={Position.Bottom} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="target" position={Position.Left} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="source" position={Position.Right} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
 
-      {/* Spacious layout with icon and text */}
-      <div className="flex items-center gap-3">
-        <Icon className="w-6 h-6 flex-shrink-0" style={{ color: data.iconColor || '#a78bfa' }} />
-        <div className="text-white font-semibold text-sm text-center">{data.label}</div>
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: data.iconColor || '#94a3b8' }} />
+        <div className="text-slate-200 font-medium text-xs">{data.label}</div>
       </div>
     </div>
   );
 };
 
-// Group Node Component - Swimlane style with proper spacing
+// Group Node Component - Subtle border with left accent
 const GroupNode = ({ data }: any) => {
   return (
     <div
-      className="rounded-lg border-2 relative"
+      className="rounded relative"
       style={{
-        backgroundColor: data.bgColor || 'rgba(55, 65, 81, 0.15)',
-        borderColor: data.borderColor || '#4b5563',
-        borderStyle: 'dashed',
+        backgroundColor: 'transparent',
+        border: '1px solid rgba(107,114,128,0.4)',
         minWidth: data.width || '400px',
         minHeight: data.height || '300px',
-        padding: '40px 20px 20px 20px', // More top padding for nodes
+        padding: '28px 16px 16px 16px',
       }}
     >
-      {/* Label badge in top-left corner */}
+      {/* Colored left accent bar */}
       <div
-        className="absolute top-3 left-3 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
-        style={{
-          backgroundColor: data.borderColor || '#4b5563',
-          color: '#ffffff',
-        }}
+        className="absolute top-0 left-0 w-[3px] h-full rounded-l"
+        style={{ backgroundColor: data.borderColor || '#6b7280' }}
+      />
+      {/* Plain text label */}
+      <div
+        className="absolute top-2 left-3 text-[10px] font-semibold uppercase tracking-wider"
+        style={{ color: 'rgba(156,163,175,0.8)' }}
       >
         {data.label}
+      </div>
+    </div>
+  );
+};
+
+// Database Node - Cylinder shape
+const DatabaseNode = ({ data, selected }: any) => {
+  const iconMap: Record<string, any> = { database: Database, redis: Database };
+  const Icon = iconMap[data.icon] || Database;
+
+  return (
+    <div className="group relative flex flex-col items-center" style={{ minWidth: '120px' }}>
+      <Handle type="target" position={Position.Top} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="source" position={Position.Bottom} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="target" position={Position.Left} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="source" position={Position.Right} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <svg width="120" height="64" viewBox="0 0 120 64" fill="none">
+        {/* Cylinder body */}
+        <path
+          d="M 10 16 L 10 48 Q 10 58 60 58 Q 110 58 110 48 L 110 16"
+          fill="rgba(30,41,59,0.8)"
+          stroke={selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)'}
+          strokeWidth="1"
+        />
+        {/* Bottom ellipse */}
+        <ellipse cx="60" cy="48" rx="50" ry="10" fill="rgba(30,41,59,0.8)" stroke={selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)'} strokeWidth="1" />
+        {/* Top ellipse */}
+        <ellipse cx="60" cy="16" rx="50" ry="10" fill="rgba(30,41,59,0.9)" stroke={selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)'} strokeWidth="1" />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center gap-1.5 pt-1">
+        <Icon className="w-3.5 h-3.5" style={{ color: data.iconColor || '#94a3b8' }} />
+        <span className="text-slate-200 font-medium text-[10px]">{data.label}</span>
+      </div>
+    </div>
+  );
+};
+
+// Cloud Node - Cloud shape
+const CloudNode = ({ data, selected }: any) => {
+  const iconMap: Record<string, any> = { cloud: Cloud, 'load-balancer': Cloud };
+  const Icon = iconMap[data.icon] || Cloud;
+
+  return (
+    <div className="group relative flex flex-col items-center" style={{ minWidth: '140px' }}>
+      <Handle type="target" position={Position.Top} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="source" position={Position.Bottom} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="target" position={Position.Left} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <Handle type="source" position={Position.Right} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      <svg width="140" height="70" viewBox="0 0 140 70" fill="none">
+        <path
+          d="M 35 55 C 10 55 5 40 20 30 C 10 15 30 5 50 12 C 60 0 90 0 100 12 C 120 5 135 20 125 35 C 140 45 130 60 110 55 Z"
+          fill="rgba(30,41,59,0.8)"
+          stroke={selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)'}
+          strokeWidth="1"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center gap-1.5">
+        <Icon className="w-3.5 h-3.5" style={{ color: data.iconColor || '#94a3b8' }} />
+        <span className="text-slate-200 font-medium text-[10px]">{data.label}</span>
       </div>
     </div>
   );
@@ -102,6 +189,12 @@ const GroupNode = ({ data }: any) => {
 const nodeTypes = {
   service: ServiceNode,
   group: GroupNode,
+  database: DatabaseNode,
+  cloud: CloudNode,
+};
+
+const edgeTypes = {
+  smart: SmartEdge,
 };
 
 interface Props {
@@ -127,33 +220,52 @@ export default function ReactFlowCanvas({
     rfNodes.filter((n) => n.type === 'group').map((n) => n.id)
   );
 
-  // Then convert nodes, validating parent relationships
-  const convertedNodes: RFNode[] = rfNodes.map((node) => {
-    const nodeData = node as any;
-    const rfNode: RFNode = {
-      id: node.id,
-      type: node.type === 'group' ? 'group' : 'service',
-      position: node.position,
-      data: { ...nodeData.data, label: nodeData.label, icon: nodeData.icon || node.type },
-    };
+  // Convert nodes, validating parent relationships
+  const convertedNodes: RFNode[] = rfNodes
+    .map((node) => {
+      const nodeData = node as any;
+      // Map node type to ReactFlow node type
+      const dbTypes = new Set(['database', 'redis', 'postgres', 'mongodb']);
+      const cloudTypes = new Set(['cloud', 'load-balancer']);
+      const nodeType = node.type || 'service';
+      let rfType = 'service';
+      if (nodeType === 'group') rfType = 'group';
+      else if (dbTypes.has(nodeType)) rfType = 'database';
+      else if (cloudTypes.has(nodeType)) rfType = 'cloud';
 
-    // Handle parent-child relationships - only if parent exists
-    if (nodeData.layerId && validParentIds.has(nodeData.layerId)) {
-      rfNode.parentNode = nodeData.layerId;
-      rfNode.extent = 'parent' as const;
-    }
-
-    // Set dimensions for group nodes
-    if (node.type === 'group' && nodeData.data?.width && nodeData.data?.height) {
-      rfNode.style = {
-        width: parseInt(nodeData.data.width),
-        height: parseInt(nodeData.data.height),
-        zIndex: nodeData.layerId ? 1 : 0,
+      const rfNode: RFNode = {
+        id: node.id,
+        type: rfType,
+        position: node.position,
+        data: { ...nodeData.data, label: nodeData.label, icon: nodeData.icon || node.type },
       };
-    }
 
-    return rfNode;
-  });
+      // Handle parent-child relationships - only if parent exists
+      if (nodeData.layerId && validParentIds.has(nodeData.layerId)) {
+        rfNode.parentNode = nodeData.layerId;
+        rfNode.extent = 'parent' as const;
+      }
+
+      // Set dimensions for group nodes
+      if (node.type === 'group' && nodeData.data?.width && nodeData.data?.height) {
+        rfNode.style = {
+          width: parseInt(nodeData.data.width),
+          height: parseInt(nodeData.data.height),
+          zIndex: nodeData.layerId ? 1 : 0,
+        };
+      }
+
+      return rfNode;
+    })
+    // Sort: parent groups first, then child groups, then service nodes
+    .sort((a, b) => {
+      const order = (n: RFNode) => {
+        if (n.type === 'group' && !n.parentNode) return 0;
+        if (n.type === 'group' && n.parentNode) return 1;
+        return 2;
+      };
+      return order(a) - order(b);
+    });
 
   const rfEdges: RFEdge[] =
     diagram?.edges.map((edge) => ({
@@ -161,7 +273,14 @@ export default function ReactFlowCanvas({
       source: edge.source,
       target: edge.target,
       animated: edge.animated,
-      style: { stroke: '#a78bfa', strokeWidth: 2 },
+      style: { stroke: '#475569', strokeWidth: 1.5 },
+      ...(edge.label ? {
+        label: edge.label,
+        labelStyle: { fill: '#94a3b8', fontSize: 10, fontWeight: 500 },
+        labelBgStyle: { fill: 'rgba(15,23,42,0.8)', stroke: 'rgba(71,85,105,0.3)', strokeWidth: 1 },
+        labelBgPadding: [4, 6] as [number, number],
+        labelBgBorderRadius: 4,
+      } : {}),
     })) || [];
 
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
@@ -270,7 +389,7 @@ export default function ReactFlowCanvas({
       const newEdge = {
         ...connection,
         animated: true,
-        style: { stroke: '#a78bfa', strokeWidth: 2 },
+        style: { stroke: '#475569', strokeWidth: 1.5 },
       };
       setEdges((eds) => addEdge(newEdge, eds));
 
@@ -335,6 +454,7 @@ export default function ReactFlowCanvas({
       onNodeClick={handleNodeClick}
       onEdgeClick={handleEdgeClick}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       fitView
       deleteKeyCode={['Delete', 'Backspace']}
       multiSelectionKeyCode="Shift"
@@ -343,20 +463,21 @@ export default function ReactFlowCanvas({
       nodesConnectable={true}
       defaultEdgeOptions={{
         animated: false,
-        style: { stroke: '#6b7280', strokeWidth: 2 },
-        type: 'smoothstep',
+        style: { stroke: '#475569', strokeWidth: 1.5 },
+        type: 'smart',
       }}
-      connectionLineStyle={{ stroke: '#a78bfa', strokeWidth: 2 }}
+      connectionLineStyle={{ stroke: '#64748b', strokeWidth: 1.5 }}
       connectionLineType={ConnectionLineType.SmoothStep}
     >
-      <Background color="#374151" variant={BackgroundVariant.Dots} gap={20} size={1.5} />
-      <Controls showInteractive={false} className="!bg-gray-800 !border-gray-700 [&_button]:!border-gray-600 [&_button:hover]:!bg-purple-600" />
+      <Background color="rgba(71,85,105,0.3)" variant={BackgroundVariant.Dots} gap={24} size={0.8} />
+      <Controls showInteractive={false} className="!bg-slate-900/80 !border-slate-700/50 !rounded-lg !shadow-lg [&_button]:!border-slate-700/30 [&_button]:!bg-transparent [&_button:hover]:!bg-slate-700/50 [&_button_svg]:!fill-slate-400" />
       <MiniMap
-        nodeColor={(node) => node.type === 'group' ? '#4b5563' : '#a78bfa'}
-        maskColor="rgba(17, 24, 39, 0.8)"
+        nodeColor={(node) => node.type === 'group' ? 'rgba(71,85,105,0.4)' : 'rgba(148,163,184,0.6)'}
+        maskColor="rgba(15,23,42,0.85)"
         style={{
-          backgroundColor: '#1f2937',
-          border: '1px solid #374151',
+          backgroundColor: 'rgba(15,23,42,0.6)',
+          border: '1px solid rgba(51,65,85,0.4)',
+          borderRadius: '8px',
         }}
       />
     </ReactFlow>
