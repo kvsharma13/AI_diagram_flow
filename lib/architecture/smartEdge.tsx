@@ -295,6 +295,7 @@ export function SmartEdge({
           className="react-flow__edge-path"
           d={edgePath}
           markerEnd={markerEnd}
+          fill="none"
         />
         {label && (
           <>
