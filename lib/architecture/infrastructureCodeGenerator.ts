@@ -243,7 +243,7 @@ export function parseInfrastructureCode(code: string): InfrastructureCode {
       if (line.trim() === 'groups:') {
         currentSection = 'groups';
         continue;
-      } else if (line.trim() === 'nodes:') {
+      } else if (line.trim() === 'nodes:' || line.trim() === 'nodes_outside_groups:') {
         currentSection = 'nodes';
         continue;
       } else if (line.trim() === 'connections:') {
@@ -322,8 +322,29 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
-  // Create a map of group positions for calculating relative positions
+  // Create maps for group positions and sizes
   const groupPositions = new Map<string, { x: number; y: number }>();
+  const groupSizes = new Map<string, { width: number; height: number }>();
+
+  // Detect whether node positions are relative or absolute per group
+  // Try absolute-to-relative subtraction; if results are invalid (negative or out of bounds), positions are already relative
+  const groupPositionsAreAbsolute = new Map<string, boolean>();
+  for (const group of infraCode.groups) {
+    groupSizes.set(group.id, group.size);
+    const nodesInGroup = infraCode.nodes.filter((n) => n.group === group.id);
+    if (nodesInGroup.length === 0) {
+      groupPositionsAreAbsolute.set(group.id, true);
+      continue;
+    }
+    const allValidAfterSubtraction = nodesInGroup.every((n) => {
+      const pos = n.position || { x: 0, y: 0 };
+      const relX = pos.x - group.position.x;
+      const relY = pos.y - group.position.y;
+      return relX >= -20 && relY >= -20 &&
+        relX < group.size.width + 50 && relY < group.size.height + 50;
+    });
+    groupPositionsAreAbsolute.set(group.id, allValidAfterSubtraction);
+  }
 
   // Create group nodes — parent groups first, then child groups
   const parentGroups = infraCode.groups.filter((g) => !g.parentGroup);
@@ -366,17 +387,22 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
 
     // If node belongs to a group, calculate relative position
     if (node.group && groupPositions.has(node.group)) {
-      const groupPos = groupPositions.get(node.group)!;
-      position = {
-        x: position.x - groupPos.x,
-        y: position.y - groupPos.y,
-      };
+      const isAbsolute = groupPositionsAreAbsolute.get(node.group);
+      if (isAbsolute) {
+        // Positions are absolute — subtract group origin to make relative
+        const groupPos = groupPositions.get(node.group)!;
+        position = {
+          x: position.x - groupPos.x,
+          y: position.y - groupPos.y,
+        };
+      }
+      // If positions are already relative, use as-is
     }
 
     const reactFlowNode: Node = {
       id: node.id,
       label: node.label,
-      type: 'service',
+      type: node.type || 'service',
       position: position,
       data: {
         label: node.label,
