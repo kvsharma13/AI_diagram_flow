@@ -9,13 +9,22 @@ export default function MessageFlowEdge({
 
   return (
     <>
-      <path id={id} style={{ ...style, strokeWidth: 1.5, stroke: '#9ca3af', strokeDasharray: '8 4' }} className="react-flow__edge-path" d={edgePath}
-        markerEnd="url(#message-arrow)" />
       <defs>
         <marker id="message-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#9ca3af" strokeWidth="1.5" />
         </marker>
       </defs>
+      <path
+        id={id}
+        d={edgePath}
+        className="react-flow__edge-path"
+        fill="none"
+        stroke="#9ca3af"
+        strokeWidth={1.5}
+        strokeDasharray="8 4"
+        markerEnd="url(#message-arrow)"
+        style={style}
+      />
       {data?.label && (
         <EdgeLabelRenderer>
           <div

@@ -40,6 +40,30 @@ export default function BPMNExportModal({ isOpen, onClose, diagramRef, diagram, 
       if (!diagramRef.current) { alert('No diagram to export'); return; }
 
       const viewport = diagramRef.current.querySelector('.react-flow__viewport')?.parentElement as HTMLElement || diagramRef.current;
+
+      // Fix SVG edge paths before export: html-to-image loses inline styles on SVG paths,
+      // causing them to render as thick black blobs. Set attributes directly.
+      const edgePaths = viewport.querySelectorAll('.react-flow__edge-path');
+      const originalStyles: { el: Element; fill: string; stroke: string; strokeWidth: string }[] = [];
+      edgePaths.forEach((path) => {
+        const el = path as SVGPathElement;
+        originalStyles.push({
+          el,
+          fill: el.getAttribute('fill') || '',
+          stroke: el.getAttribute('stroke') || '',
+          strokeWidth: el.getAttribute('stroke-width') || '',
+        });
+        if (!el.getAttribute('fill') || el.getAttribute('fill') === 'none') {
+          el.setAttribute('fill', 'none');
+        }
+        if (!el.getAttribute('stroke')) {
+          el.setAttribute('stroke', '#6b7280');
+        }
+        if (!el.getAttribute('stroke-width')) {
+          el.setAttribute('stroke-width', '2');
+        }
+      });
+
       const options = {
         backgroundColor: '#ffffff',
         quality: format === 'jpg' ? 0.95 : 1.0,
@@ -57,6 +81,13 @@ export default function BPMNExportModal({ isOpen, onClose, diagramRef, diagram, 
       if (format === 'png') dataUrl = await toPng(viewport, options);
       else if (format === 'jpg') dataUrl = await toJpeg(viewport, options);
       else dataUrl = await toSvg(viewport, options);
+
+      // Restore original attributes
+      originalStyles.forEach(({ el, fill, stroke, strokeWidth }) => {
+        if (fill) el.setAttribute('fill', fill); else el.removeAttribute('fill');
+        if (stroke) el.setAttribute('stroke', stroke); else el.removeAttribute('stroke');
+        if (strokeWidth) el.setAttribute('stroke-width', strokeWidth); else el.removeAttribute('stroke-width');
+      });
 
       const link = document.createElement('a');
       link.download = `${fileName}.${format}`;

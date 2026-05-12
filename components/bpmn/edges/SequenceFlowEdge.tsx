@@ -9,7 +9,16 @@ export default function SequenceFlowEdge({
 
   return (
     <>
-      <path id={id} style={{ ...style, strokeWidth: 2, stroke: '#6b7280' }} className="react-flow__edge-path" d={edgePath} markerEnd={markerEnd} />
+      <path
+        id={id}
+        d={edgePath}
+        className="react-flow__edge-path"
+        fill="none"
+        stroke="#6b7280"
+        strokeWidth={2}
+        markerEnd={markerEnd}
+        style={style}
+      />
       {data?.label && (
         <EdgeLabelRenderer>
           <div
