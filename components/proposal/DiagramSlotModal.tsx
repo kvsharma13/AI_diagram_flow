@@ -44,7 +44,7 @@ export default function DiagramSlotModal({ isOpen, onClose, token, existingData,
   const [isInserting, setIsInserting] = useState(false);
   const [generateError, setGenerateError] = useState('');
   const renderIdRef = useRef(0);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (!isOpen) return;
