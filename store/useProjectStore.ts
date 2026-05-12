@@ -12,6 +12,14 @@ import {
   EditorType,
   TimelineUnit,
   TemplateStyle,
+  BPMNNode,
+  BPMNEdge,
+  BPMNSwimlane,
+  BPMNDiagram,
+  ProposalSection,
+  ProposalBranding,
+  ProposalDocument,
+  ProposalTemplateId,
 } from '@/types/project';
 
 interface ProjectStore {
@@ -55,6 +63,31 @@ interface ProjectStore {
   // Template actions
   loadTemplate: (templateName: string) => void;
 
+  // BPMN actions
+  setBPMNNodes: (nodes: BPMNNode[]) => void;
+  addBPMNNode: (node: Omit<BPMNNode, 'id'>) => void;
+  updateBPMNNode: (id: string, updates: Partial<BPMNNode>) => void;
+  deleteBPMNNode: (id: string) => void;
+  setBPMNEdges: (edges: BPMNEdge[]) => void;
+  addBPMNEdge: (edge: Omit<BPMNEdge, 'id'>) => void;
+  deleteBPMNEdge: (id: string) => void;
+  addBPMNSwimlane: (swimlane: Omit<BPMNSwimlane, 'id'>) => void;
+  updateBPMNSwimlane: (id: string, updates: Partial<BPMNSwimlane>) => void;
+  deleteBPMNSwimlane: (id: string) => void;
+  setBPMNDiagram: (diagram: BPMNDiagram) => void;
+  importBPMNFromCode: (data: any) => void;
+
+  // Proposal actions
+  setProposalDocument: (doc: ProposalDocument) => void;
+  addProposalSection: (section: Omit<ProposalSection, 'id'>) => void;
+  updateProposalSection: (id: string, updates: Partial<ProposalSection>) => void;
+  deleteProposalSection: (id: string) => void;
+  reorderProposalSections: (sections: ProposalSection[]) => void;
+  setProposalBranding: (branding: ProposalBranding) => void;
+  setProposalTemplate: (templateId: ProposalTemplateId) => void;
+  updateProposalMeta: (meta: { title?: string; subtitle?: string; author?: string; version?: string }) => void;
+  snapshotDiagramToSection: (sectionId: string, snapshot: string) => void;
+
   // Import/Export actions
   importGanttFromCode: (data: any) => void;
   importRACIFromCode: (data: any) => void;
@@ -78,6 +111,13 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         architectureComponents: [],
         architectureMermaidCode: '',
         flowchartSteps: [],
+        bpmnDiagram: { nodes: [], edges: [], swimlanes: [] },
+        proposalDocument: {
+          sections: [],
+          branding: { companyName: '', primaryColor: '#6366f1', secondaryColor: '#ec4899', fontFamily: 'Inter', headerStyle: 'modern' },
+          templateId: 'blank',
+          title: '',
+        },
         timelineMonths: 12,
         timelineUnit: 'months',
         createdAt: new Date(),
@@ -644,6 +684,165 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         };
       }
       return state;
+    }),
+
+  // BPMN actions
+  setBPMNNodes: (nodes) =>
+    set((state) => {
+      if (!state.project) return state;
+      return { project: { ...state.project, bpmnDiagram: { ...(state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] }), nodes }, updatedAt: new Date() } };
+    }),
+
+  addBPMNNode: (node) =>
+    set((state) => {
+      if (!state.project) return state;
+      const diagram = state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] };
+      return { project: { ...state.project, bpmnDiagram: { ...diagram, nodes: [...diagram.nodes, { ...node, id: uuidv4() }] }, updatedAt: new Date() } };
+    }),
+
+  updateBPMNNode: (id, updates) =>
+    set((state) => {
+      if (!state.project) return state;
+      const diagram = state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] };
+      return { project: { ...state.project, bpmnDiagram: { ...diagram, nodes: diagram.nodes.map((n) => (n.id === id ? { ...n, ...updates } : n)) }, updatedAt: new Date() } };
+    }),
+
+  deleteBPMNNode: (id) =>
+    set((state) => {
+      if (!state.project) return state;
+      const diagram = state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] };
+      return { project: { ...state.project, bpmnDiagram: { ...diagram, nodes: diagram.nodes.filter((n) => n.id !== id), edges: diagram.edges.filter((e) => e.source !== id && e.target !== id) }, updatedAt: new Date() } };
+    }),
+
+  setBPMNEdges: (edges) =>
+    set((state) => {
+      if (!state.project) return state;
+      return { project: { ...state.project, bpmnDiagram: { ...(state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] }), edges }, updatedAt: new Date() } };
+    }),
+
+  addBPMNEdge: (edge) =>
+    set((state) => {
+      if (!state.project) return state;
+      const diagram = state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] };
+      return { project: { ...state.project, bpmnDiagram: { ...diagram, edges: [...diagram.edges, { ...edge, id: uuidv4() }] }, updatedAt: new Date() } };
+    }),
+
+  deleteBPMNEdge: (id) =>
+    set((state) => {
+      if (!state.project) return state;
+      const diagram = state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] };
+      return { project: { ...state.project, bpmnDiagram: { ...diagram, edges: diagram.edges.filter((e) => e.id !== id) }, updatedAt: new Date() } };
+    }),
+
+  addBPMNSwimlane: (swimlane) =>
+    set((state) => {
+      if (!state.project) return state;
+      const diagram = state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] };
+      return { project: { ...state.project, bpmnDiagram: { ...diagram, swimlanes: [...diagram.swimlanes, { ...swimlane, id: uuidv4() }] }, updatedAt: new Date() } };
+    }),
+
+  updateBPMNSwimlane: (id, updates) =>
+    set((state) => {
+      if (!state.project) return state;
+      const diagram = state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] };
+      return { project: { ...state.project, bpmnDiagram: { ...diagram, swimlanes: diagram.swimlanes.map((s) => (s.id === id ? { ...s, ...updates } : s)) }, updatedAt: new Date() } };
+    }),
+
+  deleteBPMNSwimlane: (id) =>
+    set((state) => {
+      if (!state.project) return state;
+      const diagram = state.project.bpmnDiagram || { nodes: [], edges: [], swimlanes: [] };
+      return { project: { ...state.project, bpmnDiagram: { ...diagram, swimlanes: diagram.swimlanes.filter((s) => s.id !== id) }, updatedAt: new Date() } };
+    }),
+
+  setBPMNDiagram: (diagram) =>
+    set((state) => {
+      if (!state.project) return state;
+      return { project: { ...state.project, bpmnDiagram: diagram, updatedAt: new Date() } };
+    }),
+
+  importBPMNFromCode: (data) =>
+    set((state) => {
+      if (!state.project) return state;
+      try {
+        const nodes = (data.nodes || []).map((n: any) => ({ ...n, id: n.id || uuidv4() }));
+        const edges = (data.edges || []).map((e: any) => ({ ...e, id: e.id || uuidv4() }));
+        const swimlanes = (data.swimlanes || []).map((s: any) => ({ ...s, id: s.id || uuidv4() }));
+        return { project: { ...state.project, bpmnDiagram: { nodes, edges, swimlanes }, updatedAt: new Date() } };
+      } catch (error) {
+        console.error('Failed to import BPMN data:', error);
+        return state;
+      }
+    }),
+
+  // Proposal actions
+  setProposalDocument: (doc) =>
+    set((state) => {
+      if (!state.project) return state;
+      return { project: { ...state.project, proposalDocument: doc, updatedAt: new Date() } };
+    }),
+
+  addProposalSection: (section) =>
+    set((state) => {
+      if (!state.project) return state;
+      const doc = state.project.proposalDocument || { sections: [], branding: { companyName: '', primaryColor: '#6366f1', secondaryColor: '#ec4899', fontFamily: 'Inter', headerStyle: 'modern' }, templateId: 'blank' as const, title: '' };
+      return { project: { ...state.project, proposalDocument: { ...doc, sections: [...doc.sections, { ...section, id: uuidv4() }] }, updatedAt: new Date() } };
+    }),
+
+  updateProposalSection: (id, updates) =>
+    set((state) => {
+      if (!state.project) return state;
+      const doc = state.project.proposalDocument;
+      if (!doc) return state;
+      return { project: { ...state.project, proposalDocument: { ...doc, sections: doc.sections.map((s) => (s.id === id ? { ...s, ...updates } : s)) }, updatedAt: new Date() } };
+    }),
+
+  deleteProposalSection: (id) =>
+    set((state) => {
+      if (!state.project) return state;
+      const doc = state.project.proposalDocument;
+      if (!doc) return state;
+      return { project: { ...state.project, proposalDocument: { ...doc, sections: doc.sections.filter((s) => s.id !== id) }, updatedAt: new Date() } };
+    }),
+
+  reorderProposalSections: (sections) =>
+    set((state) => {
+      if (!state.project) return state;
+      const doc = state.project.proposalDocument;
+      if (!doc) return state;
+      return { project: { ...state.project, proposalDocument: { ...doc, sections }, updatedAt: new Date() } };
+    }),
+
+  setProposalBranding: (branding) =>
+    set((state) => {
+      if (!state.project) return state;
+      const doc = state.project.proposalDocument;
+      if (!doc) return state;
+      return { project: { ...state.project, proposalDocument: { ...doc, branding }, updatedAt: new Date() } };
+    }),
+
+  setProposalTemplate: (templateId) =>
+    set((state) => {
+      if (!state.project) return state;
+      const doc = state.project.proposalDocument;
+      if (!doc) return state;
+      return { project: { ...state.project, proposalDocument: { ...doc, templateId }, updatedAt: new Date() } };
+    }),
+
+  updateProposalMeta: (meta) =>
+    set((state) => {
+      if (!state.project) return state;
+      const doc = state.project.proposalDocument;
+      if (!doc) return state;
+      return { project: { ...state.project, proposalDocument: { ...doc, ...meta }, updatedAt: new Date() } };
+    }),
+
+  snapshotDiagramToSection: (sectionId, snapshot) =>
+    set((state) => {
+      if (!state.project) return state;
+      const doc = state.project.proposalDocument;
+      if (!doc) return state;
+      return { project: { ...state.project, proposalDocument: { ...doc, sections: doc.sections.map((s) => (s.id === sectionId ? { ...s, diagramSnapshot: snapshot } : s)) }, updatedAt: new Date() } };
     }),
 
   // Import from code actions

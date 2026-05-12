@@ -312,7 +312,7 @@ export default function RACIMatrixEditor() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+    <div id="raci-export-area" className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
         <div className="px-4 md:px-6 py-4">

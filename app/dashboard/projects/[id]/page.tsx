@@ -3,11 +3,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Save, Check, FileText, Calendar, Users, Network, GitBranch, Boxes } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Check, FileText, Calendar, Users, Network, GitBranch, Boxes, Workflow, FileSignature } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import GanttEditor from '@/editors/GanttEditor';
 import RACIMatrixEditor from '@/editors/RACIMatrixEditor';
 import ArchitectureEditor from '@/editors/ArchitectureEditor';
+import BPMNEditor from '@/editors/BPMNEditor';
+import ProposalEditor from '@/editors/ProposalEditor';
 import { EditorType } from '@/types/project';
 
 export default function ProjectEditorPage() {
@@ -62,6 +64,20 @@ export default function ProjectEditorPage() {
         architectureComponents: dbProject.architecture_components || [],
         architectureMermaidCode: dbProject.architecture_mermaid_code,
         flowchartSteps: dbProject.flowchart_steps || [],
+        bpmnDiagram: {
+          nodes: dbProject.bpmn_nodes || [],
+          edges: dbProject.bpmn_edges || [],
+          swimlanes: dbProject.bpmn_swimlanes || [],
+        },
+        proposalDocument: {
+          sections: dbProject.proposal_sections || [],
+          branding: dbProject.proposal_branding || { companyName: '', primaryColor: '#6366f1', secondaryColor: '#ec4899', fontFamily: 'Inter', headerStyle: 'modern' },
+          templateId: dbProject.proposal_template_id || 'blank',
+          title: dbProject.proposal_title || '',
+          subtitle: dbProject.proposal_subtitle,
+          author: dbProject.proposal_author,
+          version: dbProject.proposal_version,
+        },
         timelineMonths: dbProject.timeline_months || 12,
         timelineUnit: dbProject.timeline_unit || 'months',
         createdAt: new Date(dbProject.created_at),
@@ -95,6 +111,16 @@ export default function ProjectEditorPage() {
           raciAssignments: project.raciAssignments,
           architectureComponents: project.architectureComponents,
           architectureMermaidCode: project.architectureMermaidCode,
+          bpmnNodes: project.bpmnDiagram?.nodes || [],
+          bpmnEdges: project.bpmnDiagram?.edges || [],
+          bpmnSwimlanes: project.bpmnDiagram?.swimlanes || [],
+          proposalSections: project.proposalDocument?.sections || [],
+          proposalBranding: project.proposalDocument?.branding,
+          proposalTemplateId: project.proposalDocument?.templateId,
+          proposalTitle: project.proposalDocument?.title,
+          proposalSubtitle: project.proposalDocument?.subtitle,
+          proposalAuthor: project.proposalDocument?.author,
+          proposalVersion: project.proposalDocument?.version,
           timelineMonths: project.timelineMonths,
           timelineUnit: project.timelineUnit,
         }),
@@ -131,6 +157,8 @@ export default function ProjectEditorPage() {
     { type: 'gantt' as EditorType, label: 'Gantt Chart', icon: Calendar },
     { type: 'raci' as EditorType, label: 'RACI Matrix', icon: Users },
     { type: 'architecture' as EditorType, label: 'Architecture', icon: Boxes },
+    { type: 'bpmn' as EditorType, label: 'Process Flow', icon: Workflow },
+    { type: 'proposal' as EditorType, label: 'Proposal', icon: FileSignature },
   ];
 
   return (
@@ -233,6 +261,8 @@ export default function ProjectEditorPage() {
         {activeEditor === 'gantt' && <GanttEditor />}
         {activeEditor === 'raci' && <RACIMatrixEditor />}
         {activeEditor === 'architecture' && <ArchitectureEditor />}
+        {activeEditor === 'bpmn' && <BPMNEditor />}
+        {activeEditor === 'proposal' && <ProposalEditor />}
       </div>
     </div>
   );

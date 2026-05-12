@@ -26,6 +26,8 @@ export interface Project {
   architectureComponents: ArchitectureComponent[];
   architectureMermaidCode?: string; // Mermaid code for architecture diagram
   flowchartSteps: FlowchartStep[];
+  bpmnDiagram?: BPMNDiagram;
+  proposalDocument?: ProposalDocument;
   timelineMonths?: number; // Total duration for Gantt timeline (default: 12)
   timelineUnit?: TimelineUnit; // Unit for timeline (default: 'months')
   createdAt: Date;
@@ -96,5 +98,115 @@ export interface FlowchartStep {
   position: { x: number; y: number };
 }
 
+// BPMN Process Flow
+export type BPMNNodeType =
+  | 'startEvent'
+  | 'endEvent'
+  | 'task'
+  | 'userTask'
+  | 'serviceTask'
+  | 'scriptTask'
+  | 'exclusiveGateway'
+  | 'parallelGateway'
+  | 'inclusiveGateway'
+  | 'subProcess'
+  | 'intermediateEvent'
+  | 'dataObject'
+  | 'dataStore'
+  | 'textAnnotation';
+
+export type BPMNEdgeType = 'sequenceFlow' | 'messageFlow' | 'association';
+
+export interface BPMNNode {
+  id: string;
+  type: BPMNNodeType;
+  label: string;
+  description?: string;
+  assignee?: string;
+  swimlaneId?: string;
+  position: { x: number; y: number };
+  data?: Record<string, any>;
+}
+
+export interface BPMNSwimlane {
+  id: string;
+  label: string;
+  role: string;
+  color?: string;
+  order: number;
+}
+
+export interface BPMNEdge {
+  id: string;
+  type: BPMNEdgeType;
+  source: string;
+  target: string;
+  label?: string;
+  conditionExpression?: string;
+  animated?: boolean;
+}
+
+export interface BPMNDiagram {
+  nodes: BPMNNode[];
+  edges: BPMNEdge[];
+  swimlanes: BPMNSwimlane[];
+}
+
+// Proposal Builder
+export type ProposalSectionType =
+  | 'cover'
+  | 'executive_summary'
+  | 'scope'
+  | 'timeline'
+  | 'stakeholders'
+  | 'architecture'
+  | 'bpmn_process'
+  | 'risks'
+  | 'budget'
+  | 'assumptions'
+  | 'deliverables'
+  | 'terms'
+  | 'appendix'
+  | 'custom';
+
+export interface ProposalSection {
+  id: string;
+  type: ProposalSectionType;
+  title: string;
+  content: string;
+  order: number;
+  diagramSnapshot?: string;
+  isVisible: boolean;
+  metadata?: Record<string, any>;
+}
+
+export interface ProposalBranding {
+  companyName: string;
+  companyLogo?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+  headerStyle: string;
+}
+
+export type ProposalTemplateId =
+  | 'sow'
+  | 'brd'
+  | 'project_charter'
+  | 'technical_proposal'
+  | 'rfp_response'
+  | 'blank';
+
+export interface ProposalDocument {
+  sections: ProposalSection[];
+  branding: ProposalBranding;
+  templateId: ProposalTemplateId;
+  title: string;
+  subtitle?: string;
+  author?: string;
+  date?: string;
+  version?: string;
+}
+
 // Editor types
-export type EditorType = 'gantt' | 'raci' | 'architecture' | 'flowchart' | 'templates';
+export type EditorType = 'gantt' | 'raci' | 'architecture' | 'flowchart' | 'bpmn' | 'proposal' | 'templates';

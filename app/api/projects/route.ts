@@ -116,6 +116,11 @@ export async function POST(request: NextRequest) {
         raci_assignments: [],
         architecture_components: [],
         flowchart_steps: [],
+        bpmn_nodes: [],
+        bpmn_edges: [],
+        bpmn_swimlanes: [],
+        proposal_sections: [],
+        proposal_template_id: 'blank',
         timeline_months: 12,
         timeline_unit: 'months',
       })

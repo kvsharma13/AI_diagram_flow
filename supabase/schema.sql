@@ -35,6 +35,20 @@ CREATE TABLE IF NOT EXISTS projects (
   architecture_mermaid_code TEXT,
   flowchart_steps JSONB DEFAULT '[]',
 
+  -- BPMN Process Flow
+  bpmn_nodes JSONB DEFAULT '[]',
+  bpmn_edges JSONB DEFAULT '[]',
+  bpmn_swimlanes JSONB DEFAULT '[]',
+
+  -- Proposal Builder
+  proposal_sections JSONB DEFAULT '[]',
+  proposal_branding JSONB,
+  proposal_template_id TEXT DEFAULT 'blank',
+  proposal_title TEXT,
+  proposal_subtitle TEXT,
+  proposal_author TEXT,
+  proposal_version TEXT,
+
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

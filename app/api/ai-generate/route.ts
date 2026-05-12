@@ -153,8 +153,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = type === 'gantt'
-      ? `You are a project management assistant. Convert the provided project timeline text into a JSON structure for a Gantt chart.
+    let systemPrompt: string;
+
+    if (type === 'gantt') {
+      systemPrompt = `You are a project management assistant. Convert the provided project timeline text into a JSON structure for a Gantt chart.
 
 Output format:
 {
@@ -184,8 +186,43 @@ Rules:
 - Extract phases, months, tasks, deliverables, and milestones from the text
 - Assign colors to phases (alternate between blue, green, orange, purple)
 - Calculate startMonth and endMonth for each phase
-- Return ONLY valid JSON, no explanations`
-      : `You are a project management assistant. Convert the provided text into a RACI matrix JSON structure.
+- Return ONLY valid JSON, no explanations`;
+    } else if (type === 'bpmn') {
+      systemPrompt = `You are a business process modeling assistant. Convert the provided process description into a BPMN diagram JSON structure.
+
+Output format:
+{
+  "swimlanes": [
+    { "id": "lane-1", "label": "<role/department>", "role": "<role>", "color": "#6366f1", "order": 0 }
+  ],
+  "nodes": [
+    { "id": "node-1", "type": "startEvent|endEvent|task|userTask|serviceTask|scriptTask|exclusiveGateway|parallelGateway|inclusiveGateway|intermediateEvent|subProcess", "label": "<label>", "swimlaneId": "lane-1", "position": { "x": 100, "y": 100 } }
+  ],
+  "edges": [
+    { "id": "edge-1", "type": "sequenceFlow", "source": "node-1", "target": "node-2", "label": "<optional condition>" }
+  ]
+}
+
+Rules:
+- Always start with a startEvent node and end with an endEvent node
+- Use exclusiveGateway for decision points (XOR), parallelGateway for parallel paths (AND)
+- Use userTask for manual tasks, serviceTask for automated tasks
+- Group nodes into swimlanes based on roles/departments
+- Connect all nodes with sequenceFlow edges
+- Position nodes left-to-right, top-to-bottom
+- Return ONLY valid JSON, no explanations`;
+    } else if (type === 'proposal_section') {
+      systemPrompt = `You are a professional proposal writer. Generate well-structured markdown content for the given section of a project proposal.
+
+Rules:
+- Write professional, clear, and concise content
+- Use proper markdown formatting (headings, bullets, tables where appropriate)
+- Base content on the project context provided
+- Do NOT wrap the output in JSON - return raw markdown text only
+- Include placeholder values where specific data is not available (use [brackets])
+- Make content realistic and actionable`;
+    } else {
+      systemPrompt = `You are a project management assistant. Convert the provided text into a RACI matrix JSON structure.
 
 Output format:
 {
@@ -207,6 +244,7 @@ Rules:
 - Assign RACI values based on context (R=Responsible, A=Accountable, C=Consulted, I=Informed)
 - Use camelCase for role keys (e.g., "Project Manager" → "ProjectManager")
 - Return ONLY valid JSON, no explanations`;
+    }
 
     console.log('Calling OpenAI API from server...');
 
@@ -240,15 +278,20 @@ Rules:
 
     console.log('OpenAI response received');
 
-    // Extract JSON from response (handle markdown code blocks)
-    let jsonText = generatedText.trim();
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/```\n?/g, '').replace(/```\n?$/g, '');
+    // For proposal_section, return raw text (not JSON)
+    let parsedJSON: any;
+    if (type === 'proposal_section') {
+      parsedJSON = generatedText.trim();
+    } else {
+      // Extract JSON from response (handle markdown code blocks)
+      let jsonText = generatedText.trim();
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\n?/g, '').replace(/```\n?$/g, '');
+      }
+      parsedJSON = JSON.parse(jsonText);
     }
-
-    const parsedJSON = JSON.parse(jsonText);
 
     // Increment AI usage count (for test users and regular subscribers)
     if (!isWhitelisted && user && user.id) {
