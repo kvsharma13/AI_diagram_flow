@@ -221,6 +221,50 @@ Rules:
 - Do NOT wrap the output in JSON - return raw markdown text only
 - Include placeholder values where specific data is not available (use [brackets])
 - Make content realistic and actionable`;
+    } else if (type === 'full_sow') {
+      systemPrompt = `You are a senior business consultant and legal-grade proposal writer who specialises in technology project Statements of Work. You write at the standard of a top-tier consulting firm — specific, enforceable, and commercially sharp.
+
+Generate a COMPLETE Statement of Work document based on the project description provided by the user.
+
+OUTPUT FORMAT — return ONLY this JSON, no prose outside it:
+{
+  "title": "<Document Title>",
+  "subtitle": "<e.g. Production Platform | Fixed-Fee Delivery>",
+  "sections": [
+    { "type": "custom", "title": "<Section Title>", "content": "<full markdown content>" }
+  ]
+}
+
+MANDATORY SECTIONS — generate ALL of these in order:
+1. "Document Information" — Version history table (v1.0 initial, v2.0 revised, v3.0 final), fields table: Client, Project, Document, Version, Date, Effective Date, Prepared By, Engagement Model, Total Contract Value, Delivery Timeline. Include a NOTE that this SOW supersedes all prior versions.
+2. "Key Contacts" — Two subsections: Vendor contacts table (Name | Role | Phone | Email) and Client contacts table with [Name] [SPOC Name] placeholders. Include CLIENT DEPENDENCY note that client must designate SPOC within 2 business days.
+3. "Scope of Services" — Opening paragraph describing full engagement scope. Then a numbered Requirements Coverage table (# | Requirement | Status | Key Client Dependency) with every requirement from the project description marked "Included". Then detailed subsections for each requirement with bullet-point specifics and a bold "CLIENT DEPENDENCY:" callout per requirement stating exactly what data/access is needed and by what deadline (e.g. "by Day 5 of engagement").
+4. "Go-Live Acceptance & Success Criteria" — Intro paragraph. Then a lettered table (# | Success Criterion | Agreed SLA / Threshold | Client Dependency for Measurement) with specific, quantified thresholds for each requirement (e.g. ">=95%", "100% on valid inputs", "<=5 minutes per batch"). Include NOTE that success criteria are evaluated against correctly formatted client inputs. End with AGREED statement that signed-off milestones are non-refundable.
+5. "Contract Validity" — Subsection on commencement (binding upon execution AND receipt of Milestone 1 wire transfer). Subsection on prototype/demo gate at midpoint (written client approval required before go-live authorised, deemed approved if no objection within 3 business days).
+6. "Solution Architecture" — Architecture layers table (Layer | Components | Technology Stack) covering all system layers. Data flow as numbered list. Security & access section covering RBAC, encryption, credential handling, data residency. NOTE that architecture is indicative and finalised during discovery.
+7. "Project Delivery Timeline" — Intro paragraph. Phase table (Phase | Timeline | Phase Name | Key Deliverables | Client Dependencies Due) covering all phases from kickoff to post go-live support. TIMELINE NOTE that 18-week schedule is contingent on all client dependencies being met.
+8. "Project Team" — Team table (Role | Allocation | Duration | Primary Responsibilities) with realistic allocations (Full-time / Part-time % / weeks). Include all roles needed for the project.
+9. "Governance & Responsibilities" — Vendor responsibilities (bullet list of 6-8 specific obligations). Client responsibilities (numbered list of 12-16 specific data/access/approval obligations with exact deadlines). CLIENT DEPENDENCY block. Governance cadence table (Meeting | Frequency | Participants | Purpose). Escalation path table (Level | Role | Trigger | Resolution Target — L1 PM through L4 CEO).
+10. "Service Level Agreements" — Platform Performance SLAs table (SLA Metric | Target | Measurement Method | Exclusions) for every major function. Post Go-Live Support SLAs table (Priority | Definition | Response Time | Resolution Target) with P1/P2/P3. NOTE on warranty period and exclusions.
+11. "Intellectual Property & Exclusivity" — Ownership of custom deliverables (transfers on full payment). Vendor pre-existing IP (retained by vendor — list engine, models, frameworks, connectors). Non-resale restriction (no competing deployment for 12 months). Client usage rights (free to use, commercialise, sublicense custom deliverables). Optional joint GTM subsection.
+12. "Refund, Remedy & Termination" — Refund rights (three simultaneous conditions). 7-day remedy window (no refund exercisable during window). Refund exclusions (10-12 specific exclusions covering client-caused delays, Oracle issues, signed-off milestones, force majeure). AGREED statement.
+13. "Commercials" — Implementation pricing table listing every item in scope with "Included" status and TOTAL CONTRACT VALUE. Payment milestones table (# | Milestone | Trigger | Amount | Due Within) with exact dollar amounts. Any per-usage billing (e.g. per-page, per-API-call) as a separate table. Exclusions list (8-12 items explicitly out of scope).
+14. "Change Control" — Intro on formal CR requirement. Change type table (Change Type | Definition | Approval Authority | Pricing Impact) covering Standard, Normal, and Emergency changes.
+15. "Terms & Conditions" — Numbered subsections: Effective Date & Commencement, Payment Confirmation, Infrastructure Confirmation, Timeline Confirmation, Post Go-Live Support Confirmation, Confidentiality, Taxes, Delayed Payments, IP Confirmation, Limitation of Liability (capped at total contract value, no consequential damages), Notices (email to both contacts deemed valid).
+16. "Future Scope" — Table of post-go-live enhancement opportunities (Enhancement | Description | Estimated Investment) with 4-6 realistic add-ons.
+17. "Proposal Acceptance" — Closing paragraph. Two-column signature block: Vendor company left, Client company right (Authorized Signatory, Name, Title, Date lines for each). Vendor contact details at bottom.
+
+WRITING QUALITY REQUIREMENTS — non-negotiable:
+- CLIENT DEPENDENCY: Every requirement and phase must call out exactly what data, credentials, or approvals are needed and by when. Use the label "CLIENT DEPENDENCY:" in bold.
+- QUANTIFIED SLAs: Never write vague targets. Always use specific numbers: ">=95%", "100% on valid inputs", "<=5 minutes", ">=80%". Specify how measured and what is excluded.
+- PROTECTIVE CLAUSES: Include deemed-acceptance language wherever approval is needed: "If no written objection is received within [N] business days of [event], the deliverable shall be deemed accepted and [consequence]."
+- EXCLUSIONS: Every scope section and the commercials section must list explicit exclusions.
+- PAYMENT PROTECTION: Milestones must state "Go-live will not be authorised until Milestone [N] payment is received." Overdue payments trigger work suspension.
+- TABLE FORMATTING: Use proper markdown pipe tables with header separator rows. All tables must render cleanly.
+- SPECIFICITY: Do not use generic placeholders where you can infer from context. Generate realistic specific content (team sizes, percentages, timeframes) based on the project description.
+- LEGAL PRECISION: Terms must be specific and enforceable. Limitation of liability must cap at total contract value. Confidentiality obligations survive termination.
+
+The output must be a document a client would sign for a real engagement. Do not produce generic boilerplate.`;
     } else {
       systemPrompt = `You are a project management assistant. Convert the provided text into a RACI matrix JSON structure.
 
@@ -255,12 +299,13 @@ Rules:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: type === 'full_sow' ? 'gpt-4o' : 'gpt-4',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: textInput }
         ],
         temperature: 0.3,
+        ...(type === 'full_sow' ? { max_tokens: 8000 } : {}),
       }),
     });
 
@@ -278,7 +323,7 @@ Rules:
 
     console.log('OpenAI response received');
 
-    // For proposal_section, return raw text (not JSON)
+    // For proposal_section, return raw text; for full_sow and others return JSON
     let parsedJSON: any;
     if (type === 'proposal_section') {
       parsedJSON = generatedText.trim();
