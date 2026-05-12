@@ -15,8 +15,9 @@ interface DiagramSlotModalProps {
 async function svgToPng(svgString: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
+    // Use a base64 data URI instead of a blob URL — blob URLs can taint the canvas
+    // and block toDataURL() when the SVG contains foreignObject or image elements.
+    const base64 = btoa(unescape(encodeURIComponent(svgString)));
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const scale = 2;
@@ -27,11 +28,15 @@ async function svgToPng(svgString: string): Promise<string> {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.scale(scale, scale);
       ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-      URL.revokeObjectURL(url);
+      try {
+        resolve(canvas.toDataURL('image/png'));
+      } catch {
+        // Fallback: store SVG as a data URI if canvas is still tainted
+        resolve(`data:image/svg+xml;base64,${base64}`);
+      }
     };
     img.onerror = () => reject(new Error('SVG to PNG conversion failed'));
-    img.src = url;
+    img.src = `data:image/svg+xml;base64,${base64}`;
   });
 }
 
