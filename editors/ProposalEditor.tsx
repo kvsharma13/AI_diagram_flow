@@ -15,6 +15,7 @@ import GenerateSOWModal from '@/components/proposal/GenerateSOWModal';
 import { Palette, LayoutTemplate, Sparkles } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { captureDiagramSnapshot } from '@/lib/proposal/diagramSnapshot';
+import { assignUIDs } from '@/lib/proposal/diagramTokens';
 
 // Which diagram source to auto-embed per section title keywords
 const DIAGRAM_INJECTION_MAP: Array<{ keywords: string[]; sourceId: string }> = [
@@ -164,7 +165,7 @@ export default function ProposalEditor() {
             id: uuidv4(),
             type: (s.type as ProposalSectionType) || 'custom',
             title: s.title,
-            content: s.content,
+            content: assignUIDs(s.content),
             order: idx,
             isVisible: true,
             ...(diagramSnapshot ? { diagramSnapshot } : {}),

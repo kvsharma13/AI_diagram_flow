@@ -89,8 +89,8 @@ export async function exportToDOCX(document: ProposalDocument): Promise<void> {
       }),
     );
 
-    if (section.content) {
-      const elements = parseMarkdown(section.content);
+    // Helper: render parsed markdown elements into children array
+    const renderElements = (elements: ReturnType<typeof parseMarkdown>) => {
       for (const el of elements) {
         switch (el.type) {
           case 'heading':
@@ -146,25 +146,64 @@ export async function exportToDOCX(document: ProposalDocument): Promise<void> {
             break;
         }
       }
-    }
+    };
 
-    // Diagram snapshot
-    if (section.diagramSnapshot) {
+    // Helper: embed a diagram snapshot into the DOCX
+    const embedDiagramSnapshot = (snapshot: string, label: string) => {
       try {
-        const base64Data = section.diagramSnapshot.split(',')[1];
+        const base64Data = snapshot.split(',')[1];
         if (base64Data) {
           const imageBuffer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
           children.push(
             new Paragraph({
+              children: [new TextRun({ text: label, italics: true, size: 18, color: '6b7280' })],
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 100 },
+            }),
+            new Paragraph({
               children: [new ImageRun({ data: imageBuffer, transformation: { width: 600, height: 300 }, type: 'png' })],
               alignment: AlignmentType.CENTER,
-              spacing: { before: 200, after: 200 },
+              spacing: { before: 80, after: 200 },
             }),
           );
         }
       } catch (e) {
         console.error('Failed to add diagram image:', e);
       }
+    };
+
+    // Content — split by diagram tokens so each embeds at its exact location
+    if (section.content) {
+      const diagrams = (section.metadata?.diagrams as Record<string, { snapshot?: string | null; label?: string }>) || {};
+      const contentLines = section.content.split('\n');
+      const TOKEN_RE = /^\{\{DIAGRAM:(\w+):([a-z0-9]{8}):([^}]+)\}\}$/;
+      let textBuffer: string[] = [];
+
+      for (const line of contentLines) {
+        const tokenMatch = line.trim().match(TOKEN_RE);
+        if (tokenMatch) {
+          if (textBuffer.length > 0) {
+            renderElements(parseMarkdown(textBuffer.join('\n')));
+            textBuffer = [];
+          }
+          const uid = tokenMatch[2];
+          const label = tokenMatch[3].trim();
+          const slot = diagrams[uid];
+          if (slot?.snapshot) {
+            embedDiagramSnapshot(slot.snapshot, label);
+          }
+        } else {
+          textBuffer.push(line);
+        }
+      }
+      if (textBuffer.length > 0) {
+        renderElements(parseMarkdown(textBuffer.join('\n')));
+      }
+    }
+
+    // Legacy per-section snapshot (captured via "Insert from Project" button)
+    if (section.diagramSnapshot) {
+      embedDiagramSnapshot(section.diagramSnapshot, 'Diagram');
     }
 
     children.push(new Paragraph({ children: [new PageBreak()] }));

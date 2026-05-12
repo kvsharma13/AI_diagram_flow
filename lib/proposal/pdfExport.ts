@@ -96,9 +96,8 @@ export async function exportToPDF(document: ProposalDocument): Promise<void> {
     pdf.line(margin, yPos, margin + contentWidth, yPos);
     yPos += 10;
 
-    // Content
-    if (section.content) {
-      const elements = parseMarkdown(section.content);
+    // Helper: render parsed markdown elements to PDF
+    const renderElements = (elements: ReturnType<typeof parseMarkdown>) => {
       for (const el of elements) {
         switch (el.type) {
           case 'heading':
@@ -138,7 +137,6 @@ export async function exportToPDF(document: ProposalDocument): Promise<void> {
             if (el.rows && el.rows.length > 0) {
               const colCount = el.rows[0].length;
               const colWidth = contentWidth / colCount;
-              // Header
               checkPage(10);
               pdf.setFillColor('#f3f4f6');
               pdf.rect(margin, yPos - 4, contentWidth, 8, 'F');
@@ -149,7 +147,6 @@ export async function exportToPDF(document: ProposalDocument): Promise<void> {
                 pdf.text(stripMarkdownFormatting(cell), margin + ci * colWidth + 2, yPos);
               });
               yPos += 8;
-              // Data rows
               pdf.setFont('helvetica', 'normal');
               pdf.setTextColor('#4b5563');
               for (let ri = 1; ri < el.rows.length; ri++) {
@@ -164,9 +161,57 @@ export async function exportToPDF(document: ProposalDocument): Promise<void> {
             break;
         }
       }
+    };
+
+    // Helper: embed a diagram image with a caption label
+    const embedDiagramImage = (snapshot: string, label: string) => {
+      checkPage(75);
+      try {
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'italic');
+        pdf.setTextColor('#6b7280');
+        pdf.text(label, margin, yPos);
+        yPos += 5;
+        pdf.addImage(snapshot, 'PNG', margin, yPos, contentWidth, 60);
+        yPos += 65;
+      } catch (e) {
+        console.error('Failed to add diagram image:', e);
+      }
+    };
+
+    // Content — split by diagram tokens so each embeds at its exact location
+    if (section.content) {
+      const diagrams = (section.metadata?.diagrams as Record<string, { snapshot?: string | null; label?: string }>) || {};
+      const contentLines = section.content.split('\n');
+      const TOKEN_RE = /^\{\{DIAGRAM:(\w+):([a-z0-9]{8}):([^}]+)\}\}$/;
+      let textBuffer: string[] = [];
+
+      for (const line of contentLines) {
+        const tokenMatch = line.trim().match(TOKEN_RE);
+        if (tokenMatch) {
+          // Flush accumulated text first
+          if (textBuffer.length > 0) {
+            renderElements(parseMarkdown(textBuffer.join('\n')));
+            textBuffer = [];
+          }
+          // Embed diagram if snapshot is available
+          const uid = tokenMatch[2];
+          const label = tokenMatch[3].trim();
+          const slot = diagrams[uid];
+          if (slot?.snapshot) {
+            embedDiagramImage(slot.snapshot, label);
+          }
+        } else {
+          textBuffer.push(line);
+        }
+      }
+      // Flush remaining text
+      if (textBuffer.length > 0) {
+        renderElements(parseMarkdown(textBuffer.join('\n')));
+      }
     }
 
-    // Diagram snapshot
+    // Legacy per-section snapshot (captured via "Insert from Project" button)
     if (section.diagramSnapshot) {
       checkPage(80);
       try {

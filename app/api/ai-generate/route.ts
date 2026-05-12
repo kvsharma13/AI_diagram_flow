@@ -221,6 +221,18 @@ Rules:
 - Do NOT wrap the output in JSON - return raw markdown text only
 - Include placeholder values where specific data is not available (use [brackets])
 - Make content realistic and actionable`;
+    } else if (type === 'mermaid_diagram') {
+      systemPrompt = `You are a Mermaid diagram expert. Generate a valid Mermaid diagram based on the description provided.
+
+Rules:
+- Return ONLY raw Mermaid code — no code fences (no \`\`\`), no explanations, no prose
+- Use the correct Mermaid diagram type that best fits the description
+- Keep the diagram clear, readable, and professionally structured
+- For flowcharts and architecture: use "graph TD" or "graph LR"
+- For sequences: use "sequenceDiagram"
+- For timelines: use "gantt"
+- For state machines: use "stateDiagram-v2"
+- Label nodes descriptively but concisely (3-6 words max per node)`;
     } else if (type === 'full_sow') {
       systemPrompt = `You are a senior business consultant and legal-grade proposal writer who specialises in technology project Statements of Work. You write at the standard of a top-tier consulting firm — specific, enforceable, and commercially sharp.
 
@@ -241,8 +253,8 @@ MANDATORY SECTIONS — generate ALL of these in order:
 3. "Scope of Services" — Opening paragraph describing full engagement scope. Then a numbered Requirements Coverage table (# | Requirement | Status | Key Client Dependency) with every requirement from the project description marked "Included". Then detailed subsections for each requirement with bullet-point specifics and a bold "CLIENT DEPENDENCY:" callout per requirement stating exactly what data/access is needed and by what deadline (e.g. "by Day 5 of engagement").
 4. "Go-Live Acceptance & Success Criteria" — Intro paragraph. Then a lettered table (# | Success Criterion | Agreed SLA / Threshold | Client Dependency for Measurement) with specific, quantified thresholds for each requirement (e.g. ">=95%", "100% on valid inputs", "<=5 minutes per batch"). Include NOTE that success criteria are evaluated against correctly formatted client inputs. End with AGREED statement that signed-off milestones are non-refundable.
 5. "Contract Validity" — Subsection on commencement (binding upon execution AND receipt of Milestone 1 wire transfer). Subsection on prototype/demo gate at midpoint (written client approval required before go-live authorised, deemed approved if no objection within 3 business days).
-6. "Solution Architecture" — Architecture layers table (Layer | Components | Technology Stack) covering all system layers. Data flow as numbered list. Security & access section covering RBAC, encryption, credential handling, data residency. NOTE that architecture is indicative and finalised during discovery.
-7. "Project Delivery Timeline" — Intro paragraph. Phase table (Phase | Timeline | Phase Name | Key Deliverables | Client Dependencies Due) covering all phases from kickoff to post go-live support. TIMELINE NOTE that 18-week schedule is contingent on all client dependencies being met.
+6. "Solution Architecture" — Architecture layers table (Layer | Components | Technology Stack) covering all system layers. Then insert the diagram token: {{DIAGRAM:architecture:Solution Architecture Overview}} on its own line. Data flow as numbered list. Security & access section covering RBAC, encryption, credential handling, data residency. NOTE that architecture is indicative and finalised during discovery.
+7. "Project Delivery Timeline" — Intro paragraph. Phase table (Phase | Timeline | Phase Name | Key Deliverables | Client Dependencies Due) covering all phases from kickoff to post go-live support. Then insert the diagram token: {{DIAGRAM:gantt:Project Delivery Timeline}} on its own line. TIMELINE NOTE that the schedule is contingent on all client dependencies being met.
 8. "Project Team" — Team table (Role | Allocation | Duration | Primary Responsibilities) with realistic allocations (Full-time / Part-time % / weeks). Include all roles needed for the project.
 9. "Governance & Responsibilities" — Vendor responsibilities (bullet list of 6-8 specific obligations). Client responsibilities (numbered list of 12-16 specific data/access/approval obligations with exact deadlines). CLIENT DEPENDENCY block. Governance cadence table (Meeting | Frequency | Participants | Purpose). Escalation path table (Level | Role | Trigger | Resolution Target — L1 PM through L4 CEO).
 10. "Service Level Agreements" — Platform Performance SLAs table (SLA Metric | Target | Measurement Method | Exclusions) for every major function. Post Go-Live Support SLAs table (Priority | Definition | Response Time | Resolution Target) with P1/P2/P3. NOTE on warranty period and exclusions.
@@ -253,6 +265,15 @@ MANDATORY SECTIONS — generate ALL of these in order:
 15. "Terms & Conditions" — Numbered subsections: Effective Date & Commencement, Payment Confirmation, Infrastructure Confirmation, Timeline Confirmation, Post Go-Live Support Confirmation, Confidentiality, Taxes, Delayed Payments, IP Confirmation, Limitation of Liability (capped at total contract value, no consequential damages), Notices (email to both contacts deemed valid).
 16. "Future Scope" — Table of post-go-live enhancement opportunities (Enhancement | Description | Estimated Investment) with 4-6 realistic add-ons.
 17. "Proposal Acceptance" — Closing paragraph. Two-column signature block: Vendor company left, Client company right (Authorized Signatory, Name, Title, Date lines for each). Vendor contact details at bottom.
+
+DIAGRAM PLACEHOLDER TOKENS — embed these in content where visual diagrams would aid comprehension:
+- Token format: {{DIAGRAM:type:Descriptive Label}} — place on its own line in the markdown content
+- Valid types: architecture | gantt | flowchart | sequence | bpmn | custom
+- Section 3 "Scope of Services": if the project has a clear process flow (e.g. invoice intake, order processing), embed {{DIAGRAM:flowchart:End-to-End Process Flow}} after describing the main workflow
+- Section 6 "Solution Architecture": MUST embed {{DIAGRAM:architecture:Solution Architecture Overview}} after the architecture layers table
+- Section 7 "Project Delivery Timeline": MUST embed {{DIAGRAM:gantt:Project Delivery Timeline}} after the phase table
+- For complex integrations, you may add {{DIAGRAM:sequence:Integration Sequence}} in the relevant scope subsection
+- Do NOT add diagram tokens to sections that are primarily tables or legal text (sections 1-2, 10-17)
 
 WRITING QUALITY REQUIREMENTS — non-negotiable:
 - CLIENT DEPENDENCY: Every requirement and phase must call out exactly what data, credentials, or approvals are needed and by when. Use the label "CLIENT DEPENDENCY:" in bold.
@@ -323,9 +344,9 @@ Rules:
 
     console.log('OpenAI response received');
 
-    // For proposal_section, return raw text; for full_sow and others return JSON
+    // For proposal_section and mermaid_diagram, return raw text; for full_sow and others return JSON
     let parsedJSON: any;
-    if (type === 'proposal_section') {
+    if (type === 'proposal_section' || type === 'mermaid_diagram') {
       parsedJSON = generatedText.trim();
     } else {
       // Extract JSON from response (handle markdown code blocks)
