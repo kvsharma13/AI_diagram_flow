@@ -53,7 +53,7 @@ export default function LandingPage() {
 
         <div className="flex items-center justify-center gap-4 mb-12">
           <Button size="xl" asChild>
-            <Link href="/sign-in?redirect_url=/pricing">
+            <Link href="/sign-in?redirect_url=/pricing" className="flex items-center gap-2 whitespace-nowrap">
               Get Started
               <ArrowRight className="w-5 h-5" />
             </Link>
