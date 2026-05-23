@@ -157,7 +157,7 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <main
-        className={`min-h-screen transition-all duration-300 ${
+        className={`h-screen overflow-auto transition-all duration-300 ${
           sidebarCollapsed ? 'ml-[72px]' : 'ml-60'
         }`}
       >

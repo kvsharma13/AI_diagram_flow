@@ -23,10 +23,13 @@ export default function InfrastructureEditor() {
   const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('horizontal');
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Load default template
+  // Load default template — reinitialize if no nodes or if application-mode nodes are present
   useEffect(() => {
-    if (diagram && diagram.nodes.length === 0) {
-      handleGenerateFromCode();
+    if (diagram) {
+      const hasAppNodes = diagram.nodes.some((n: any) => n.layerId);
+      if (diagram.nodes.length === 0 || hasAppNodes) {
+        handleGenerateFromCode();
+      }
     }
   }, []);
 
@@ -284,7 +287,7 @@ connections:
         )}
 
         {/* Canvas */}
-        <div className="flex-1" ref={canvasRef}>
+        <div className="flex-1 min-h-0" ref={canvasRef}>
           <ReactFlowCanvas
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
