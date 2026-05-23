@@ -162,14 +162,17 @@ export default function ProjectEditorPage() {
   ];
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg-base)' }}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
+      <div className="flex-shrink-0" style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
         <div className="px-6 py-3">
           <div className="flex items-center justify-between mb-2.5">
             <Link
               href="/dashboard/projects"
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'}
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Projects
@@ -178,12 +181,12 @@ export default function ProjectEditorPage() {
             {/* Save Status */}
             <div className="flex items-center gap-3">
               {isSaving ? (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Saving...</span>
                 </div>
               ) : lastSaved ? (
-                <div className="flex items-center gap-2 text-sm text-green-600">
+                <div className="flex items-center gap-2 text-sm text-green-400">
                   <Check className="w-4 h-4" />
                   <span>Saved {lastSaved.toLocaleTimeString()}</span>
                 </div>
@@ -192,7 +195,8 @@ export default function ProjectEditorPage() {
               <button
                 onClick={saveProject}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium disabled:opacity-40"
+                style={{ background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
               >
                 <Save className="w-4 h-4" />
                 Save Now
@@ -217,13 +221,15 @@ export default function ProjectEditorPage() {
                       setIsEditingName(false);
                     }
                   }}
-                  className="text-2xl font-bold text-gray-900 px-3 py-1 border-2 border-purple-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="text-2xl font-bold px-3 py-1 border-2 border-purple-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  style={{ background: 'var(--surface-2)', color: 'var(--text-primary)' }}
                   autoFocus
                 />
               ) : (
                 <h1
                   onClick={() => setIsEditingName(true)}
-                  className="text-2xl font-bold text-gray-900 cursor-pointer hover:text-purple-600 transition-colors px-3 py-1 rounded-lg hover:bg-purple-50"
+                  className="text-2xl font-bold cursor-pointer transition-colors px-3 py-1 rounded-lg hover:bg-[rgba(124,58,237,0.08)]"
+                  style={{ color: 'var(--text-primary)' }}
                 >
                   {project?.name}
                 </h1>
@@ -243,8 +249,9 @@ export default function ProjectEditorPage() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                       isActive
                         ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : ''
                     }`}
+                    style={!isActive ? { background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' } : {}}
                   >
                     <Icon className="w-4 h-4" />
                     {editor.label}
