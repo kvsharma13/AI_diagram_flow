@@ -3,19 +3,22 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md",
+          "border-[rgba(124,58,237,0.35)] bg-[rgba(124,58,237,0.14)] text-[#8B5CF6]",
         secondary:
-          "border-transparent bg-gray-100 text-gray-900",
+          "border-white/[0.08] bg-white/[0.05] text-[#A1A1AA]",
         destructive:
-          "border-transparent bg-red-600 text-white shadow-md",
-        outline: "border-gray-300 text-gray-700",
-        success: "border-transparent bg-green-600 text-white shadow-md",
-        warning: "border-transparent bg-yellow-500 text-white shadow-md",
+          "border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.10)] text-[#EF4444]",
+        outline:
+          "border-white/[0.10] text-[#71717A]",
+        success:
+          "border-[rgba(34,197,94,0.25)] bg-[rgba(34,197,94,0.10)] text-[#22C55E]",
+        warning:
+          "border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.10)] text-[#F59E0B]",
       },
     },
     defaultVariants: {

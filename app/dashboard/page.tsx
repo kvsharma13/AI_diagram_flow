@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Users, Sparkles, TrendingUp, Zap, Lock, Calendar, Plus, RefreshCw, Boxes } from 'lucide-react';
+import {
+  Users, Sparkles, TrendingUp, Zap, Lock,
+  Calendar, Plus, RefreshCw, Boxes, X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
@@ -29,14 +30,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     checkSubscription();
-
-    // Refetch when page becomes visible again (e.g., after using AI)
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        checkSubscription();
-      }
+      if (!document.hidden) checkSubscription();
     };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
@@ -47,9 +43,7 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         setSubscriptionCheck(data);
-        // Don't redirect - allow access to dashboard regardless of subscription
       }
-
       const usageResponse = await fetch('/api/ai-usage');
       if (usageResponse.ok) {
         const usageData = await usageResponse.json();
@@ -66,9 +60,8 @@ export default function DashboardPage() {
     }
   };
 
-  const createGanttProject = async () => {
+  const createProject = async (destination: string) => {
     if (!projectName.trim()) return;
-
     setIsCreating(true);
     try {
       const response = await fetch('/api/projects', {
@@ -76,479 +69,441 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: projectName.trim() }),
       });
-
       if (response.ok) {
         const data = await response.json();
-        router.push(`/dashboard/gantt?projectId=${data.project.id}`);
+        router.push(`${destination}?projectId=${data.project.id}`);
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to create project');
       }
-    } catch (error) {
-      console.error('Failed to create project:', error);
+    } catch {
       alert('Failed to create project. Please try again.');
     } finally {
       setIsCreating(false);
     }
   };
 
-  const createRaciProject = async () => {
-    if (!projectName.trim()) return;
-
-    setIsCreating(true);
-    try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: projectName.trim() }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        router.push(`/dashboard/raci?projectId=${data.project.id}`);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to create project');
-      }
-    } catch (error) {
-      console.error('Failed to create project:', error);
-      alert('Failed to create project. Please try again.');
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const createArchitectureProject = async () => {
-    if (!projectName.trim()) return;
-
-    setIsCreating(true);
-    try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: projectName.trim() }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        router.push(`/dashboard/architecture?projectId=${data.project.id}`);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to create project');
-      }
-    } catch (error) {
-      console.error('Failed to create project:', error);
-      alert('Failed to create project. Please try again.');
-    } finally {
-      setIsCreating(false);
-    }
+  const closeAllDialogs = () => {
+    setShowGanttDialog(false);
+    setShowRaciDialog(false);
+    setShowArchitectureDialog(false);
+    setProjectName('');
   };
 
   if (isLoading) {
     return (
-      <div className="p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-64" />
-              <Skeleton className="h-5 w-96" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-40 w-full" />
-          </div>
+      <div className="p-8 max-w-6xl mx-auto space-y-6">
+        <Skeleton className="h-9 w-56 rounded-lg" style={{ background: 'var(--surface-2)' }} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[0,1,2].map(i => (
+            <Skeleton key={i} className="h-32 rounded-xl" style={{ background: 'var(--surface-2)' }} />
+          ))}
         </div>
       </div>
     );
   }
 
-  // Allow access to dashboard even without subscription
   const needsSubscription = subscriptionCheck?.needsSubscription && !subscriptionCheck?.isWhitelisted;
+  const creditPct = stats.aiCreditsLimit > 0
+    ? (stats.aiCreditsRemaining / stats.aiCreditsLimit) * 100
+    : 0;
 
-  const planBadge = subscriptionCheck?.planType === 'pro' ? (
-    <Badge variant="default">Pro Plan</Badge>
-  ) : subscriptionCheck?.planType === 'basic' ? (
-    <Badge variant="secondary">Basic Plan</Badge>
-  ) : subscriptionCheck?.isWhitelisted ? (
-    <Badge variant="success">Unlimited Access</Badge>
-  ) : null;
+  const planLabel = subscriptionCheck?.planType === 'pro'
+    ? 'Pro'
+    : subscriptionCheck?.planType === 'basic'
+    ? 'Basic'
+    : subscriptionCheck?.isWhitelisted
+    ? 'Unlimited'
+    : null;
+
+  const tools = [
+    {
+      label: 'Gantt Chart',
+      description: 'Visual project timelines with drag-and-drop editing',
+      icon: Calendar,
+      onClick: () => setShowGanttDialog(true),
+    },
+    {
+      label: 'RACI Matrix',
+      description: 'Define clear responsibilities across stakeholders',
+      icon: Users,
+      onClick: () => setShowRaciDialog(true),
+    },
+    {
+      label: 'Architecture Diagram',
+      description: 'Design system and infrastructure visually',
+      icon: Boxes,
+      onClick: () => setShowArchitectureDialog(true),
+    },
+    {
+      label: 'AI Generation',
+      description: 'Describe your project — AI builds the artifacts',
+      icon: Sparkles,
+      onClick: () => setShowGanttDialog(true),
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-        {/* Subscription Warning Banner */}
-        {needsSubscription && (
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5" />
-                <div>
-                  <p className="font-semibold">Subscribe to unlock all features</p>
-                  <p className="text-sm text-white/90">
-                    You can explore the dashboard, but need a subscription to use AI generation and features
-                  </p>
-                </div>
-              </div>
-              <Button asChild variant="secondary" size="sm" className="bg-white text-purple-600 hover:bg-gray-100">
-                <Link href="/pricing">
-                  Subscribe Now
-                </Link>
-              </Button>
-            </div>
+    <div className="min-h-screen" style={{ background: 'var(--bg-base)' }}>
+      {/* Subscription warning banner */}
+      {needsSubscription && (
+        <div
+          className="flex items-center justify-between px-6 py-3 text-sm"
+          style={{
+            background: 'rgba(124,58,237,0.12)',
+            borderBottom: '1px solid rgba(124,58,237,0.25)',
+          }}
+        >
+          <div className="flex items-center gap-3" style={{ color: 'var(--text-secondary)' }}>
+            <Lock className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--accent-hover)' }} />
+            <span>Subscribe to unlock AI generation and all features.</span>
           </div>
-        )}
+          <Button asChild size="sm" className="ml-4">
+            <Link href="/pricing">Subscribe</Link>
+          </Button>
+        </div>
+      )}
 
-        <div className="p-8 max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-bold text-gray-900">
-                  Welcome back, {user?.firstName || 'User'}!
-                </h1>
-                {planBadge}
+      <div className="p-8 max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Good to see you, {user?.firstName || 'there'}
+            </h1>
+            {planLabel && (
+              <span
+                className="text-xs font-medium px-2.5 py-0.5 rounded-full"
+                style={{
+                  background: 'var(--accent-soft-bg)',
+                  color: 'var(--accent-hover)',
+                  border: '1px solid var(--accent-soft-bd)',
+                }}
+              >
+                {planLabel}
+              </span>
+            )}
+          </div>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            Your workspace is ready. Start building or continue where you left off.
+          </p>
+        </div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+          {/* Projects */}
+          <div
+            className="rounded-xl p-5"
+            style={{
+              background: 'var(--surface-1)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                Projects
+              </span>
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'var(--accent-soft-bg)' }}
+              >
+                <Calendar className="w-4 h-4" style={{ color: 'var(--accent-hover)' }} />
               </div>
-              <p className="text-gray-600 text-lg">
-                Here's what's happening with your projects today.
-              </p>
             </div>
+            <div className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+              {stats.projects}
+            </div>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Total created</p>
           </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Projects Card */}
-          <Card className="hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Total Projects
-              </CardTitle>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{stats.projects}</div>
-              <p className="text-xs text-gray-600 mt-1">Projects created</p>
-            </CardContent>
-          </Card>
-
-          {/* AI Credits Card */}
-          <Card className="bg-gradient-to-br from-purple-600 to-pink-600 text-white border-none hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white/90">
-                AI Generations
-              </CardTitle>
-              <div className="flex items-center gap-2">
+          {/* AI Credits */}
+          <div
+            className="rounded-xl p-5"
+            style={{
+              background: 'var(--surface-1)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                AI Credits
+              </span>
+              <div className="flex items-center gap-1">
                 <button
                   onClick={checkSubscription}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  className="w-7 h-7 rounded-md flex items-center justify-center transition-colors hover:bg-white/[0.05]"
                   title="Refresh"
                 >
-                  <RefreshCw className="w-4 h-4 text-white" />
+                  <RefreshCw className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
                 </button>
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-white" />
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: 'var(--accent-soft-bg)' }}
+                >
+                  <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-hover)' }} />
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.aiCreditsRemaining}/{stats.aiCreditsLimit}</div>
-              <p className="text-xs text-white/80 mt-1">Remaining this month</p>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+              {stats.aiCreditsRemaining}
+              <span className="text-base font-normal ml-1" style={{ color: 'var(--text-muted)' }}>
+                / {stats.aiCreditsLimit}
+              </span>
+            </div>
+            <div className="w-full h-1 rounded-full mt-2" style={{ background: 'var(--surface-3)' }}>
+              <div
+                className="h-1 rounded-full transition-all"
+                style={{
+                  width: `${creditPct}%`,
+                  background: creditPct > 30 ? 'var(--accent-hover)' : 'var(--warning)',
+                }}
+              />
+            </div>
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>Remaining this month</p>
+          </div>
 
-          {/* Charts Card */}
-          <Card className="hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                Total Charts
-              </CardTitle>
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
+          {/* Charts */}
+          <div
+            className="rounded-xl p-5"
+            style={{
+              background: 'var(--surface-1)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                Artifacts
+              </span>
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'var(--accent-soft-bg)' }}
+              >
+                <TrendingUp className="w-4 h-4" style={{ color: 'var(--accent-hover)' }} />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{stats.totalCharts}</div>
-              <p className="text-xs text-gray-600 mt-1">All time</p>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+              {stats.totalCharts}
+            </div>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>All time</p>
+          </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Create New Project */}
-          <Card className="group border-2 border-dashed border-gray-300 hover:border-purple-400 hover:shadow-xl transition-all cursor-pointer">
-            <Link href="/dashboard/projects/new">
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Plus className="w-7 h-7 text-white" />
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Quick start
+            </h2>
+            <Link
+              href="/dashboard/projects"
+              className="text-xs transition-colors hover:underline"
+              style={{ color: 'var(--accent-hover)' }}
+            >
+              All projects →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* New Project CTA */}
+            <Link
+              href="/dashboard/projects/new"
+              className="group flex items-center gap-4 rounded-xl px-5 py-4 transition-all duration-200"
+              style={{
+                background: 'var(--accent-soft-bg)',
+                border: '1px solid var(--accent-soft-bd)',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.20)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'var(--accent-soft-bg)';
+              }}
+            >
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: 'var(--accent)' }}
+              >
+                <Plus className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  New project
+                </p>
+                <p className="text-xs" style={{ color: 'var(--accent-hover)' }}>
+                  Start from scratch or use a template
+                </p>
+              </div>
+            </Link>
+
+            {/* Tool cards */}
+            {tools.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <button
+                  key={tool.label}
+                  onClick={tool.onClick}
+                  className="group flex items-center gap-4 rounded-xl px-5 py-4 text-left transition-all duration-200 w-full"
+                  style={{
+                    background: 'var(--surface-1)',
+                    border: '1px solid var(--border)',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = 'var(--surface-hover)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.10)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = 'var(--surface-1)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+                  }}
+                >
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'var(--surface-3)' }}
+                  >
+                    <Icon className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
                   </div>
                   <div>
-                    <CardTitle className="text-xl mb-2">Create New Project</CardTitle>
-                    <CardDescription>
-                      Start a new Gantt chart or RACI matrix from scratch or with AI
-                    </CardDescription>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {tool.label}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {tool.description}
+                    </p>
                   </div>
-                </div>
-              </CardHeader>
-            </Link>
-          </Card>
-
-          {/* View All Projects */}
-          <Card className="group bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-400 hover:shadow-xl transition-all cursor-pointer">
-            <Link href="/dashboard/projects">
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Calendar className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl mb-2">View All Projects</CardTitle>
-                    <CardDescription className="text-gray-700">
-                      Access and manage all your existing projects
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Link>
-          </Card>
-
-          {/* Gantt Chart */}
-          <Card
-            className="group bg-white border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all cursor-pointer"
-            onClick={() => setShowGanttDialog(true)}
-          >
-            <CardHeader>
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                  <Calendar className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl mb-2">Gantt Chart</CardTitle>
-                  <CardDescription>
-                    Create beautiful timelines with drag-and-drop editing
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* RACI Matrix */}
-          <Card
-            className="group bg-gradient-to-br from-purple-600 to-pink-600 border-none text-white hover:shadow-xl transition-all cursor-pointer"
-            onClick={() => setShowRaciDialog(true)}
-          >
-            <CardHeader>
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                  <Users className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl mb-2 text-white">RACI Matrix</CardTitle>
-                  <CardDescription className="text-white/90">
-                    Define clear responsibilities with visual matrix
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* Architecture Diagram */}
-          <Card
-            className="group bg-gradient-to-br from-orange-500 to-red-500 border-none text-white hover:shadow-xl transition-all cursor-pointer"
-            onClick={() => setShowArchitectureDialog(true)}
-          >
-            <CardHeader>
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                  <Boxes className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl mb-2 text-white">Architecture Diagram</CardTitle>
-                  <CardDescription className="text-white/90">
-                    Design system architecture with visual components
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Features Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">What you can do with ProjectFlow AI</CardTitle>
-            <CardDescription>Explore all the powerful features at your fingertips</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-purple-50 transition-colors">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-6 h-6 text-purple-600" />
+        {/* Features section */}
+        <div
+          className="rounded-xl p-6"
+          style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
+        >
+          <h2 className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+            What&apos;s in your workspace
+          </h2>
+          <p className="text-xs mb-6" style={{ color: 'var(--text-muted)' }}>
+            Every tool you need for enterprise project planning, powered by AI
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            {[
+              { icon: Sparkles, label: 'AI Generation', desc: 'Describe a project and get Gantt, RACI, and SOW artifacts instantly' },
+              { icon: Calendar, label: 'Gantt Charts', desc: 'Interactive timelines with phases, milestones, and drag-and-drop editing' },
+              { icon: Users, label: 'RACI Matrix', desc: 'Define ownership and accountability across all stakeholders' },
+              { icon: Zap, label: 'Auto-Save', desc: 'Every change is synced to the cloud automatically, no manual saves needed' },
+            ].map(({ icon: Icon, label, desc }) => (
+              <div
+                key={label}
+                className="flex items-start gap-3 rounded-lg p-4 transition-colors"
+                style={{ background: 'var(--surface-2)' }}
+              >
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ background: 'var(--accent-soft-bg)' }}
+                >
+                  <Icon className="w-4 h-4" style={{ color: 'var(--accent-hover)' }} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-lg">AI-Powered Generation</h3>
-                  <p className="text-sm text-gray-600">
-                    Paste your project description and let AI create professional charts instantly
+                  <h3 className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                    {label}
+                  </h3>
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    {desc}
                   </p>
                 </div>
               </div>
-
-              <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-blue-50 transition-colors">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Calendar className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-lg">Gantt Charts</h3>
-                  <p className="text-sm text-gray-600">
-                    Create beautiful timelines with drag-and-drop editing and templates
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-green-50 transition-colors">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Users className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-lg">RACI Matrix</h3>
-                  <p className="text-sm text-gray-600">
-                    Define clear responsibilities with visual matrix and dual marks
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-orange-50 transition-colors">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-6 h-6 text-orange-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-lg">Auto-Save</h3>
-                  <p className="text-sm text-gray-600">
-                    Never lose your work with automatic cloud backup and sync
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
         </div>
-
-        {/* Gantt Project Name Dialog */}
-        {showGanttDialog && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Create Gantt Chart</h3>
-              <p className="text-sm text-gray-600 mb-4">Give your project a name to get started</p>
-              <input
-                type="text"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && createGanttProject()}
-                placeholder="Enter project name..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-                autoFocus
-              />
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowGanttDialog(false);
-                    setProjectName('');
-                  }}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  disabled={isCreating}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={createGanttProject}
-                  disabled={!projectName.trim() || isCreating}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                >
-                  {isCreating ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* RACI Project Name Dialog */}
-        {showRaciDialog && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Create RACI Matrix</h3>
-              <p className="text-sm text-gray-600 mb-4">Give your project a name to get started</p>
-              <input
-                type="text"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && createRaciProject()}
-                placeholder="Enter project name..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
-                autoFocus
-              />
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowRaciDialog(false);
-                    setProjectName('');
-                  }}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  disabled={isCreating}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={createRaciProject}
-                  disabled={!projectName.trim() || isCreating}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                >
-                  {isCreating ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Architecture Project Name Dialog */}
-        {showArchitectureDialog && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Create Architecture Diagram</h3>
-              <p className="text-sm text-gray-600 mb-4">Give your project a name to get started</p>
-              <input
-                type="text"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && createArchitectureProject()}
-                placeholder="Enter project name..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
-                autoFocus
-              />
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowArchitectureDialog(false);
-                    setProjectName('');
-                  }}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                  disabled={isCreating}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={createArchitectureProject}
-                  disabled={!projectName.trim() || isCreating}
-                  className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                >
-                  {isCreating ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Project Name Dialogs */}
+      {(showGanttDialog || showRaciDialog || showArchitectureDialog) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+          onClick={(e) => e.target === e.currentTarget && closeAllDialogs()}
+        >
+          <div
+            className="w-full max-w-md rounded-xl p-6 shadow-2xl"
+            style={{
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {showGanttDialog && 'New Gantt Chart'}
+                  {showRaciDialog && 'New RACI Matrix'}
+                  {showArchitectureDialog && 'New Architecture Diagram'}
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  Name your project to continue
+                </p>
+              </div>
+              <button
+                onClick={closeAllDialogs}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                style={{ color: 'var(--text-muted)' }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = 'var(--surface-3)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = '';
+                }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <input
+              type="text"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  if (showGanttDialog) createProject('/dashboard/gantt');
+                  if (showRaciDialog) createProject('/dashboard/raci');
+                  if (showArchitectureDialog) createProject('/dashboard/architecture');
+                }
+              }}
+              placeholder="e.g. Q3 Product Launch"
+              autoFocus
+              className="w-full px-4 py-2.5 rounded-lg text-sm mb-5 outline-none transition-all"
+              style={{
+                background: 'var(--surface-3)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+              }}
+              onFocus={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-soft-bd)';
+              }}
+              onBlur={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+              }}
+            />
+
+            <div className="flex gap-3 justify-end">
+              <Button variant="secondary" onClick={closeAllDialogs} disabled={isCreating}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (showGanttDialog) createProject('/dashboard/gantt');
+                  if (showRaciDialog) createProject('/dashboard/raci');
+                  if (showArchitectureDialog) createProject('/dashboard/architecture');
+                }}
+                disabled={!projectName.trim() || isCreating}
+              >
+                {isCreating ? 'Creating…' : 'Create'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

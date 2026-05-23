@@ -8,43 +8,65 @@ export default function Sidebar() {
   const { currentEditor, setCurrentEditor } = useProjectStore();
 
   const menuItems: { id: EditorType; label: string; icon: React.ReactNode }[] = [
-    { id: 'gantt', label: 'Gantt Editor', icon: <Calendar className="w-5 h-5" /> },
-    { id: 'raci', label: 'RACI Matrix', icon: <Users className="w-5 h-5" /> },
-    { id: 'architecture', label: 'Architecture', icon: <Network className="w-5 h-5" /> },
-    { id: 'flowchart', label: 'Flowchart', icon: <GitBranch className="w-5 h-5" /> },
-    { id: 'templates', label: 'Templates', icon: <FileText className="w-5 h-5" /> },
+    { id: 'gantt',      label: 'Gantt',        icon: <Calendar className="w-4 h-4" /> },
+    { id: 'raci',       label: 'RACI Matrix',   icon: <Users className="w-4 h-4" /> },
+    { id: 'architecture',label: 'Architecture', icon: <Network className="w-4 h-4" /> },
+    { id: 'flowchart',  label: 'Flowchart',     icon: <GitBranch className="w-4 h-4" /> },
+    { id: 'templates',  label: 'Templates',     icon: <FileText className="w-4 h-4" /> },
   ];
 
   return (
-    <div className="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 flex flex-col">
-      <div className="p-6 border-b border-gray-700">
-        <h1 className="text-2xl font-bold">SaaS Editor</h1>
-        <p className="text-sm text-gray-400 mt-1">Multi-Editor Platform</p>
+    <div
+      className="w-56 h-screen fixed left-0 top-0 flex flex-col"
+      style={{ background: 'var(--surface-1)', borderRight: '1px solid var(--border)' }}
+    >
+      <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--divider)' }}>
+        <h1 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+          ProjectFlow <span style={{ color: 'var(--accent-hover)' }}>AI</span>
+        </h1>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Editor workspace</p>
       </div>
 
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <button
-                onClick={() => setCurrentEditor(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  currentEditor === item.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800'
-                }`}
-              >
-                {item.icon}
-                <span className="font-medium">{item.label}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+      <nav className="flex-1 px-3 py-4 space-y-0.5">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setCurrentEditor(item.id)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150"
+            style={
+              currentEditor === item.id
+                ? {
+                    background: 'var(--accent-soft-bg)',
+                    border: '1px solid var(--accent-soft-bd)',
+                    color: '#fff',
+                  }
+                : {
+                    color: 'var(--text-secondary)',
+                    border: '1px solid transparent',
+                  }
+            }
+            onMouseEnter={(e) => {
+              if (currentEditor !== item.id) {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (currentEditor !== item.id) {
+                (e.currentTarget as HTMLElement).style.background = '';
+                (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
+              }
+            }}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
       </nav>
 
-      <div className="p-4 border-t border-gray-700">
-        <p className="text-xs text-gray-500 text-center">
-          Built with Next.js & Zustand
+      <div className="px-5 py-4" style={{ borderTop: '1px solid var(--divider)' }}>
+        <p className="text-xs" style={{ color: 'var(--text-disabled)' }}>
+          ProjectFlow AI
         </p>
       </div>
     </div>

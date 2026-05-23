@@ -1,182 +1,222 @@
 
 @import "tailwindcss";
 
+/* ============================================================
+   DESIGN TOKENS — ProjectFlow AI Enterprise Color System
+   ============================================================ */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 9%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 9%;
-  --primary: 262 83% 58%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 96%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 45%;
-  --accent: 0 0% 96%;
-  --accent-foreground: 0 0% 9%;
-  --destructive: 0 84% 60%;
+  /* Backgrounds */
+  --bg-base:        #0B0D10;
+  --bg-secondary:   #0F1115;
+
+  /* Surfaces */
+  --surface-1:      #111318;
+  --surface-2:      #171A21;
+  --surface-3:      #1D2129;
+  --surface-hover:  #232833;
+
+  /* Borders */
+  --border:         rgba(255,255,255,0.06);
+  --divider:        rgba(255,255,255,0.04);
+
+  /* Text */
+  --text-primary:   #F3F4F6;
+  --text-secondary: #A1A1AA;
+  --text-muted:     #71717A;
+  --text-disabled:  #52525B;
+
+  /* Accent — violet */
+  --accent:         #7C3AED;
+  --accent-hover:   #8B5CF6;
+  --accent-active:  #6D28D9;
+  --accent-soft-bg: rgba(124,58,237,0.14);
+  --accent-soft-bd: rgba(124,58,237,0.35);
+
+  /* Status */
+  --success:        #22C55E;
+  --warning:        #F59E0B;
+  --error:          #EF4444;
+  --info:           #38BDF8;
+
+  /* Shadcn slot vars (HSL) */
+  --background:          222 16% 6%;
+  --foreground:          220 13% 95%;
+  --card:                224 18% 8%;
+  --card-foreground:     220 13% 95%;
+  --popover:             224 20% 9%;
+  --popover-foreground:  220 13% 95%;
+  --primary:             263 70% 56%;
+  --primary-foreground:  0 0% 100%;
+  --secondary:           224 18% 10%;
+  --secondary-foreground:220 10% 65%;
+  --muted:               224 16% 11%;
+  --muted-foreground:    220 9% 46%;
+  --accent:              263 70% 56%;
+  --accent-foreground:   0 0% 100%;
+  --destructive:         0 62% 50%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
-  --ring: 262 83% 58%;
-  --radius: 0.5rem;
+  --border:              224 14% 12%;
+  --input:               224 14% 12%;
+  --ring:                263 70% 56%;
+  --radius:              0.5rem;
 }
 
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background:            hsl(var(--background));
+  --color-foreground:            hsl(var(--foreground));
+  --color-card:                  hsl(var(--card));
+  --color-card-foreground:       hsl(var(--card-foreground));
+  --color-popover:               hsl(var(--popover));
+  --color-popover-foreground:    hsl(var(--popover-foreground));
+  --color-primary:               hsl(var(--primary));
+  --color-primary-foreground:    hsl(var(--primary-foreground));
+  --color-secondary:             hsl(var(--secondary));
+  --color-secondary-foreground:  hsl(var(--secondary-foreground));
+  --color-muted:                 hsl(var(--muted));
+  --color-muted-foreground:      hsl(var(--muted-foreground));
+  --color-accent:                hsl(var(--accent));
+  --color-accent-foreground:     hsl(var(--accent-foreground));
+  --color-destructive:           hsl(var(--destructive));
+  --color-destructive-foreground:hsl(var(--destructive-foreground));
+  --color-border:                hsl(var(--border));
+  --color-input:                 hsl(var(--input));
+  --color-ring:                  hsl(var(--ring));
+  --font-sans:                   var(--font-geist-sans);
+  --font-mono:                   var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 93%;
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 93%;
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 93%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 93%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 64%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 93%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 93%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 262 83% 58%;
-  }
+/* ============================================================
+   BASE
+   ============================================================ */
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Modern scrollbar styles */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(10px);
+  background: var(--surface-1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  transition: all 0.3s ease;
+  background: rgba(124,58,237,0.4);
+  border-radius: 999px;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(139,92,246,0.6);
 }
 
-/* React Flow custom styles */
-.react-flow__node {
-  cursor: move;
+/* ============================================================
+   SELECTION / FOCUS
+   ============================================================ */
+::selection {
+  background-color: rgba(124,58,237,0.4);
+  color: #fff;
 }
 
-.react-flow__handle {
-  width: 8px;
-  height: 8px;
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-/* Modern Animations */
+/* ============================================================
+   SURFACE UTILITIES
+   ============================================================ */
+.surface-1 { background: var(--surface-1); }
+.surface-2 { background: var(--surface-2); }
+.surface-3 { background: var(--surface-3); }
+
+.card-dark {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-dark:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.10);
+  box-shadow: 0 0 0 1px rgba(124,58,237,0.08);
+}
+
+.glass {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+}
+
+/* ============================================================
+   ACCENT UTILITIES
+   ============================================================ */
+.accent-glow {
+  box-shadow: 0 0 20px rgba(124,58,237,0.25), 0 0 40px rgba(124,58,237,0.08);
+}
+
+.accent-glow-sm {
+  box-shadow: 0 0 12px rgba(124,58,237,0.20);
+}
+
+.text-accent { color: var(--accent-hover); }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+  0%   { background-position: -800px 0; }
+  100% { background-position: 800px 0; }
 }
 
-/* Glassmorphism utility */
-.glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+@keyframes pulse-accent {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(124,58,237,0); }
 }
 
-.glass-dark {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
+/* ============================================================
+   TEXT UTILITIES
+   ============================================================ */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -191,56 +231,36 @@ body {
   overflow: hidden;
 }
 
-/* Smooth transitions */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ============================================================
+   REACT FLOW
+   ============================================================ */
+.react-flow__node { cursor: move; }
+.react-flow__handle { width: 8px; height: 8px; }
+
+.react-flow__background {
+  background-color: var(--bg-base) !important;
 }
 
-/* Selection styles */
-::selection {
-  background-color: #3B82F6;
-  color: white;
-}
-
-/* Focus styles */
-:focus-visible {
-  outline: 2px solid #3B82F6;
-  outline-offset: 2px;
-}
-
-/* Custom gradient backgrounds */
-.bg-gradient-premium {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-/* Dragging cursor */
-.cursor-grabbing {
-  cursor: grabbing !important;
-}
-
-.cursor-grab {
-  cursor: grab;
-}
-
-/* Mermaid Diagram Styles */
+/* ============================================================
+   MERMAID
+   ============================================================ */
 .mermaid-container svg {
   max-width: 100%;
   height: auto;
-  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-geist-sans, 'Inter', sans-serif);
 }
 
 .mermaid-container .node rect,
 .mermaid-container .node circle,
 .mermaid-container .node polygon {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
   transition: filter 0.2s ease;
 }
 
 .mermaid-container .node:hover rect,
 .mermaid-container .node:hover circle,
 .mermaid-container .node:hover polygon {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  filter: drop-shadow(0 4px 12px rgba(124,58,237,0.3));
 }
 
 .mermaid-container .edgeLabel {
@@ -254,7 +274,6 @@ body {
   font-weight: 500;
 }
 
-/* Make subgraph/cluster backgrounds transparent - no grey boxes */
 .mermaid-container .cluster rect,
 .mermaid-container g.cluster rect {
   fill: transparent !important;
@@ -265,16 +284,24 @@ body {
 .mermaid-container .cluster text,
 .mermaid-container g.cluster text {
   font-weight: 600;
-  fill: #9ca3af;
-  font-size: 14px;
+  fill: var(--text-muted);
+  font-size: 13px;
 }
 
-/* Code editor enhancements */
+/* ============================================================
+   CODE EDITOR
+   ============================================================ */
 textarea.font-mono {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
 }
 
 textarea.font-mono::placeholder {
-  color: #6b7280;
-  opacity: 0.5;
+  color: var(--text-muted);
+  opacity: 0.6;
 }
+
+/* ============================================================
+   CURSOR
+   ============================================================ */
+.cursor-grabbing { cursor: grabbing !important; }
+.cursor-grab { cursor: grab; }
