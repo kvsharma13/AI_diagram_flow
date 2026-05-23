@@ -70,7 +70,7 @@ export default function RACIMatrixEditor() {
   };
 
   const getRACIColor = (value: RACIValue) => {
-    if (!value) return 'bg-gray-100 text-gray-400 hover:bg-gray-200';
+    if (!value) return 'text-[#52525B] hover:bg-[rgba(255,255,255,0.06)]';
 
     // For dual/multi values, use gradient
     const letters = value.split('/');
@@ -83,7 +83,7 @@ export default function RACIMatrixEditor() {
       case 'A': return 'bg-green-500 text-white';
       case 'C': return 'bg-yellow-500 text-white';
       case 'I': return 'bg-purple-500 text-white';
-      default: return 'bg-gray-100 text-gray-400 hover:bg-gray-200';
+      default: return 'text-[#52525B] hover:bg-[rgba(255,255,255,0.06)]';
     }
   };
 
@@ -312,14 +312,14 @@ export default function RACIMatrixEditor() {
   }
 
   return (
-    <div id="raci-export-area" className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+    <div id="raci-export-area" className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg-base)' }}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
+      <div className="flex-shrink-0" style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
         <div className="px-4 md:px-6 py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex-shrink-0">
-              <h1 className="text-xl md:text-2xl font-semibold text-gray-900">RACI Matrix</h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <h1 className="text-xl md:text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>RACI Matrix</h1>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 {tasks.length} tasks • {stakeholders.length} stakeholders
               </p>
             </div>
@@ -369,33 +369,34 @@ export default function RACIMatrixEditor() {
       <div className="flex-1 overflow-auto p-4 md:p-6">
         <div className="max-w-full">
           {/* Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-900">
-              <span className="font-semibold">💡 How to use:</span> Click individual R/A/C/I buttons to toggle multiple values (dual marks like R/A, C/I).
+          <div className="rounded-lg p-4 mb-6" style={{ background: 'var(--accent-soft-bg)', border: '1px solid var(--accent-soft-bd)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>💡 How to use:</span> Click individual R/A/C/I buttons to toggle multiple values (dual marks like R/A, C/I).
               Click the cell background to cycle single values. Double-click headers to edit names.
             </p>
           </div>
 
           {/* RACI Matrix Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gradient-to-b from-gray-50 to-white border-b-2 border-gray-300">
-                    <th className="px-6 py-4 text-left border-r-2 border-gray-300 min-w-[250px]">
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <tr style={{ background: 'var(--surface-2)', borderBottom: '2px solid var(--border)' }}>
+                    <th className="px-6 py-4 text-left min-w-[250px]" style={{ borderRight: '2px solid var(--border)' }}>
+                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
                         Task / Stakeholder
                       </span>
                     </th>
                     {stakeholders.map((sh) => (
-                      <th key={sh.id} className="px-4 py-3 text-center border-r border-gray-200 last:border-r-0 min-w-[120px] group relative">
+                      <th key={sh.id} className="px-4 py-3 text-center min-w-[120px] group relative" style={{ borderRight: '1px solid var(--border)' }}>
                         {editingStakeholder === sh.id ? (
                           <div className="space-y-2">
                             <input
                               type="text"
                               value={sh.name}
                               onChange={(e) => updateStakeholder(sh.id, { name: e.target.value })}
-                              className="w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm border border-purple-500 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              style={{ background: 'var(--surface-3)', color: 'var(--text-primary)' }}
                               autoFocus
                               onBlur={() => setEditingStakeholder(null)}
                               onKeyDown={(e) => e.key === 'Enter' && setEditingStakeholder(null)}
@@ -405,23 +406,21 @@ export default function RACIMatrixEditor() {
                               value={sh.role || ''}
                               onChange={(e) => updateStakeholder(sh.id, { role: e.target.value })}
                               placeholder="Role"
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-xs rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                             />
                           </div>
                         ) : (
-                          <div
-                            onDoubleClick={() => setEditingStakeholder(sh.id)}
-                            className="cursor-pointer"
-                          >
-                            <div className="font-semibold text-gray-900">{sh.name}</div>
-                            {sh.role && <div className="text-xs text-gray-600 mt-1">{sh.role}</div>}
+                          <div onDoubleClick={() => setEditingStakeholder(sh.id)} className="cursor-pointer">
+                            <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>{sh.name}</div>
+                            {sh.role && <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{sh.role}</div>}
                           </div>
                         )}
                         <button
                           onClick={() => deleteStakeholder(sh.id)}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded transition-all"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-900/30 rounded transition-all"
                         >
-                          <Trash2 className="w-3 h-3 text-red-600" />
+                          <Trash2 className="w-3 h-3 text-red-400" />
                         </button>
                       </th>
                     ))}
@@ -429,15 +428,23 @@ export default function RACIMatrixEditor() {
                 </thead>
                 <tbody>
                   {tasks.map((task, idx) => (
-                    <tr key={task.id} className={`border-b border-gray-200 group ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                      <td className="px-6 py-4 border-r-2 border-gray-200 relative">
+                    <tr
+                      key={task.id}
+                      className="group"
+                      style={{
+                        background: idx % 2 === 0 ? 'var(--surface-1)' : 'var(--bg-secondary)',
+                        borderBottom: '1px solid var(--divider)',
+                      }}
+                    >
+                      <td className="px-6 py-4 relative" style={{ borderRight: '2px solid var(--border)' }}>
                         {editingTask === task.id ? (
                           <div className="space-y-2 pr-8">
                             <input
                               type="text"
                               value={task.taskName}
                               onChange={(e) => updateTask(task.id, { taskName: e.target.value })}
-                              className="w-full px-2 py-1 text-sm font-semibold border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-sm font-semibold border border-purple-500 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              style={{ background: 'var(--surface-3)', color: 'var(--text-primary)' }}
                               autoFocus
                               onBlur={() => setEditingTask(null)}
                               onKeyDown={(e) => e.key === 'Enter' && setEditingTask(null)}
@@ -447,23 +454,21 @@ export default function RACIMatrixEditor() {
                               value={task.description || ''}
                               onChange={(e) => updateTask(task.id, { description: e.target.value })}
                               placeholder="Description"
-                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1 text-xs rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                             />
                           </div>
                         ) : (
-                          <div
-                            onDoubleClick={() => setEditingTask(task.id)}
-                            className="cursor-pointer pr-8"
-                          >
-                            <div className="font-medium text-gray-900">{task.taskName}</div>
-                            {task.description && <div className="text-sm text-gray-600 mt-1">{task.description}</div>}
+                          <div onDoubleClick={() => setEditingTask(task.id)} className="cursor-pointer pr-8">
+                            <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{task.taskName}</div>
+                            {task.description && <div className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{task.description}</div>}
                           </div>
                         )}
                         <button
                           onClick={() => deleteTask(task.id)}
-                          className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 rounded-lg transition-all"
+                          className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-900/30 rounded-lg transition-all"
                         >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <Trash2 className="w-4 h-4 text-red-400" />
                         </button>
                       </td>
                       {stakeholders.map((sh) => {
@@ -471,12 +476,13 @@ export default function RACIMatrixEditor() {
                         const letters = value ? value.split('/') : [];
 
                         return (
-                          <td key={sh.id} className="px-4 py-4 text-center border-r border-gray-100 last:border-r-0">
+                          <td key={sh.id} className="px-4 py-4 text-center" style={{ borderRight: '1px solid var(--divider)' }}>
                             <div className="flex flex-col items-center gap-2">
                               {/* Main cell display */}
                               <div
                                 onClick={() => handleCellClick(task.id, sh.id)}
                                 className={`w-16 h-10 rounded-lg font-bold text-sm transition-all hover:scale-105 hover:shadow-md cursor-pointer flex items-center justify-center ${getRACIColor(value)}`}
+                                style={!value ? { background: 'var(--surface-3)' } : {}}
                               >
                                 {value || ''}
                               </div>
@@ -500,10 +506,9 @@ export default function RACIMatrixEditor() {
                                         handleCellClick(task.id, sh.id, letter);
                                       }}
                                       className={`w-6 h-6 rounded text-xs font-bold transition-all ${
-                                        isActive
-                                          ? colorMap[letter]
-                                          : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
+                                        isActive ? colorMap[letter] : 'text-[#52525B] hover:text-white'
                                       }`}
+                                      style={!isActive ? { background: 'var(--surface-hover)' } : {}}
                                     >
                                       {letter}
                                     </button>
@@ -522,35 +527,35 @@ export default function RACIMatrixEditor() {
           </div>
 
           {/* Legend */}
-          <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">RACI Legend</h3>
+          <div className="mt-6 rounded-xl p-6" style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}>
+            <h3 className="font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>RACI Legend</h3>
             <div className="grid grid-cols-4 gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold">R</div>
                 <div>
-                  <div className="font-medium text-gray-900">Responsible</div>
-                  <div className="text-xs text-gray-600">Does the work</div>
+                  <div className="font-medium" style={{ color: 'var(--text-primary)' }}>Responsible</div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Does the work</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center text-white font-bold">A</div>
                 <div>
-                  <div className="font-medium text-gray-900">Accountable</div>
-                  <div className="text-xs text-gray-600">Ultimately answerable</div>
+                  <div className="font-medium" style={{ color: 'var(--text-primary)' }}>Accountable</div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Ultimately answerable</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-yellow-500 flex items-center justify-center text-white font-bold">C</div>
                 <div>
-                  <div className="font-medium text-gray-900">Consulted</div>
-                  <div className="text-xs text-gray-600">Provides input</div>
+                  <div className="font-medium" style={{ color: 'var(--text-primary)' }}>Consulted</div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Provides input</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-500 flex items-center justify-center text-white font-bold">I</div>
                 <div>
-                  <div className="font-medium text-gray-900">Informed</div>
-                  <div className="text-xs text-gray-600">Kept up-to-date</div>
+                  <div className="font-medium" style={{ color: 'var(--text-primary)' }}>Informed</div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Kept up-to-date</div>
                 </div>
               </div>
             </div>
@@ -558,9 +563,9 @@ export default function RACIMatrixEditor() {
 
           {/* Empty State */}
           {tasks.length === 0 && stakeholders.length === 0 && (
-            <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-16 text-center mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No RACI Matrix yet</h3>
-              <p className="text-gray-600 mb-6">
+            <div className="rounded-xl border-2 border-dashed p-16 text-center mt-6" style={{ background: 'var(--surface-1)', borderColor: 'var(--border)' }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>No RACI Matrix yet</h3>
+              <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
                 Start by adding stakeholders and tasks to create your responsibility matrix.
               </p>
               <div className="flex gap-3 justify-center">
