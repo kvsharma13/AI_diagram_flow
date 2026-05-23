@@ -287,6 +287,10 @@ export function SmartEdge({
       targetPosition,
     });
 
+    const labelStr = typeof label === 'string' ? label : '';
+    const pillW = Math.max(labelStr.length * 7 + 16, 32);
+    const pillH = 18;
+
     return (
       <>
         <path
@@ -300,21 +304,21 @@ export function SmartEdge({
         {label && (
           <>
             <rect
-              x={labelX - 20}
-              y={labelY - 8}
-              width={40}
-              height={16}
-              rx={labelBgBorderRadius || 4}
-              style={labelBgStyle as React.CSSProperties || { fill: 'rgba(15,23,42,0.8)' }}
+              x={labelX - pillW / 2}
+              y={labelY - pillH / 2}
+              width={pillW}
+              height={pillH}
+              rx={9}
+              style={{ fill: 'rgba(15,23,42,0.88)', stroke: 'rgba(148,163,184,0.18)', strokeWidth: 1 }}
             />
             <text
               x={labelX}
               y={labelY}
               textAnchor="middle"
               dominantBaseline="central"
-              style={labelStyle as React.CSSProperties || { fill: '#94a3b8', fontSize: 10 }}
+              style={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600, letterSpacing: '0.04em' }}
             >
-              {label as string}
+              {labelStr}
             </text>
           </>
         )}
@@ -335,6 +339,10 @@ export function SmartEdge({
     ? (pathPoints[midIdx - 1]?.y + pathPoints[midIdx]?.y) / 2 || sourceY
     : sourceY;
 
+  const labelStr = typeof label === 'string' ? label : '';
+  const pillW = Math.max(labelStr.length * 7 + 16, 32);
+  const pillH = 18;
+
   return (
     <>
       <path
@@ -348,21 +356,21 @@ export function SmartEdge({
       {label && (
         <>
           <rect
-            x={labelX - 20}
-            y={labelY - 8}
-            width={40}
-            height={16}
-            rx={labelBgBorderRadius || 4}
-            style={labelBgStyle as React.CSSProperties || { fill: 'rgba(15,23,42,0.8)' }}
+            x={labelX - pillW / 2}
+            y={labelY - pillH / 2}
+            width={pillW}
+            height={pillH}
+            rx={9}
+            style={{ fill: 'rgba(15,23,42,0.88)', stroke: 'rgba(148,163,184,0.18)', strokeWidth: 1 }}
           />
           <text
             x={labelX}
             y={labelY}
             textAnchor="middle"
             dominantBaseline="central"
-            style={labelStyle as React.CSSProperties || { fill: '#94a3b8', fontSize: 10 }}
+            style={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600, letterSpacing: '0.04em' }}
           >
-            {label as string}
+            {labelStr}
           </text>
         </>
       )}

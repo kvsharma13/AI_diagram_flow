@@ -15,6 +15,7 @@ import ReactFlow, {
   ConnectionLineType,
   Handle,
   Position,
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
@@ -26,7 +27,37 @@ import {
   Box, Eye, Clipboard, Repeat, Triangle,
 } from 'lucide-react';
 
-// Custom Node Component - Compact eraser.io style
+// Type-aware color styles
+const TYPE_STYLES: Record<string, { accent: string; bg: string; label: string }> = {
+  'api-gateway':   { accent: '#38BDF8', bg: 'rgba(56,189,248,0.08)',   label: 'API GATEWAY' },
+  'load-balancer': { accent: '#38BDF8', bg: 'rgba(56,189,248,0.08)',   label: 'LOAD BALANCER' },
+  'cloud':         { accent: '#38BDF8', bg: 'rgba(56,189,248,0.08)',   label: 'CLOUD' },
+  'database':      { accent: '#34D399', bg: 'rgba(52,211,153,0.08)',   label: 'DATABASE' },
+  'redis':         { accent: '#FB7185', bg: 'rgba(251,113,133,0.08)',  label: 'CACHE' },
+  's3':            { accent: '#A78BFA', bg: 'rgba(167,139,250,0.08)',  label: 'STORAGE' },
+  'lambda':        { accent: '#FB923C', bg: 'rgba(251,146,60,0.08)',   label: 'FUNCTION' },
+  'ec2':           { accent: '#818CF8', bg: 'rgba(129,140,248,0.08)',  label: 'COMPUTE' },
+  'worker':        { accent: '#FB923C', bg: 'rgba(251,146,60,0.08)',   label: 'WORKER' },
+  'queue':         { accent: '#FBBF24', bg: 'rgba(251,191,36,0.08)',   label: 'QUEUE' },
+  'server':        { accent: '#818CF8', bg: 'rgba(129,140,248,0.08)',  label: 'SERVICE' },
+  'analytics':     { accent: '#C084FC', bg: 'rgba(192,132,252,0.08)',  label: 'ANALYTICS' },
+  'lock':          { accent: '#F472B6', bg: 'rgba(244,114,182,0.08)',  label: 'AUTH' },
+  'shield':        { accent: '#F472B6', bg: 'rgba(244,114,182,0.08)',  label: 'SECURITY' },
+  'monitor':       { accent: '#60A5FA', bg: 'rgba(96,165,250,0.08)',   label: 'CLIENT' },
+  'globe':         { accent: '#60A5FA', bg: 'rgba(96,165,250,0.08)',   label: 'WEB' },
+  'smartphone':    { accent: '#60A5FA', bg: 'rgba(96,165,250,0.08)',   label: 'MOBILE' },
+};
+
+const FALLBACK_STYLE = { accent: '#818CF8', bg: 'rgba(129,140,248,0.08)', label: 'SERVICE' };
+
+function getTypeStyle(data: any): { accent: string; bg: string; label: string } {
+  if (data.type && TYPE_STYLES[data.type]) return TYPE_STYLES[data.type];
+  if (data.icon && TYPE_STYLES[data.icon]) return TYPE_STYLES[data.icon];
+  if (data.type) return { ...FALLBACK_STYLE, label: data.type.toUpperCase() };
+  return FALLBACK_STYLE;
+}
+
+// Unified Service Node — left 3px accent bar, icon + type badge, bold name
 const ServiceNode = ({ data, selected }: any) => {
   const iconMap: Record<string, any> = {
     'api-gateway': Globe,
@@ -66,121 +97,146 @@ const ServiceNode = ({ data, selected }: any) => {
     triangle: Triangle,
   };
 
-  const Icon = iconMap[data.icon] || Server;
+  const typeStyle = getTypeStyle(data);
+  const Icon = iconMap[data.icon] || iconMap[data.type] || Server;
 
   return (
     <div
-      className={`group relative flex items-center px-3 py-2 rounded-lg border transition-all ${
-        selected ? 'ring-1 ring-slate-400 ring-offset-1 ring-offset-gray-950' : ''
-      }`}
+      className="group"
       style={{
-        backgroundColor: 'rgba(30,41,59,0.8)',
-        borderColor: selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)',
-        borderWidth: '1px',
+        position: 'relative',
+        background: typeStyle.bg,
+        border: `1px solid ${selected ? typeStyle.accent + 'CC' : typeStyle.accent + '40'}`,
+        borderRadius: '8px',
         minWidth: '160px',
-        minHeight: '56px',
+        overflow: 'hidden',
         boxShadow: selected
-          ? '0 2px 8px rgba(100,116,139,0.2)'
-          : '0 1px 3px rgba(0,0,0,0.3)',
+          ? `0 0 0 1px ${typeStyle.accent}40, 0 4px 12px rgba(0,0,0,0.4)`
+          : '0 1px 4px rgba(0,0,0,0.35)',
       }}
     >
-      {/* Handles - hidden by default, show on hover */}
-      <Handle type="target" position={Position.Top} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="source" position={Position.Bottom} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="target" position={Position.Left} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="source" position={Position.Right} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
+      {/* Left accent strip */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: '3px',
+          background: typeStyle.accent,
+          borderRadius: '8px 0 0 8px',
+        }}
+      />
 
-      <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: data.iconColor || '#94a3b8' }} />
-        <div className="text-slate-200 font-medium text-xs">{data.label}</div>
+      {/* Handles — invisible by default, shown on group hover */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        style={{ opacity: 0, width: 6, height: 6, background: '#94a3b8', border: 'none', transition: 'opacity 0.15s' }}
+        className="group-hover:!opacity-70"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        style={{ opacity: 0, width: 6, height: 6, background: '#94a3b8', border: 'none', transition: 'opacity 0.15s' }}
+        className="group-hover:!opacity-70"
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ opacity: 0, width: 6, height: 6, background: '#94a3b8', border: 'none', transition: 'opacity 0.15s' }}
+        className="group-hover:!opacity-70"
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ opacity: 0, width: 6, height: 6, background: '#94a3b8', border: 'none', transition: 'opacity 0.15s' }}
+        className="group-hover:!opacity-70"
+      />
+
+      {/* Content */}
+      <div style={{ padding: '10px 12px 10px 18px' }}>
+        {/* Type badge row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
+          <Icon style={{ width: 11, height: 11, color: typeStyle.accent, flexShrink: 0 }} />
+          <span
+            style={{
+              fontSize: '9px',
+              fontWeight: 700,
+              letterSpacing: '0.07em',
+              color: typeStyle.accent,
+              textTransform: 'uppercase',
+            }}
+          >
+            {typeStyle.label}
+          </span>
+        </div>
+        {/* Service name */}
+        <div
+          style={{
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#E2E8F0',
+            lineHeight: 1.25,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {data.label}
+        </div>
       </div>
     </div>
   );
 };
 
-// Group Node Component - Subtle border with left accent
+// Group Node — subtle dashed border, downward tag badge from top
 const GroupNode = ({ data }: any) => {
+  const borderColor = data.borderColor || '#6b7280';
+
   return (
     <div
-      className="rounded relative"
       style={{
-        backgroundColor: 'transparent',
-        border: '1px solid rgba(107,114,128,0.4)',
+        position: 'relative',
+        background: `${borderColor}06`,
+        border: `1.5px dashed ${borderColor}45`,
+        borderRadius: '10px',
         minWidth: data.width || '400px',
         minHeight: data.height || '300px',
-        padding: '28px 16px 16px 16px',
       }}
     >
-      {/* Colored left accent bar */}
+      {/* Downward tag badge from top */}
       <div
-        className="absolute top-0 left-0 w-[3px] h-full rounded-l"
-        style={{ backgroundColor: data.borderColor || '#6b7280' }}
-      />
-      {/* Plain text label */}
-      <div
-        className="absolute top-2 left-3 text-[10px] font-semibold uppercase tracking-wider"
-        style={{ color: 'rgba(156,163,175,0.8)' }}
+        style={{
+          position: 'absolute',
+          top: '-1px',
+          left: '16px',
+          background: borderColor,
+          borderRadius: '0 0 6px 6px',
+          padding: '2px 10px 3px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '5px',
+        }}
       >
-        {data.label}
-      </div>
-    </div>
-  );
-};
-
-// Database Node - Cylinder shape
-const DatabaseNode = ({ data, selected }: any) => {
-  const iconMap: Record<string, any> = { database: Database, redis: Database };
-  const Icon = iconMap[data.icon] || Database;
-
-  return (
-    <div className="group relative flex flex-col items-center" style={{ minWidth: '120px' }}>
-      <Handle type="target" position={Position.Top} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="source" position={Position.Bottom} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="target" position={Position.Left} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="source" position={Position.Right} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <svg width="120" height="64" viewBox="0 0 120 64" fill="none">
-        {/* Cylinder body */}
-        <path
-          d="M 10 16 L 10 48 Q 10 58 60 58 Q 110 58 110 48 L 110 16"
-          fill="rgba(30,41,59,0.8)"
-          stroke={selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)'}
-          strokeWidth="1"
+        <div
+          style={{
+            width: 5,
+            height: 5,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.55)',
+            flexShrink: 0,
+          }}
         />
-        {/* Bottom ellipse */}
-        <ellipse cx="60" cy="48" rx="50" ry="10" fill="rgba(30,41,59,0.8)" stroke={selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)'} strokeWidth="1" />
-        {/* Top ellipse */}
-        <ellipse cx="60" cy="16" rx="50" ry="10" fill="rgba(30,41,59,0.9)" stroke={selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)'} strokeWidth="1" />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center gap-1.5 pt-1">
-        <Icon className="w-3.5 h-3.5" style={{ color: data.iconColor || '#94a3b8' }} />
-        <span className="text-slate-200 font-medium text-[10px]">{data.label}</span>
-      </div>
-    </div>
-  );
-};
-
-// Cloud Node - Cloud shape
-const CloudNode = ({ data, selected }: any) => {
-  const iconMap: Record<string, any> = { cloud: Cloud, 'load-balancer': Cloud };
-  const Icon = iconMap[data.icon] || Cloud;
-
-  return (
-    <div className="group relative flex flex-col items-center" style={{ minWidth: '140px' }}>
-      <Handle type="target" position={Position.Top} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="source" position={Position.Bottom} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="target" position={Position.Left} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <Handle type="source" position={Position.Right} className="!w-1.5 !h-1.5 !bg-slate-400 !border-none !opacity-0 group-hover:!opacity-70 transition-opacity" />
-      <svg width="140" height="70" viewBox="0 0 140 70" fill="none">
-        <path
-          d="M 35 55 C 10 55 5 40 20 30 C 10 15 30 5 50 12 C 60 0 90 0 100 12 C 120 5 135 20 125 35 C 140 45 130 60 110 55 Z"
-          fill="rgba(30,41,59,0.8)"
-          stroke={selected ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.4)'}
-          strokeWidth="1"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center gap-1.5">
-        <Icon className="w-3.5 h-3.5" style={{ color: data.iconColor || '#94a3b8' }} />
-        <span className="text-slate-200 font-medium text-[10px]">{data.label}</span>
+        <span
+          style={{
+            fontSize: '10px',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: '#fff',
+            textTransform: 'uppercase',
+          }}
+        >
+          {data.label}
+        </span>
       </div>
     </div>
   );
@@ -189,8 +245,6 @@ const CloudNode = ({ data, selected }: any) => {
 const nodeTypes = {
   service: ServiceNode,
   group: GroupNode,
-  database: DatabaseNode,
-  cloud: CloudNode,
 };
 
 const edgeTypes = {
@@ -224,20 +278,16 @@ export default function ReactFlowCanvas({
   const convertedNodes: RFNode[] = rfNodes
     .map((node) => {
       const nodeData = node as any;
-      // Map node type to ReactFlow node type
-      const dbTypes = new Set(['database', 'redis', 'postgres', 'mongodb']);
-      const cloudTypes = new Set(['cloud', 'load-balancer']);
+      // All non-group nodes map to 'service'
       const nodeType = node.type || 'service';
       let rfType = 'service';
       if (nodeType === 'group') rfType = 'group';
-      else if (dbTypes.has(nodeType)) rfType = 'database';
-      else if (cloudTypes.has(nodeType)) rfType = 'cloud';
 
       const rfNode: RFNode = {
         id: node.id,
         type: rfType,
         position: node.position,
-        data: { ...nodeData.data, label: nodeData.label, icon: nodeData.icon || node.type },
+        data: { ...nodeData.data, label: nodeData.label, icon: nodeData.icon || node.type, type: nodeData.type },
       };
 
       // Handle parent-child relationships - only if parent exists
@@ -272,15 +322,11 @@ export default function ReactFlowCanvas({
       id: edge.id,
       source: edge.source,
       target: edge.target,
+      type: 'smart',
       animated: edge.animated,
-      style: { stroke: '#475569', strokeWidth: 1.5 },
-      ...(edge.label ? {
-        label: edge.label,
-        labelStyle: { fill: '#94a3b8', fontSize: 10, fontWeight: 500 },
-        labelBgStyle: { fill: 'rgba(15,23,42,0.8)', stroke: 'rgba(71,85,105,0.3)', strokeWidth: 1 },
-        labelBgPadding: [4, 6] as [number, number],
-        labelBgBorderRadius: 4,
-      } : {}),
+      style: { stroke: '#3F4E63', strokeWidth: 1.5 },
+      markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#64748B' },
+      ...(edge.label ? { label: edge.label } : {}),
     })) || [];
 
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
@@ -388,8 +434,10 @@ export default function ReactFlowCanvas({
     (connection: Connection) => {
       const newEdge = {
         ...connection,
-        animated: true,
-        style: { stroke: '#475569', strokeWidth: 1.5 },
+        type: 'smart',
+        animated: false,
+        style: { stroke: '#3F4E63', strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#64748B' },
       };
       setEdges((eds) => addEdge(newEdge, eds));
 
@@ -463,13 +511,14 @@ export default function ReactFlowCanvas({
       nodesConnectable={true}
       defaultEdgeOptions={{
         animated: false,
-        style: { stroke: '#475569', strokeWidth: 1.5 },
+        style: { stroke: '#3F4E63', strokeWidth: 1.5 },
         type: 'smart',
+        markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#64748B' },
       }}
       connectionLineStyle={{ stroke: '#64748b', strokeWidth: 1.5 }}
       connectionLineType={ConnectionLineType.SmoothStep}
     >
-      <Background color="rgba(71,85,105,0.3)" variant={BackgroundVariant.Dots} gap={24} size={0.8} />
+      <Background color="rgba(71,85,105,0.3)" variant={BackgroundVariant.Dots} gap={20} size={0.6} />
       <Controls showInteractive={false} className="!bg-slate-900/80 !border-slate-700/50 !rounded-lg !shadow-lg [&_button]:!border-slate-700/30 [&_button]:!bg-transparent [&_button:hover]:!bg-slate-700/50 [&_button_svg]:!fill-slate-400" />
       <MiniMap
         nodeColor={(node) => node.type === 'group' ? 'rgba(71,85,105,0.4)' : 'rgba(148,163,184,0.6)'}

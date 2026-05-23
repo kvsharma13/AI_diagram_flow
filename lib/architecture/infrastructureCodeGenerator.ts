@@ -402,14 +402,13 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
     const reactFlowNode: Node = {
       id: node.id,
       label: node.label,
-      type: node.type || 'service',
+      type: node.type || 'server',
       position: position,
       data: {
         label: node.label,
         icon: node.icon,
+        type: node.type || 'server',
         iconColor: node.iconColor || '#60a5fa',
-        borderColor: '#4b5563',
-        bgColor: '#374151',
       },
     };
 
