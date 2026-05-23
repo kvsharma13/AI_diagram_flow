@@ -549,14 +549,14 @@ export default function GanttEditor() {
   }
 
   return (
-    <div id="gantt-export-area" className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+    <div id="gantt-export-area" className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg-base)' }}>
       {/* Professional Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
+      <div className="flex-shrink-0" style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
         <div className="px-4 md:px-6 py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex-shrink-0">
-              <h1 className="text-xl md:text-2xl font-semibold text-gray-900">Project Timeline</h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <h1 className="text-xl md:text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>Project Timeline</h1>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 {project.ganttPhases.length} phases • {timelineMonths} {unitLabelPlural.toLowerCase()} duration
               </p>
             </div>
@@ -567,8 +567,9 @@ export default function GanttEditor() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
                   showBarText
                     ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                    : 'text-[#A1A1AA] hover:text-white'
                 }`}
+                style={!showBarText ? { background: 'var(--surface-3)' } : {}}
                 title={showBarText ? 'Hide text in bars' : 'Show text in bars'}
               >
                 <Type className="w-4 h-4" />
@@ -576,14 +577,15 @@ export default function GanttEditor() {
               </button>
 
               {/* Unit Toggle */}
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center gap-2 rounded-lg p-1" style={{ background: 'var(--surface-3)' }}>
                 <button
                   onClick={() => setTimelineUnit('months')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                     timelineUnit === 'months'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'text-white shadow-sm'
+                      : 'text-[#71717A] hover:text-white'
                   }`}
+                  style={timelineUnit === 'months' ? { background: 'var(--surface-hover)' } : {}}
                 >
                   Months
                 </button>
@@ -591,25 +593,27 @@ export default function GanttEditor() {
                   onClick={() => setTimelineUnit('weeks')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                     timelineUnit === 'weeks'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'text-white shadow-sm'
+                      : 'text-[#71717A] hover:text-white'
                   }`}
+                  style={timelineUnit === 'weeks' ? { background: 'var(--surface-hover)' } : {}}
                 >
                   Weeks
                 </button>
               </div>
 
               {/* Timeline Presets */}
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center gap-2 rounded-lg p-1" style={{ background: 'var(--surface-3)' }}>
                 {timelinePresets.map((preset) => (
                   <button
                     key={preset.value}
                     onClick={() => setTimelineMonths(preset.value)}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                       timelineMonths === preset.value
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? 'text-white shadow-sm'
+                        : 'text-[#71717A] hover:text-white'
                     }`}
+                    style={timelineMonths === preset.value ? { background: 'var(--surface-hover)' } : {}}
                   >
                     {preset.label}
                   </button>
@@ -643,10 +647,10 @@ export default function GanttEditor() {
 
               <button
                 onClick={() => setShowTimelineSettings(!showTimelineSettings)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg transition-colors hover:bg-[rgba(255,255,255,0.06)]"
                 title="Timeline Settings"
               >
-                <Settings className="w-5 h-5 text-gray-600" />
+                <Settings className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
               </button>
 
               <button
@@ -670,18 +674,19 @@ export default function GanttEditor() {
 
         {/* Custom Timeline Settings */}
         {showTimelineSettings && (
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="px-6 py-4" style={{ background: 'var(--surface-2)', borderTop: '1px solid var(--border)' }}>
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700">Custom Duration:</label>
+              <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Custom Duration:</label>
               <input
                 type="number"
                 min="1"
                 max="60"
                 value={timelineMonths}
                 onChange={(e) => setTimelineMonths(parseInt(e.target.value) || 12)}
-                className="w-24 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-24 px-3 py-1.5 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
               />
-              <span className="text-sm text-gray-600">{unitLabelPlural.toLowerCase()} (max 60)</span>
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{unitLabelPlural.toLowerCase()} (max 60)</span>
             </div>
           </div>
         )}
@@ -701,11 +706,13 @@ export default function GanttEditor() {
                 <div
                   key={phase.id}
                   onClick={() => setSelectedPhase(isSelected ? null : phase.id)}
-                  className={`group relative bg-white rounded-xl border-2 transition-all cursor-pointer ${
-                    isSelected
-                      ? `${color.border} shadow-lg scale-[1.02]`
-                      : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
-                  }`}
+                  className="group relative rounded-xl border-2 transition-all cursor-pointer"
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderColor: isSelected ? colorConfig[phase.color || 'purple'].bg : 'var(--border)',
+                    boxShadow: isSelected ? `0 0 0 1px ${colorConfig[phase.color || 'purple'].bg}30` : undefined,
+                    transform: isSelected ? 'scale(1.02)' : undefined,
+                  }}
                 >
                   <div className="p-4">
                     {/* Color Bar */}
@@ -714,10 +721,10 @@ export default function GanttEditor() {
                     />
 
                     {/* Phase Name */}
-                    <h3 className="font-semibold text-gray-900 mb-1 pr-8">{phase.name}</h3>
+                    <h3 className="font-semibold mb-1 pr-8" style={{ color: 'var(--text-primary)' }}>{phase.name}</h3>
 
                     {/* Timeline Info */}
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                    <div className="flex items-center gap-2 text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
                       <Calendar className="w-3 h-3" />
                       <span>
                         {unitLabel.charAt(0)}{formatMonth(phase.startMonth)} - {unitLabel.charAt(0)}{formatMonth(phase.startMonth + phase.duration)} ({formatMonth(phase.duration)}{unitLabel.charAt(0).toLowerCase()})
@@ -726,7 +733,7 @@ export default function GanttEditor() {
 
                     {/* Deliverables Preview */}
                     {phase.deliverables && (
-                      <p className="text-xs text-gray-600">{phase.deliverables}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{phase.deliverables}</p>
                     )}
 
                     {/* Actions */}
@@ -735,9 +742,9 @@ export default function GanttEditor() {
                         e.stopPropagation();
                         deletePhase(phase.id);
                       }}
-                      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 rounded-lg transition-all"
+                      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-900/30 rounded-lg transition-all"
                     >
-                      <Trash2 className="w-4 h-4 text-red-600" />
+                      <Trash2 className="w-4 h-4 text-red-400" />
                     </button>
                   </div>
                 </div>
@@ -748,11 +755,12 @@ export default function GanttEditor() {
             {project.ganttPhases.length < 12 && (
               <button
                 onClick={handleAddPhase}
-                className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-blue-400 hover:bg-blue-50 transition-all flex items-center justify-center min-h-[140px]"
+                className="border-2 border-dashed rounded-xl p-4 transition-all flex items-center justify-center min-h-[140px] hover:border-[var(--accent-hover)] hover:bg-[rgba(124,58,237,0.06)]"
+                style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
               >
                 <div className="text-center">
-                  <Plus className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <span className="text-sm text-gray-600 font-medium">Add Phase</span>
+                  <Plus className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Add Phase</span>
                 </div>
               </button>
             )}
@@ -765,20 +773,25 @@ export default function GanttEditor() {
             const color = getColorConfig(phase.color);
 
             return (
-              <div className={`bg-white rounded-xl border-2 ${color.border} shadow-lg p-6`}>
+              <div
+                className="rounded-xl border-2 shadow-lg p-6"
+                style={{ background: 'var(--surface-2)', borderColor: colorConfig[phase.color || 'purple'].bg }}
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phase Name</label>
+                    <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Phase Name</label>
                     <input
                       type="text"
                       value={phase.name}
                       onChange={(e) => updatePhase(phase.id, { name: e.target.value })}
-                      className="w-full text-xl font-semibold text-gray-900 mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full text-xl font-semibold mt-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                     />
                   </div>
                   <button
                     onClick={() => setSelectedPhase(null)}
-                    className="text-gray-400 hover:text-gray-600 ml-4"
+                    className="ml-4 hover:opacity-70 transition-opacity"
+                    style={{ color: 'var(--text-muted)' }}
                   >
                     <ChevronDown className="w-5 h-5" />
                   </button>
@@ -786,17 +799,18 @@ export default function GanttEditor() {
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Bar Label (text in box)</label>
+                    <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Bar Label (text in box)</label>
                     <input
                       type="text"
                       value={phase.barLabel ?? ''}
                       onChange={(e) => updatePhase(phase.id, { barLabel: e.target.value })}
                       placeholder={phase.name}
-                      className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Color</label>
+                    <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Color</label>
                     <div className="flex gap-2 mt-1 flex-wrap">
                       {(Object.keys(colorConfig) as PhaseColor[]).slice(0, 6).map((colorName) => (
                         <button
@@ -804,7 +818,7 @@ export default function GanttEditor() {
                           onClick={() => updatePhase(phase.id, { color: colorName })}
                           className={`w-8 h-8 rounded-lg transition-all ${
                             phase.color === colorName
-                              ? 'ring-2 ring-offset-2 ring-gray-900 scale-110'
+                              ? 'ring-2 ring-offset-2 ring-offset-[#171A21] ring-white scale-110'
                               : 'hover:scale-110'
                           }`}
                           style={{ backgroundColor: colorConfig[colorName].bg }}
@@ -816,7 +830,7 @@ export default function GanttEditor() {
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Start {unitLabel}</label>
+                    <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Start {unitLabel}</label>
                     <input
                       type="number"
                       min="1"
@@ -824,11 +838,12 @@ export default function GanttEditor() {
                       step="0.1"
                       value={phase.startMonth}
                       onChange={(e) => updatePhase(phase.id, { startMonth: parseFloat(e.target.value) || 1 })}
-                      className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration ({unitLabelPlural.toLowerCase()})</label>
+                    <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Duration ({unitLabelPlural.toLowerCase()})</label>
                     <input
                       type="number"
                       min="0.1"
@@ -836,45 +851,47 @@ export default function GanttEditor() {
                       step="0.1"
                       value={phase.duration}
                       onChange={(e) => updatePhase(phase.id, { duration: parseFloat(e.target.value) || 1 })}
-                      className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Deliverables</label>
+                  <label className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Deliverables</label>
                   <textarea
                     value={phase.deliverables}
                     onChange={(e) => updatePhase(phase.id, { deliverables: e.target.value })}
                     placeholder="List key deliverables and milestones..."
                     rows={3}
-                    className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full mt-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                    style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   />
                 </div>
 
                 {/* Monthly Breakdown */}
                 {phase.months && phase.months.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+                  <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+                    <h3 className="text-sm font-semibold uppercase tracking-wide mb-4" style={{ color: 'var(--text-primary)' }}>
                       Monthly Breakdown
                     </h3>
                     <div className="space-y-4">
                       {phase.months.map((monthData, idx) => (
-                        <div key={idx} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div key={idx} className="rounded-lg p-4" style={{ background: 'var(--surface-3)', border: '1px solid var(--border)' }}>
                           <div className="flex items-center gap-2 mb-3">
                             <div className={`px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${color.gradient}`}>
                               Month {monthData.month}
                             </div>
-                            <h4 className="font-semibold text-gray-900">{monthData.title}</h4>
+                            <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>{monthData.title}</h4>
                           </div>
 
                           {monthData.highlights && monthData.highlights.length > 0 && (
                             <div className="mb-3">
-                              <p className="text-xs font-medium text-gray-500 uppercase mb-1">Highlights</p>
-                              <ul className="text-sm text-gray-700 space-y-1">
+                              <p className="text-xs font-medium uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Highlights</p>
+                              <ul className="text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
                                 {monthData.highlights.map((highlight, hIdx) => (
                                   <li key={hIdx} className="flex items-start gap-2">
-                                    <span className="text-blue-500 mt-1">•</span>
+                                    <span className="text-blue-400 mt-1">•</span>
                                     <span>{highlight}</span>
                                   </li>
                                 ))}
@@ -884,11 +901,11 @@ export default function GanttEditor() {
 
                           {monthData.deliverables && monthData.deliverables.length > 0 && (
                             <div className="mb-3">
-                              <p className="text-xs font-medium text-gray-500 uppercase mb-1">Deliverables</p>
-                              <ul className="text-sm text-gray-700 space-y-1">
+                              <p className="text-xs font-medium uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Deliverables</p>
+                              <ul className="text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
                                 {monthData.deliverables.map((deliverable, dIdx) => (
                                   <li key={dIdx} className="flex items-start gap-2">
-                                    <span className="text-green-500 mt-1">✓</span>
+                                    <span className="text-green-400 mt-1">✓</span>
                                     <span>{deliverable}</span>
                                   </li>
                                 ))}
@@ -898,11 +915,11 @@ export default function GanttEditor() {
 
                           {monthData.milestones && monthData.milestones.length > 0 && (
                             <div>
-                              <p className="text-xs font-medium text-gray-500 uppercase mb-1">Milestones</p>
-                              <ul className="text-sm text-gray-700 space-y-1">
+                              <p className="text-xs font-medium uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Milestones</p>
+                              <ul className="text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
                                 {monthData.milestones.map((milestone, mIdx) => (
                                   <li key={mIdx} className="flex items-start gap-2">
-                                    <span className="text-purple-500 mt-1">★</span>
+                                    <span className="text-purple-400 mt-1">★</span>
                                     <span className="font-medium">{milestone}</span>
                                   </li>
                                 ))}
@@ -923,16 +940,16 @@ export default function GanttEditor() {
             <div
               className="rounded-xl shadow-sm border overflow-hidden"
               style={{
-                background: templateStyle?.background || '#ffffff',
-                borderColor: templateStyle?.rowBorder || '#e5e7eb',
+                background: templateStyle?.background || 'var(--surface-1)',
+                borderColor: templateStyle?.rowBorder || 'var(--border)',
               }}
             >
               <div
                 className="p-4 border-b flex items-center justify-between"
                 style={{
-                  background: templateStyle?.headerBg || '#f9fafb',
-                  borderColor: templateStyle?.rowBorder || '#e5e7eb',
-                  color: templateStyle?.headerText || '#374151',
+                  background: templateStyle?.headerBg || 'var(--surface-2)',
+                  borderColor: templateStyle?.rowBorder || 'var(--border)',
+                  color: templateStyle?.headerText || 'var(--text-secondary)',
                 }}
               >
                 {editingTimelineHeading ? (
@@ -945,13 +962,13 @@ export default function GanttEditor() {
                       if (e.key === 'Enter') setEditingTimelineHeading(false);
                       if (e.key === 'Escape') setEditingTimelineHeading(false);
                     }}
-                    className="text-sm font-semibold uppercase tracking-wide bg-white border-2 border-blue-400 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ color: templateStyle?.headerText || '#374151' }}
+                    className="text-sm font-semibold uppercase tracking-wide border-2 border-purple-500 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    style={{ background: 'var(--surface-3)', color: templateStyle?.headerText || 'var(--text-secondary)' }}
                     autoFocus
                   />
                 ) : (
                   <h2
-                    className="text-sm font-semibold uppercase tracking-wide cursor-text hover:bg-blue-50 px-3 py-1 rounded transition-colors"
+                    className="text-sm font-semibold uppercase tracking-wide cursor-text px-3 py-1 rounded transition-colors hover:bg-[rgba(255,255,255,0.05)]"
                     onClick={() => setEditingTimelineHeading(true)}
                     title="Click to edit heading"
                   >
@@ -972,19 +989,19 @@ export default function GanttEditor() {
                   <div
                     className="flex border-b sticky top-0 z-10"
                     style={{
-                      background: templateStyle?.monthHeaderBg || 'linear-gradient(to bottom, #f9fafb, #ffffff)',
-                      borderColor: templateStyle?.gridLines || '#e5e7eb',
+                      background: templateStyle?.monthHeaderBg || 'var(--surface-2)',
+                      borderColor: templateStyle?.gridLines || 'var(--border)',
                     }}
                   >
                     <div
                       className="w-64 flex-shrink-0 px-6 py-3 border-r"
                       style={{
-                        borderColor: templateStyle?.gridLines || '#e5e7eb',
+                        borderColor: templateStyle?.gridLines || 'var(--border)',
                       }}
                     >
                       <span
                         className="text-xs font-semibold uppercase tracking-wide"
-                        style={{ color: templateStyle?.monthHeaderText || '#6b7280' }}
+                        style={{ color: templateStyle?.monthHeaderText || 'var(--text-muted)' }}
                       >
                         Phase
                       </span>
@@ -995,12 +1012,12 @@ export default function GanttEditor() {
                           key={i}
                           className="px-2 py-3 text-center border-r last:border-r-0"
                           style={{
-                            borderColor: templateStyle?.gridLines || '#f3f4f6',
+                            borderColor: templateStyle?.gridLines || 'var(--divider)',
                           }}
                         >
                           <div
                             className="text-xs font-semibold"
-                            style={{ color: templateStyle?.monthHeaderText || '#374151' }}
+                            style={{ color: templateStyle?.monthHeaderText || 'var(--text-secondary)' }}
                           >
                             {unitLabel} {i + 1}
                           </div>
@@ -1021,15 +1038,15 @@ export default function GanttEditor() {
                           key={phase.id}
                           className="flex items-center border-b hover:opacity-90 transition-opacity"
                           style={{
-                            background: templateStyle?.rowBg || (index % 2 === 0 ? '#ffffff' : 'rgba(249, 250, 251, 0.5)'),
-                            borderColor: templateStyle?.gridLines || '#f3f4f6',
+                            background: templateStyle?.rowBg || (index % 2 === 0 ? 'var(--surface-1)' : 'var(--bg-secondary)'),
+                            borderColor: templateStyle?.gridLines || 'var(--divider)',
                           }}
                         >
                           {/* Phase Info */}
                           <div
                             className="w-64 flex-shrink-0 px-6 py-4 border-r"
                             style={{
-                              borderColor: templateStyle?.gridLines || '#e5e7eb',
+                              borderColor: templateStyle?.gridLines || 'var(--border)',
                             }}
                           >
                             {/* Editable Phase Name */}
@@ -1043,14 +1060,14 @@ export default function GanttEditor() {
                                   if (e.key === 'Enter') setEditingPhaseName(null);
                                   if (e.key === 'Escape') setEditingPhaseName(null);
                                 }}
-                                className="w-full font-medium text-sm mb-1 px-2 py-1 border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                style={{ color: templateStyle?.headerText || '#111827' }}
+                                className="w-full font-medium text-sm mb-1 px-2 py-1 border border-purple-500 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                style={{ background: 'var(--surface-3)', color: templateStyle?.headerText || 'var(--text-primary)' }}
                                 autoFocus
                               />
                             ) : (
                               <div
-                                className="font-medium text-sm mb-1 cursor-text hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                style={{ color: templateStyle?.headerText || '#111827' }}
+                                className="font-medium text-sm mb-1 cursor-text px-2 py-1 rounded transition-colors hover:bg-[rgba(255,255,255,0.05)]"
+                                style={{ color: templateStyle?.headerText || 'var(--text-primary)' }}
                                 onClick={() => setEditingPhaseName(phase.id)}
                                 title="Click to edit"
                               >
@@ -1070,14 +1087,14 @@ export default function GanttEditor() {
                                   if (e.key === 'Escape') setEditingPhaseDeliverables(null);
                                 }}
                                 placeholder="Add deliverables..."
-                                className="w-full text-xs px-2 py-1 border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                style={{ color: templateStyle?.monthHeaderText || '#6b7280' }}
+                                className="w-full text-xs px-2 py-1 border border-purple-500 rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                style={{ background: 'var(--surface-3)', color: templateStyle?.monthHeaderText || 'var(--text-secondary)' }}
                                 autoFocus
                               />
                             ) : (
                               <div
-                                className="text-xs cursor-text hover:bg-blue-50 px-2 py-1 rounded transition-colors whitespace-normal"
-                                style={{ color: templateStyle?.monthHeaderText || '#6b7280' }}
+                                className="text-xs cursor-text px-2 py-1 rounded transition-colors whitespace-normal hover:bg-[rgba(255,255,255,0.05)]"
+                                style={{ color: templateStyle?.monthHeaderText || 'var(--text-muted)' }}
                                 onClick={() => setEditingPhaseDeliverables(phase.id)}
                                 title="Click to edit deliverables"
                               >
@@ -1094,7 +1111,7 @@ export default function GanttEditor() {
                                   key={monthIndex}
                                   className="border-r last:border-r-0"
                                   style={{
-                                    borderColor: templateStyle?.gridLines || '#f3f4f6',
+                                    borderColor: templateStyle?.gridLines || 'var(--divider)',
                                   }}
                                 />
                               ))}
@@ -1194,13 +1211,13 @@ export default function GanttEditor() {
               <div
                 className="px-6 py-3 border-t"
                 style={{
-                  background: templateStyle?.headerBg || '#f9fafb',
-                  borderColor: templateStyle?.rowBorder || '#e5e7eb',
+                  background: templateStyle?.headerBg || 'var(--surface-2)',
+                  borderColor: templateStyle?.rowBorder || 'var(--border)',
                 }}
               >
                 <p
                   className="text-xs"
-                  style={{ color: templateStyle?.monthHeaderText || '#6b7280' }}
+                  style={{ color: templateStyle?.monthHeaderText || 'var(--text-muted)' }}
                 >
                   💡 <span className="font-medium">Toggle "Bar Text"</span> button to show/hide text in boxes •
                   <span className="font-medium"> Click text inside bars</span> to edit (when visible) •
@@ -1213,15 +1230,15 @@ export default function GanttEditor() {
 
           {/* Empty State */}
           {project.ganttPhases.length === 0 && (
-            <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-16 text-center">
-              <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No phases yet</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <div className="rounded-xl border-2 border-dashed p-16 text-center" style={{ background: 'var(--surface-1)', borderColor: 'var(--border)' }}>
+              <Calendar className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
+              <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>No phases yet</h3>
+              <p className="mb-6 max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
                 Get started by adding your first project phase. You can customize duration, deliverables, and timeline.
               </p>
               <button
                 onClick={handleAddPhase}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-all shadow-sm hover:shadow font-medium"
+                className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white px-6 py-3 rounded-lg transition-all shadow-sm hover:shadow font-medium"
               >
                 Create First Phase
               </button>
