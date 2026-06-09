@@ -25,7 +25,7 @@ interface ArchitectureStore {
 
 export const useArchitectureStore = create<ArchitectureStore>((set) => ({
   diagram: null,
-  architectureMode: 'application',
+  architectureMode: 'ai',
 
   setMode: (mode) =>
     set((state) => ({
@@ -153,6 +153,6 @@ export const useArchitectureStore = create<ArchitectureStore>((set) => ({
   resetDiagram: () =>
     set({
       diagram: null,
-      architectureMode: 'application',
+      architectureMode: 'ai',
     }),
 }));

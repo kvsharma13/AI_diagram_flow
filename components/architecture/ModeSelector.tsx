@@ -2,7 +2,7 @@
 
 import { useArchitectureStore } from '@/store/architectureStore';
 import { ArchitectureMode } from '@/types/architecture';
-import { Layers, Cloud, Sparkles } from 'lucide-react';
+import { Cloud, Sparkles } from 'lucide-react';
 
 const modes: {
   id: ArchitectureMode;
@@ -11,22 +11,16 @@ const modes: {
   description: string;
 }[] = [
   {
-    id: 'application',
-    label: 'Application',
-    icon: Layers,
-    description: 'Logical software architecture with layers',
-  },
-  {
-    id: 'infrastructure',
-    label: 'Infrastructure',
-    icon: Cloud,
-    description: 'Cloud infrastructure deployment view',
-  },
-  {
     id: 'ai',
     label: 'AI Generate',
     icon: Sparkles,
-    description: 'Auto-generate architecture from description',
+    description: 'Generate an architecture from a description',
+  },
+  {
+    id: 'infrastructure',
+    label: 'Editor',
+    icon: Cloud,
+    description: 'Drag, connect and edit the diagram',
   },
 ];
 

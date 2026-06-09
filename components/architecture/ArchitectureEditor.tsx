@@ -6,14 +6,9 @@ import ModeSelector from './ModeSelector';
 import dynamic from 'next/dynamic';
 
 // Dynamically import mode components
-const ApplicationMode = dynamic(() => import('./application-mode/ApplicationEditor'), {
-  ssr: false,
-  loading: () => <LoadingState mode="Application" />,
-});
-
 const InfrastructureMode = dynamic(() => import('./infrastructure-mode/InfrastructureEditor'), {
   ssr: false,
-  loading: () => <LoadingState mode="Infrastructure" />,
+  loading: () => <LoadingState mode="Editor" />,
 });
 
 const AIMode = dynamic(() => import('./ai-mode/AIGenerator'), {
@@ -38,16 +33,20 @@ function LoadingState({ mode }: { mode: string }) {
 export default function ArchitectureEditor() {
   const { diagram, architectureMode, createDiagram } = useArchitectureStore();
 
-  // Initialize diagram if none exists
+  // Initialize diagram if none exists — start on the AI generator.
   useEffect(() => {
     if (!diagram) {
-      createDiagram('My Architecture', 'application');
+      createDiagram('My Architecture', 'ai');
     }
   }, [diagram, createDiagram]);
 
   if (!diagram) {
     return <LoadingState mode="Editor" />;
   }
+
+  // Normalise mode: anything that isn't the AI generator renders in the Editor
+  // (this also gracefully handles legacy diagrams saved with the old 'application' mode).
+  const activeMode = architectureMode === 'ai' ? 'ai' : 'infrastructure';
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -63,9 +62,8 @@ export default function ArchitectureEditor() {
 
       {/* Mode Content */}
       <div className="flex-1 overflow-hidden">
-        {architectureMode === 'application' && <ApplicationMode />}
-        {architectureMode === 'infrastructure' && <InfrastructureMode />}
-        {architectureMode === 'ai' && <AIMode />}
+        {activeMode === 'ai' && <AIMode />}
+        {activeMode === 'infrastructure' && <InfrastructureMode />}
       </div>
     </div>
   );

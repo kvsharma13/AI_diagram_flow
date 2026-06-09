@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { format, startOfMonth } from 'date-fns';
 import { isWhitelistedUser, isTestUser, getTestUserPlan, getAICreditsForPlan } from '@/lib/config';
+import { SERVICE_VOCABULARY } from '@/lib/architecture/iconMap';
 
 export async function POST(request: NextRequest) {
   try {
@@ -286,6 +287,34 @@ WRITING QUALITY REQUIREMENTS — non-negotiable:
 - LEGAL PRECISION: Terms must be specific and enforceable. Limitation of liability must cap at total contract value. Confidentiality obligations survive termination.
 
 The output must be a document a client would sign for a real engagement. Do not produce generic boilerplate.`;
+    } else if (type === 'architecture') {
+      systemPrompt = `You are a senior software/cloud architect. Convert the user's description into a clean architecture diagram expressed as STRICT JSON. Do NOT include any positions or coordinates — the layout is computed automatically.
+
+OUTPUT FORMAT — return ONLY this JSON object and nothing else:
+{
+  "title": "<short diagram title>",
+  "groups": [
+    { "id": "<kebab-id>", "name": "<Group Name>", "parent": "<optional parent group id>" }
+  ],
+  "nodes": [
+    { "id": "<kebab-id>", "label": "<Display Name>", "service": "<service key>", "group": "<optional group id>" }
+  ],
+  "connections": [
+    { "from": "<node id>", "to": "<node id>", "label": "<optional short verb, e.g. reads, publishes, calls>", "animated": <boolean> }
+  ]
+}
+
+RULES:
+- "service" MUST be one of these canonical keys (pick the closest match) — this drives the node's brand icon:
+${SERVICE_VOCABULARY.join(', ')}
+- If nothing fits, use the closest category key: "server", "database", "cache", "queue", "storage", "network", or "external".
+- Use "groups" to represent boundaries and layers — e.g. "Clients", "API Layer", "Services", "Data Stores", "External Services", or cloud boundaries like "VPC" and "Private Subnet". Nest a group inside another with "parent" when meaningful (e.g. a subnet inside a VPC).
+- Every node SHOULD belong to a group, unless it is a standalone external actor or third-party service.
+- Model a realistic system: typically 8-20 nodes. Include the databases, caches, queues, gateways, auth and external services the description implies — do not under-model.
+- "id" values are short, lowercase, kebab-case and unique across BOTH groups and nodes. "label" is human-readable (e.g. "Orders Service", "PostgreSQL", "Redis Cache").
+- "connections" follow real data-flow direction (client -> gateway -> service -> datastore). Set "animated": true for asynchronous, event, streaming or pub/sub links; false for synchronous request/response.
+- Keep edge "label" very short (1-2 words) or omit it.
+- Output valid JSON only: no markdown, no code fences, no comments, no trailing commas.`;
     } else {
       systemPrompt = `You are a project management assistant. Convert the provided text into a RACI matrix JSON structure.
 
@@ -320,13 +349,16 @@ Rules:
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: type === 'full_sow' ? 'gpt-4o' : 'gpt-4',
+        model: (type === 'full_sow' || type === 'architecture') ? 'gpt-4o' : 'gpt-4',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: textInput }
         ],
-        temperature: 0.3,
+        temperature: type === 'architecture' ? 0.4 : 0.3,
         ...(type === 'full_sow' ? { max_tokens: 8000 } : {}),
+        ...(type === 'architecture'
+          ? { max_tokens: 4000, response_format: { type: 'json_object' } }
+          : {}),
       }),
     });
 

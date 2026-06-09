@@ -23,13 +23,11 @@ export default function InfrastructureEditor() {
   const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('horizontal');
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Load default template — reinitialize if no nodes or if application-mode nodes are present
+  // Load the default template only when the diagram is empty. A non-empty
+  // diagram (e.g. one just produced by the AI generator) is preserved.
   useEffect(() => {
-    if (diagram) {
-      const hasAppNodes = diagram.nodes.some((n: any) => n.layerId);
-      if (diagram.nodes.length === 0 || hasAppNodes) {
-        handleGenerateFromCode();
-      }
+    if (diagram && diagram.nodes.length === 0) {
+      handleGenerateFromCode();
     }
   }, []);
 

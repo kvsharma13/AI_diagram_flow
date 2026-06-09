@@ -20,99 +20,40 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
 import { SmartEdge } from '@/lib/architecture/smartEdge';
-import {
-  Server, Database, Workflow, Cpu, HardDrive, Globe, Zap, Activity, Cloud,
-  Lock, Shield, Bell, Users, Monitor, Smartphone, CreditCard, BarChart3,
-  FileText, Key, Mail, Search, GitBranch, Layers, Network, Settings,
-  Box, Eye, Clipboard, Repeat, Triangle,
-} from 'lucide-react';
+import { resolveIcon } from '@/lib/architecture/iconMap';
+import ServiceIcon from '@/components/architecture/ServiceIcon';
 
-// Type-aware color styles
-const TYPE_STYLES: Record<string, { accent: string; bg: string; label: string }> = {
-  'api-gateway':   { accent: '#38BDF8', bg: 'rgba(56,189,248,0.08)',   label: 'API GATEWAY' },
-  'load-balancer': { accent: '#38BDF8', bg: 'rgba(56,189,248,0.08)',   label: 'LOAD BALANCER' },
-  'cloud':         { accent: '#38BDF8', bg: 'rgba(56,189,248,0.08)',   label: 'CLOUD' },
-  'database':      { accent: '#34D399', bg: 'rgba(52,211,153,0.08)',   label: 'DATABASE' },
-  'redis':         { accent: '#FB7185', bg: 'rgba(251,113,133,0.08)',  label: 'CACHE' },
-  's3':            { accent: '#A78BFA', bg: 'rgba(167,139,250,0.08)',  label: 'STORAGE' },
-  'lambda':        { accent: '#FB923C', bg: 'rgba(251,146,60,0.08)',   label: 'FUNCTION' },
-  'ec2':           { accent: '#818CF8', bg: 'rgba(129,140,248,0.08)',  label: 'COMPUTE' },
-  'worker':        { accent: '#FB923C', bg: 'rgba(251,146,60,0.08)',   label: 'WORKER' },
-  'queue':         { accent: '#FBBF24', bg: 'rgba(251,191,36,0.08)',   label: 'QUEUE' },
-  'server':        { accent: '#818CF8', bg: 'rgba(129,140,248,0.08)',  label: 'SERVICE' },
-  'analytics':     { accent: '#C084FC', bg: 'rgba(192,132,252,0.08)',  label: 'ANALYTICS' },
-  'lock':          { accent: '#F472B6', bg: 'rgba(244,114,182,0.08)',  label: 'AUTH' },
-  'shield':        { accent: '#F472B6', bg: 'rgba(244,114,182,0.08)',  label: 'SECURITY' },
-  'monitor':       { accent: '#60A5FA', bg: 'rgba(96,165,250,0.08)',   label: 'CLIENT' },
-  'globe':         { accent: '#60A5FA', bg: 'rgba(96,165,250,0.08)',   label: 'WEB' },
-  'smartphone':    { accent: '#60A5FA', bg: 'rgba(96,165,250,0.08)',   label: 'MOBILE' },
+const handleStyle = {
+  opacity: 0,
+  width: 7,
+  height: 7,
+  background: '#94a3b8',
+  border: 'none',
+  transition: 'opacity 0.15s',
 };
 
-const FALLBACK_STYLE = { accent: '#818CF8', bg: 'rgba(129,140,248,0.08)', label: 'SERVICE' };
-
-function getTypeStyle(data: any): { accent: string; bg: string; label: string } {
-  if (data.type && TYPE_STYLES[data.type]) return TYPE_STYLES[data.type];
-  if (data.icon && TYPE_STYLES[data.icon]) return TYPE_STYLES[data.icon];
-  if (data.type) return { ...FALLBACK_STYLE, label: data.type.toUpperCase() };
-  return FALLBACK_STYLE;
-}
-
-// Unified Service Node — left 3px accent bar, icon + type badge, bold name
+// Unified Service Node — icon-forward, eraser-style card with brand logo,
+// left accent bar, type badge and bold service name.
 const ServiceNode = ({ data, selected }: any) => {
-  const iconMap: Record<string, any> = {
-    'api-gateway': Globe,
-    lambda: Zap,
-    s3: HardDrive,
-    server: Server,
-    ec2: Server,
-    database: Database,
-    queue: Workflow,
-    worker: Cpu,
-    analytics: Activity,
-    redis: Database,
-    cloud: Cloud,
-    'load-balancer': Cloud,
-    globe: Globe,
-    auth: Lock,
-    lock: Lock,
-    shield: Shield,
-    bell: Bell,
-    users: Users,
-    monitor: Monitor,
-    smartphone: Smartphone,
-    'credit-card': CreditCard,
-    'bar-chart': BarChart3,
-    'file-text': FileText,
-    key: Key,
-    mail: Mail,
-    search: Search,
-    'git-branch': GitBranch,
-    layers: Layers,
-    network: Network,
-    settings: Settings,
-    box: Box,
-    eye: Eye,
-    clipboard: Clipboard,
-    repeat: Repeat,
-    triangle: Triangle,
-  };
-
-  const typeStyle = getTypeStyle(data);
-  const Icon = iconMap[data.icon] || iconMap[data.type] || Server;
+  const spec = resolveIcon({
+    service: data.service || data.icon,
+    type: data.type,
+    label: data.label,
+  });
 
   return (
     <div
       className="group"
       style={{
         position: 'relative',
-        background: typeStyle.bg,
-        border: `1px solid ${selected ? typeStyle.accent + 'CC' : typeStyle.accent + '40'}`,
-        borderRadius: '8px',
-        minWidth: '160px',
+        background: '#0F172A',
+        border: `1px solid ${selected ? spec.accent + 'CC' : spec.accent + '33'}`,
+        borderRadius: '10px',
+        minWidth: '172px',
         overflow: 'hidden',
         boxShadow: selected
-          ? `0 0 0 1px ${typeStyle.accent}40, 0 4px 12px rgba(0,0,0,0.4)`
-          : '0 1px 4px rgba(0,0,0,0.35)',
+          ? `0 0 0 1px ${spec.accent}55, 0 8px 24px rgba(0,0,0,0.45)`
+          : '0 2px 8px rgba(0,0,0,0.40)',
       }}
     >
       {/* Left accent strip */}
@@ -123,65 +64,60 @@ const ServiceNode = ({ data, selected }: any) => {
           top: 0,
           bottom: 0,
           width: '3px',
-          background: typeStyle.accent,
-          borderRadius: '8px 0 0 8px',
+          background: spec.accent,
+          borderRadius: '10px 0 0 10px',
         }}
       />
 
-      {/* Handles — invisible by default, shown on group hover */}
-      <Handle
-        type="target"
-        position={Position.Top}
-        style={{ opacity: 0, width: 6, height: 6, background: '#94a3b8', border: 'none', transition: 'opacity 0.15s' }}
-        className="group-hover:!opacity-70"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{ opacity: 0, width: 6, height: 6, background: '#94a3b8', border: 'none', transition: 'opacity 0.15s' }}
-        className="group-hover:!opacity-70"
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{ opacity: 0, width: 6, height: 6, background: '#94a3b8', border: 'none', transition: 'opacity 0.15s' }}
-        className="group-hover:!opacity-70"
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{ opacity: 0, width: 6, height: 6, background: '#94a3b8', border: 'none', transition: 'opacity 0.15s' }}
-        className="group-hover:!opacity-70"
-      />
+      {/* Handles — invisible by default, shown on hover */}
+      <Handle type="target" position={Position.Top} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle type="source" position={Position.Bottom} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle type="target" position={Position.Left} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle type="source" position={Position.Right} style={handleStyle} className="group-hover:!opacity-70" />
 
       {/* Content */}
-      <div style={{ padding: '10px 12px 10px 18px' }}>
-        {/* Type badge row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
-          <Icon style={{ width: 11, height: 11, color: typeStyle.accent, flexShrink: 0 }} />
-          <span
-            style={{
-              fontSize: '9px',
-              fontWeight: 700,
-              letterSpacing: '0.07em',
-              color: typeStyle.accent,
-              textTransform: 'uppercase',
-            }}
-          >
-            {typeStyle.label}
-          </span>
-        </div>
-        {/* Service name */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '11px', padding: '10px 14px 10px 17px' }}>
+        {/* Icon tile */}
         <div
           style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            color: '#E2E8F0',
-            lineHeight: 1.25,
-            whiteSpace: 'nowrap',
+            width: 36,
+            height: 36,
+            borderRadius: 9,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: spec.brand ? 'rgba(255,255,255,0.06)' : spec.accent + '1A',
+            border: `1px solid ${spec.accent}22`,
+            flexShrink: 0,
           }}
         >
-          {data.label}
+          <ServiceIcon spec={spec} size={21} />
+        </div>
+        {/* Text column */}
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: '8.5px',
+              fontWeight: 700,
+              letterSpacing: '0.09em',
+              color: spec.accent,
+              textTransform: 'uppercase',
+              marginBottom: '2px',
+            }}
+          >
+            {spec.label}
+          </div>
+          <div
+            style={{
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#E2E8F0',
+              lineHeight: 1.2,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {data.label}
+          </div>
         </div>
       </div>
     </div>
@@ -287,7 +223,13 @@ export default function ReactFlowCanvas({
         id: node.id,
         type: rfType,
         position: node.position,
-        data: { ...nodeData.data, label: nodeData.label, icon: nodeData.icon || node.type, type: nodeData.type },
+        data: {
+          ...nodeData.data,
+          label: nodeData.label,
+          icon: nodeData.icon || node.type,
+          type: nodeData.type,
+          service: nodeData.data?.service ?? nodeData.service,
+        },
       };
 
       // Handle parent-child relationships - only if parent exists

@@ -1,6 +1,6 @@
 // Unified Architecture Types
 
-export type ArchitectureMode = 'application' | 'infrastructure' | 'ai';
+export type ArchitectureMode = 'infrastructure' | 'ai';
 
 export interface Node {
   id: string;

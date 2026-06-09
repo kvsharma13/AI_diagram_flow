@@ -2,25 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { useArchitectureStore } from '@/store/architectureStore';
-import { generateArchitectureWithAI } from '@/lib/architecture/aiArchitectureGenerator';
-import { Sparkles, Loader2, ArrowRight, Layers, Cloud } from 'lucide-react';
+import { generateArchitecture } from '@/lib/architecture/aiArchitectureClient';
+import { Sparkles, Loader2, Cloud } from 'lucide-react';
+import Link from 'next/link';
 
 const examplePrompts = [
-  'Create architecture for AI calling agent using LiveKit, PostgreSQL, Redis, and OpenAI',
-  'Design an e-commerce platform with microservices for products, orders, and payments',
-  'Build a social media app with real-time messaging using WebSockets and PostgreSQL',
-  'Create a video streaming service with CDN, transcoding, and analytics',
+  'AI calling agent platform using LiveKit, a Node API gateway, campaign and call microservices, PostgreSQL, Redis, and OpenAI',
+  'E-commerce platform with web and mobile clients, API gateway, product/order/payment microservices, PostgreSQL, Redis cache, and Stripe',
+  'Real-time chat app with WebSocket gateway, message service, presence service, PostgreSQL, Redis, and push notifications',
+  'Video streaming service with CDN, upload service, transcoding workers on a queue, S3 storage, metadata DB, and analytics',
 ];
 
 export default function AIGenerator() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [generated, setGenerated] = useState(false);
   const [aiUsage, setAiUsage] = useState<{ used: number; remaining: number; limit: number } | null>(null);
   const [error, setError] = useState('');
+  const [needsSubscription, setNeedsSubscription] = useState(false);
   const { setNodes, setEdges, setLayers, setMode } = useArchitectureStore();
 
-  // Fetch AI usage on mount
   useEffect(() => {
     fetchAIUsage();
   }, []);
@@ -42,70 +42,57 @@ export default function AIGenerator() {
       setError('Please enter a description');
       return;
     }
-
-    // Check AI usage limit
     if (aiUsage && aiUsage.remaining <= 0) {
       setError(`AI generation limit reached (${aiUsage.limit}/${aiUsage.limit}). Upgrade your plan or wait until next month.`);
       return;
     }
 
     setLoading(true);
-    setGenerated(false);
     setError('');
+    setNeedsSubscription(false);
 
     try {
-      // For now, use mock generator but track usage
-      // TODO: Replace with real AI API when architecture prompts are ready
-      const result = await generateArchitectureWithAI({
-        description: prompt,
-        mode: 'application',
-      });
+      const result = await generateArchitecture(prompt);
 
-      // Track usage by calling the API
-      try {
-        const usageResponse = await fetch('/api/track-architecture-usage', {
-          method: 'POST',
-        });
-
-        if (usageResponse.ok) {
-          await fetchAIUsage(); // Refresh usage display
-        }
-      } catch (usageError) {
-        console.error('Failed to track usage:', usageError);
-        // Don't block the generation if tracking fails
+      if (!result.nodes.length) {
+        setError('The model returned an empty diagram. Try rephrasing with the specific services you want.');
+        return;
       }
 
+      // Groups are modelled as nodes; clear any stale layer list.
+      setLayers([]);
       setNodes(result.nodes);
       setEdges(result.edges);
-      setLayers(result.layers);
-      setGenerated(true);
-    } catch (error) {
-      console.error('Failed to generate architecture:', error);
-      setError('Failed to generate architecture. Please try again.');
+
+      await fetchAIUsage();
+
+      // Drop straight into the editor to view / refine the diagram.
+      setMode('infrastructure');
+    } catch (err) {
+      console.error('Failed to generate architecture:', err);
+      const e = err as Error & { needsSubscription?: boolean };
+      if (e?.needsSubscription) {
+        setNeedsSubscription(true);
+        setError('An active subscription is required to use AI generation.');
+      } else {
+        setError(e?.message || 'Failed to generate architecture. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const switchToApplicationMode = () => {
-    setMode('application');
-  };
-
-  const switchToInfrastructureMode = () => {
-    setMode('infrastructure');
-  };
-
   return (
-    <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-      <div className="max-w-3xl w-full space-y-8">
+    <div className="h-full overflow-y-auto flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
+      <div className="max-w-3xl w-full space-y-8 py-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-3">
-            <Sparkles className="w-12 h-12 text-blue-500" />
+            <Sparkles className="w-11 h-11 text-blue-500" />
             <h1 className="text-4xl font-bold text-white">AI Architecture Generator</h1>
           </div>
           <p className="text-gray-400 text-lg">
-            Describe your architecture and let AI generate it for you
+            Describe your system and AI will generate a clean, editable architecture diagram.
           </p>
         </div>
 
@@ -134,8 +121,16 @@ export default function AIGenerator() {
 
         {/* Error Display */}
         {error && (
-          <div className="bg-red-900/50 border border-red-500 rounded-lg p-4">
+          <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 flex items-center justify-between gap-4">
             <p className="text-red-200 text-sm">{error}</p>
+            {needsSubscription && (
+              <Link
+                href="/dashboard/subscription"
+                className="shrink-0 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold transition-colors"
+              >
+                Subscribe
+              </Link>
+            )}
           </div>
         )}
 
@@ -147,9 +142,12 @@ export default function AIGenerator() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Example: Create architecture for AI calling agent using LiveKit, PostgreSQL, Redis, and OpenAI"
+            placeholder="Example: AI calling agent using LiveKit, a Node API gateway, PostgreSQL, Redis, and OpenAI"
             className="w-full h-32 bg-gray-900 text-white border border-gray-700 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             disabled={loading}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleGenerate();
+            }}
           />
 
           <button
@@ -169,6 +167,7 @@ export default function AIGenerator() {
               </>
             )}
           </button>
+          <p className="text-gray-500 text-xs text-center">Tip: press ⌘/Ctrl + Enter to generate</p>
         </div>
 
         {/* Example Prompts */}
@@ -188,42 +187,13 @@ export default function AIGenerator() {
           </div>
         </div>
 
-        {/* Success State */}
-        {generated && !loading && (
-          <div className="bg-green-900/20 border border-green-600 rounded-xl p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-6 h-6 text-green-400" />
-              <h3 className="text-green-400 font-bold text-lg">Architecture Generated!</h3>
-            </div>
-            <p className="text-gray-300">
-              Your architecture has been generated successfully. Choose a view to explore it:
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={switchToApplicationMode}
-                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-colors"
-              >
-                <Layers className="w-5 h-5" />
-                View in Application Mode
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={switchToInfrastructureMode}
-                className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition-colors"
-              >
-                <Cloud className="w-5 h-5" />
-                View in Infrastructure Mode
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Info */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-2">
+          <Cloud className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
           <p className="text-gray-400 text-sm">
-            💡 <strong className="text-white">Tip:</strong> Be specific about the technologies, services, and
-            connections you want in your architecture for best results.
+            <strong className="text-white">Tip:</strong> name the specific technologies (PostgreSQL, Redis,
+            Kafka, S3, Stripe…) so each gets its real brand icon. After generating, you land in the
+            <strong className="text-white"> Editor</strong> to drag, connect and tweak nodes.
           </p>
         </div>
       </div>
