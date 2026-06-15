@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef, ReactNode } from 'react';
+import { useEffect, useState, useRef, Fragment, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
-  ArrowRight, Check, Calendar, Users,
-  Network, FileText, GitBranch, Cpu,
+  ArrowRight, Check, Calendar, Users, Network, FileText, GitBranch, Cpu,
+  ChevronRight, Server, Database, Cloud, Shield, Smartphone, Globe,
+  CheckCircle2, XCircle, type LucideIcon,
 } from 'lucide-react';
 
 /* ─── Brand mark — a small flow/graph glyph (no ✨) ─── */
@@ -21,6 +22,24 @@ function BrandMark({ className = '', glyph = 14 }: { className?: string; glyph?:
         <circle cx="18" cy="12" r="2.4" fill="#0B0D10" />
         <path d="M8.1 6.9 L15.9 11.1 M8.1 17.1 L15.9 12.9" stroke="#0B0D10" strokeWidth="1.7" strokeLinecap="round" />
       </svg>
+    </span>
+  );
+}
+
+/* ─── Avatar with initials ─── */
+function Avatar({ t, c, size = 18 }: { t: string; c: string; size?: number }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-full font-semibold flex-shrink-0"
+      style={{
+        width: size, height: size, fontSize: size * 0.42,
+        background: `linear-gradient(135deg, ${c}, ${c}aa)`,
+        color: '#fff',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
+        border: '1.5px solid var(--surface-2)',
+      }}
+    >
+      {t}
     </span>
   );
 }
@@ -142,105 +161,182 @@ function WorkflowDemo() {
   );
 }
 
-/* ─── Individual artifact panels (kept colorful — this is real product UI) ─── */
+/* ════════════ Product preview panels — premium, detailed, real-product feel ════════════ */
+
 function GanttPanel() {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  const rows = [
+    { label: 'Discovery',   bar: [0, 1.4],   pct: 100, color: '#3B82F6' },
+    { label: 'Design',      bar: [1.1, 2.6], pct: 100, color: '#38BDF8' },
+    { label: 'Development', bar: [2.4, 4.9], pct: 58,  color: '#6366F1' },
+    { label: 'QA Testing',  bar: [4.4, 5.5], pct: 18,  color: '#22C55E' },
+    { label: 'Launch',      bar: [5.5, 6],   pct: 0,   color: '#F59E0B', milestone: true },
+  ];
+  const today = 3.55;
+  const pos = (v: number) => `${(v / 6) * 100}%`;
+
   return (
-    <div className="p-4 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <Calendar className="w-3.5 h-3.5" style={{ color: '#38BDF8' }} />
-        <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>Gantt Chart — Q3 Product Launch</span>
+    <div className="p-5 h-full flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Q3 Product Launch</h4>
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-medium" style={{ background: 'rgba(34,197,94,0.14)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.3)' }}>On track</span>
+          </div>
+          <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>5 phases · Jan – Jun 2026 · 62% complete</p>
+        </div>
+        <div className="flex -space-x-2">
+          {[['AM', '#3B82F6'], ['RK', '#38BDF8'], ['JD', '#6366F1'], ['SP', '#22C55E']].map(([t, c]) => (
+            <Avatar key={t} t={t} c={c} size={22} />
+          ))}
+        </div>
       </div>
-      <div className="flex gap-1 mb-2 pl-24">
-        {['Jan','Feb','Mar','Apr','May','Jun'].map(m => (
-          <div key={m} className="flex-1 text-center text-[9px]" style={{ color: 'var(--text-muted)' }}>{m}</div>
+
+      {/* Month header */}
+      <div className="flex mb-2 pl-28">
+        {months.map(m => (
+          <div key={m} className="flex-1 text-[9px] font-medium" style={{ color: 'var(--text-muted)' }}>{m}</div>
         ))}
       </div>
-      {[
-        { label: 'Discovery',   bar: [0, 1.5],  color: '#2563EB' },
-        { label: 'Design',      bar: [1, 2.5],  color: '#38BDF8' },
-        { label: 'Development', bar: [2.5, 5],  color: '#3B82F6' },
-        { label: 'QA Testing',  bar: [4.5, 5.5],color: '#22C55E' },
-        { label: 'Launch',      bar: [5.5, 6],  color: '#F59E0B' },
-      ].map(row => (
-        <div key={row.label} className="flex items-center gap-2 mb-2.5">
-          <div className="w-20 text-[10px] truncate flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>{row.label}</div>
-          <div className="flex-1 relative h-5 rounded-md" style={{ background: 'var(--surface-3)' }}>
-            {[1,2,3,4,5].map(i => (
-              <div key={i} className="absolute top-0 bottom-0 w-px" style={{ left:`${(i/6)*100}%`, background:'var(--divider)' }} />
+
+      {/* Track */}
+      <div className="relative flex-1">
+        {/* gridlines + today */}
+        <div className="absolute inset-0 pl-28">
+          <div className="relative h-full">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="absolute top-0 bottom-0 w-px" style={{ left: pos(i), background: 'var(--divider)' }} />
             ))}
-            <div className="absolute top-0.5 bottom-0.5 rounded-sm" style={{
-              left:`${(row.bar[0]/6)*100}%`,
-              width:`${((row.bar[1]-row.bar[0])/6)*100}%`,
-              background: row.color, opacity: 0.85,
-            }} />
+            <div className="absolute top-0 bottom-0" style={{ left: pos(today) }}>
+              <div className="w-px h-full" style={{ background: 'rgba(244,114,182,0.45)' }} />
+              <div className="absolute -top-1 -left-[3px] w-2 h-2 rounded-full" style={{ background: '#F472B6', boxShadow: '0 0 0 3px rgba(244,114,182,0.18)' }} />
+            </div>
           </div>
         </div>
-      ))}
-      <div className="mt-auto flex items-center gap-3 pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
-        {[['#2563EB','Discovery'],['#38BDF8','Design'],['#22C55E','QA']].map(([c,l]) => (
-          <div key={l} className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-sm" style={{ background: c }} />
-            <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{l}</span>
-          </div>
-        ))}
+
+        {/* rows */}
+        <div className="relative flex flex-col justify-around h-full">
+          {rows.map(row => (
+            <div key={row.label} className="flex items-center gap-2 h-7">
+              <div className="w-28 flex-shrink-0">
+                <span className="text-[10px] truncate" style={{ color: 'var(--text-secondary)' }}>{row.label}</span>
+              </div>
+              <div className="relative flex-1 h-full flex items-center">
+                {row.milestone ? (
+                  <div className="absolute -translate-x-1/2" style={{ left: pos(row.bar[0]) }}>
+                    <div className="w-3.5 h-3.5 rotate-45 rounded-[2px]" style={{ background: `linear-gradient(135deg,${row.color},${row.color}aa)`, boxShadow: `0 0 0 3px ${row.color}22, 0 1px 3px rgba(0,0,0,0.4)` }} />
+                  </div>
+                ) : (
+                  <div
+                    className="absolute h-[18px] rounded-full overflow-hidden"
+                    style={{
+                      left: pos(row.bar[0]),
+                      width: `${((row.bar[1] - row.bar[0]) / 6) * 100}%`,
+                      background: `${row.color}26`,
+                      border: `1px solid ${row.color}4d`,
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+                    }}
+                  >
+                    <div
+                      className="h-full rounded-full flex items-center justify-end pr-1.5"
+                      style={{ width: `${Math.max(row.pct, 6)}%`, background: `linear-gradient(90deg, ${row.color}cc, ${row.color})` }}
+                    >
+                      {row.pct >= 35 && <span className="text-[7px] font-bold" style={{ color: 'rgba(255,255,255,0.95)' }}>{row.pct}%</span>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-3 flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
+        <div className="flex items-center gap-3">
+          {[['#3B82F6', 'Discovery'], ['#6366F1', 'Build'], ['#22C55E', 'QA']].map(([c, l]) => (
+            <div key={l} className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ background: c }} />
+              <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{l}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#F472B6' }} />
+          <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>Today · Apr 18</span>
+        </div>
       </div>
     </div>
   );
 }
 
 function RaciPanel() {
-  const tasks = ['Requirements','Architecture','UI Design','Backend API','QA Testing'];
-  const members = ['PM','Dev Lead','Designer','QA'];
+  const tasks = ['Requirements', 'Architecture', 'UI Design', 'Backend API', 'QA Testing'];
+  const members = [
+    { r: 'PM',       t: 'AM', c: '#3B82F6' },
+    { r: 'Dev Lead', t: 'JD', c: '#6366F1' },
+    { r: 'Designer', t: 'RK', c: '#38BDF8' },
+    { r: 'QA',       t: 'SP', c: '#22C55E' },
+  ];
   const matrix: Record<string, string[]> = {
-    'Requirements': ['R','C','I','I'],
-    'Architecture': ['A','R','C','I'],
-    'UI Design':    ['I','C','R','I'],
-    'Backend API':  ['A','R','I','C'],
-    'QA Testing':   ['A','C','I','R'],
+    'Requirements': ['R', 'C', 'I', 'I'],
+    'Architecture': ['A', 'R', 'C', 'I'],
+    'UI Design':    ['I', 'C', 'R', 'I'],
+    'Backend API':  ['A', 'R', 'I', 'C'],
+    'QA Testing':   ['A', 'C', 'I', 'R'],
   };
-  const colors: Record<string,string> = { R:'#2563EB', A:'#22C55E', C:'#38BDF8', I:'#52525B' };
+  const meta: Record<string, { c: string; label: string }> = {
+    R: { c: '#3B82F6', label: 'Responsible' },
+    A: { c: '#22C55E', label: 'Accountable' },
+    C: { c: '#38BDF8', label: 'Consulted' },
+    I: { c: '#71717A', label: 'Informed' },
+  };
+
   return (
-    <div className="p-4 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <Users className="w-3.5 h-3.5" style={{ color: '#22C55E' }} />
-        <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>RACI Matrix — Responsibilities</span>
+    <div className="p-5 h-full flex flex-col overflow-hidden">
+      <div className="mb-4">
+        <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Responsibility Matrix</h4>
+        <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>5 tasks · 4 owners</p>
       </div>
-      <div className="overflow-auto flex-1">
-        <table className="w-full text-[9px] border-collapse">
-          <thead>
-            <tr>
-              <th className="text-left pb-2 pr-2" style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Task</th>
-              {members.map(m => (
-                <th key={m} className="pb-2 text-center" style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{m}</th>
+
+      <div className="flex-1">
+        <div className="grid items-center" style={{ gridTemplateColumns: '1.5fr repeat(4, 1fr)' }}>
+          {/* header */}
+          <div />
+          {members.map(m => (
+            <div key={m.r} className="flex flex-col items-center gap-1 pb-3">
+              <Avatar t={m.t} c={m.c} size={24} />
+              <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>{m.r}</span>
+            </div>
+          ))}
+          {/* rows */}
+          {tasks.map((task, ri) => (
+            <Fragment key={task}>
+              <div className="text-[10px] py-2 pr-2" style={{ color: 'var(--text-secondary)', borderTop: ri ? '1px solid var(--divider)' : 'none' }}>{task}</div>
+              {matrix[task].map((mark, mi) => (
+                <div key={mi} className="flex items-center justify-center py-2" style={{ borderTop: ri ? '1px solid var(--divider)' : 'none' }}>
+                  <span
+                    className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[9px] font-bold"
+                    style={{
+                      background: `linear-gradient(135deg,${meta[mark].c}2e,${meta[mark].c}14)`,
+                      color: meta[mark].c,
+                      border: `1px solid ${meta[mark].c}4d`,
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+                    }}
+                  >{mark}</span>
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task) => (
-              <tr key={task}>
-                <td className="py-1.5 pr-2 text-[9px]" style={{ color: 'var(--text-secondary)' }}>{task}</td>
-                {matrix[task].map((mark, mi) => (
-                  <td key={mi} className="py-1.5 text-center">
-                    <span
-                      className="inline-flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold"
-                      style={{
-                        background: colors[mark] + '18',
-                        color: colors[mark],
-                        border: `1px solid ${colors[mark]}30`,
-                      }}
-                    >{mark}</span>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </Fragment>
+          ))}
+        </div>
       </div>
-      <div className="flex gap-3 mt-3 pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
-        {[['R','Responsible','#2563EB'],['A','Accountable','#22C55E'],['C','Consulted','#38BDF8'],['I','Informed','#71717A']].map(([k,v,c]) => (
-          <div key={k} className="flex items-center gap-1">
-            <span className="text-[8px] font-bold" style={{ color: c as string }}>{k}</span>
-            <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>{v}</span>
+
+      <div className="flex items-center gap-3 mt-3 pt-3 flex-wrap" style={{ borderTop: '1px solid var(--divider)' }}>
+        {Object.entries(meta).map(([k, v]) => (
+          <div key={k} className="flex items-center gap-1.5">
+            <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded text-[8px] font-bold" style={{ background: v.c + '22', color: v.c }}>{k}</span>
+            <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{v.label}</span>
           </div>
         ))}
       </div>
@@ -248,86 +344,141 @@ function RaciPanel() {
   );
 }
 
+/* flow helpers */
+function Conn({ h = 16 }: { h?: number }) {
+  return (
+    <div className="flex flex-col items-center" style={{ height: h }}>
+      <div className="w-px flex-1" style={{ background: 'var(--border)' }} />
+      <svg width="7" height="4" viewBox="0 0 7 4" fill="none">
+        <path d="M0.6 0.6 L3.5 3 L6.4 0.6" stroke="var(--text-disabled)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+function FlowCard({ icon: Icon, label, sub, color }: { icon: LucideIcon; label: string; sub: string; color: string }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', minWidth: 156, boxShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
+      <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: color + '1f', border: `1px solid ${color}3a` }}>
+        <Icon className="w-3 h-3" style={{ color }} />
+      </div>
+      <div className="leading-tight">
+        <div className="text-[10px] font-medium" style={{ color: 'var(--text-primary)' }}>{label}</div>
+        <div className="text-[8px]" style={{ color: 'var(--text-muted)' }}>{sub}</div>
+      </div>
+    </div>
+  );
+}
+function FlowChip({ icon: Icon, label, color }: { icon: LucideIcon; label: string; color: string }) {
+  return (
+    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: color + '14', border: `1px solid ${color}38` }}>
+      <Icon className="w-3 h-3 flex-shrink-0" style={{ color }} />
+      <span className="text-[9px] font-medium whitespace-nowrap" style={{ color }}>{label}</span>
+    </div>
+  );
+}
+
 function BpmnPanel() {
   return (
-    <div className="p-4 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <GitBranch className="w-3.5 h-3.5" style={{ color: '#A78BFA' }} />
-        <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>Process Flow — Approval Workflow</span>
+    <div className="p-5 h-full flex flex-col overflow-hidden">
+      <div className="mb-2">
+        <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Invoice Approval</h4>
+        <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>BPMN 2.0 · Finance lane</p>
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center gap-2">
+
+      <div className="flex-1 flex flex-col items-center justify-center">
         {/* Start */}
-        <div className="w-8 h-8 rounded-full flex items-center justify-center border-2" style={{ borderColor: '#22C55E', background: 'rgba(34,197,94,0.12)' }}>
+        <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ border: '2px solid #22C55E', background: 'rgba(34,197,94,0.14)' }}>
           <div className="w-2 h-2 rounded-full" style={{ background: '#22C55E' }} />
         </div>
-        <div className="w-px h-4" style={{ background: 'var(--border)' }} />
-        {/* Task 1 */}
-        <div className="w-full max-w-[180px] py-2 px-3 rounded-lg text-center text-[10px] font-medium" style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-          Submit Request
-        </div>
-        <div className="w-px h-3" style={{ background: 'var(--border)' }} />
+        <Conn />
+        <FlowCard icon={FileText} label="Submit Request" sub="Requestor" color="#3B82F6" />
+        <Conn />
         {/* Gateway */}
-        <div className="w-8 h-8 rotate-45 flex items-center justify-center" style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)' }}>
-          <span className="text-[9px] font-bold -rotate-45" style={{ color: '#A78BFA' }}>?</span>
+        <div className="relative flex items-center justify-center" style={{ width: 38, height: 38 }}>
+          <div className="absolute inset-0 rotate-45 rounded-[4px]" style={{ background: 'rgba(245,158,11,0.14)', border: '1.5px solid rgba(245,158,11,0.5)' }} />
+          <span className="relative text-[10px] font-bold" style={{ color: '#F59E0B' }}>?</span>
         </div>
-        {/* Branch */}
-        <div className="flex items-start gap-6 w-full justify-center">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-px h-3" style={{ background: 'var(--border)' }} />
-            <div className="py-2 px-3 rounded-lg text-[9px] text-center" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', color: '#22C55E', width: 80 }}>Approved</div>
+        <div className="text-[9px] mt-1.5 mb-1" style={{ color: 'var(--text-muted)' }}>Approved?</div>
+        {/* Branches */}
+        <div className="flex items-start gap-5">
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] font-semibold mb-1" style={{ color: '#22C55E' }}>Yes</span>
+            <div className="w-px h-3" style={{ background: 'rgba(34,197,94,0.45)' }} />
+            <div className="mt-1"><FlowChip icon={CheckCircle2} label="Process Payment" color="#22C55E" /></div>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-px h-3" style={{ background: 'var(--border)' }} />
-            <div className="py-2 px-3 rounded-lg text-[9px] text-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#EF4444', width: 80 }}>Rejected</div>
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] font-semibold mb-1" style={{ color: '#EF4444' }}>No</span>
+            <div className="w-px h-3" style={{ background: 'rgba(239,68,68,0.45)' }} />
+            <div className="mt-1"><FlowChip icon={XCircle} label="Return to Sender" color="#EF4444" /></div>
           </div>
         </div>
-        <div className="w-px h-3" style={{ background: 'var(--border)' }} />
-        {/* Task 2 */}
-        <div className="w-full max-w-[180px] py-2 px-3 rounded-lg text-center text-[10px] font-medium" style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-          Notify Stakeholders
-        </div>
-        <div className="w-px h-3" style={{ background: 'var(--border)' }} />
+        <Conn />
         {/* End */}
-        <div className="w-8 h-8 rounded-full flex items-center justify-center border-2" style={{ borderColor: '#EF4444', background: 'rgba(239,68,68,0.10)' }}>
-          <div className="w-3 h-3 rounded-full" style={{ background: '#EF4444' }} />
+        <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ border: '2px solid #EF4444', background: 'rgba(239,68,68,0.12)' }}>
+          <div className="w-2.5 h-2.5 rounded-sm" style={{ background: '#EF4444' }} />
         </div>
       </div>
     </div>
   );
 }
 
+function ArchBox({ icon: Icon, label, color, wide, small }: { icon: LucideIcon; label: string; color: string; wide?: boolean; small?: boolean }) {
+  return (
+    <div
+      className="flex items-center gap-1.5 rounded-lg"
+      style={{
+        padding: small ? '5px 8px' : '7px 11px',
+        background: 'var(--surface-2)',
+        border: `1px solid ${color}38`,
+        minWidth: wide ? 140 : undefined,
+        justifyContent: wide ? 'center' : 'flex-start',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+      }}
+    >
+      <Icon className={small ? 'w-2.5 h-2.5 flex-shrink-0' : 'w-3 h-3 flex-shrink-0'} style={{ color }} />
+      <span className={`${small ? 'text-[8px]' : 'text-[9px]'} font-medium whitespace-nowrap`} style={{ color: 'var(--text-secondary)' }}>{label}</span>
+    </div>
+  );
+}
+function Tier() {
+  return <div className="flex justify-center"><div className="w-px h-3" style={{ background: 'var(--accent-soft-bd)' }} /></div>;
+}
+
 function ArchPanel() {
   return (
-    <div className="p-4 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <Network className="w-3.5 h-3.5" style={{ color: '#FB923C' }} />
-        <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>Architecture — Microservices</span>
+    <div className="p-5 h-full flex flex-col overflow-hidden">
+      <div className="mb-3">
+        <h4 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Microservices</h4>
+        <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>3 tiers · 9 services</p>
       </div>
-      <div className="flex-1 flex flex-col gap-2 justify-center">
-        {/* Row 1 */}
-        <div className="flex justify-center gap-2">
-          <div className="py-2 px-3 rounded-lg text-[9px] text-center flex-1 max-w-[90px]" style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Client App</div>
-          <div className="py-2 px-3 rounded-lg text-[9px] text-center flex-1 max-w-[90px]" style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>Mobile App</div>
+
+      <div className="flex-1 flex flex-col justify-center gap-2">
+        {/* clients */}
+        <div className="flex justify-center gap-2.5">
+          <ArchBox icon={Globe} label="Web App" color="#38BDF8" />
+          <ArchBox icon={Smartphone} label="Mobile" color="#38BDF8" />
         </div>
-        {/* Connector */}
-        <div className="flex justify-center"><div className="w-px h-4" style={{ background: 'var(--accent-soft-bd)' }} /></div>
-        {/* API Gateway */}
+        <Tier />
+        {/* gateway */}
         <div className="flex justify-center">
-          <div className="py-2 px-4 rounded-lg text-[9px] text-center font-semibold" style={{ background: 'rgba(37,99,235,0.12)', border: '1px solid rgba(37,99,235,0.30)', color: '#3B82F6', minWidth: 110 }}>API Gateway</div>
+          <ArchBox icon={Shield} label="API Gateway" color="#3B82F6" wide />
         </div>
-        <div className="flex justify-center"><div className="w-px h-4" style={{ background: 'var(--accent-soft-bd)' }} /></div>
-        {/* Row 2 */}
-        <div className="flex justify-center gap-2">
-          {['Auth','Users','Billing','Reports'].map(s => (
-            <div key={s} className="py-2 px-2 rounded-lg text-[8px] text-center flex-1" style={{ background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.20)', color: '#FB923C' }}>{s}</div>
-          ))}
+        <Tier />
+        {/* services group */}
+        <div className="rounded-xl p-2.5" style={{ border: '1px dashed var(--border)', background: 'rgba(99,102,241,0.05)' }}>
+          <div className="text-[8px] mb-2 uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Services</div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {([['Auth', Shield], ['Users', Users], ['Billing', FileText], ['Reports', Network]] as [string, LucideIcon][]).map(([l, I]) => (
+              <ArchBox key={l} icon={I} label={l} color="#6366F1" small />
+            ))}
+          </div>
         </div>
-        <div className="flex justify-center"><div className="w-px h-4" style={{ background: 'var(--border)' }} /></div>
-        {/* Row 3 */}
-        <div className="flex justify-center gap-2">
-          {['PostgreSQL','Redis','S3'].map(s => (
-            <div key={s} className="py-2 px-3 rounded-lg text-[8px] text-center flex-1" style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>{s}</div>
-          ))}
+        <Tier />
+        {/* data */}
+        <div className="flex justify-center gap-2.5">
+          <ArchBox icon={Database} label="PostgreSQL" color="#22C55E" />
+          <ArchBox icon={Server} label="Redis" color="#F59E0B" />
+          <ArchBox icon={Cloud} label="S3" color="#A78BFA" />
         </div>
       </div>
     </div>
@@ -335,53 +486,57 @@ function ArchPanel() {
 }
 
 function SowPanel() {
-  const sections = [
-    { title: 'Executive Summary',     preview: 'Scope, timeline, and deliverables for the fintech reconciliation platform.', done: true },
-    { title: 'Project Scope',         preview: 'Real-time transaction reconciliation system — design, build, deploy.', done: true },
-    { title: 'Timeline & Milestones', preview: 'Discovery Jan–Feb · Design Feb–Mar · Build Mar–May · Launch Jun.', done: true },
-    { title: 'Commercials',           preview: 'Fixed-price ₹12,00,000 · milestone-based payment schedule.', done: false },
-  ];
   return (
-    <div className="p-4 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-        <FileText className="w-3.5 h-3.5" style={{ color: '#F472B6' }} />
-        <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>Proposal / SOW — Generated</span>
+    <div className="p-5 h-full flex flex-col overflow-hidden">
+      {/* doc header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(244,114,182,0.14)', border: '1px solid rgba(244,114,182,0.3)' }}>
+            <FileText className="w-4 h-4" style={{ color: '#F472B6' }} />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>Statement of Work</h4>
+            <p className="text-[9px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Acme Fintech · v1.2 · Draft</p>
+          </div>
+        </div>
+        <span className="px-2 py-0.5 rounded text-[9px] font-medium" style={{ background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>PDF</span>
       </div>
-      <div className="flex flex-col gap-2 overflow-hidden">
-        {sections.map(section => (
-          <div
-            key={section.title}
-            className="rounded-lg px-3 py-2 flex-shrink-0"
-            style={{ background: 'var(--surface-2)', border: '1px solid var(--divider)' }}
-          >
-            <div className="flex items-center gap-2 mb-0.5">
-              <div
-                className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: section.done ? 'rgba(34,197,94,0.15)' : 'var(--surface-3)',
-                  border: `1px solid ${section.done ? 'rgba(34,197,94,0.35)' : 'var(--border)'}`,
-                }}
-              >
-                {section.done && <Check className="w-2 h-2" style={{ color: '#22C55E' }} />}
-              </div>
-              <span className="text-[10px] font-semibold" style={{ color: section.done ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                {section.title}
-              </span>
-            </div>
-            <p className="text-[8px] leading-relaxed pl-5 truncate" style={{ color: 'var(--text-muted)' }}>
-              {section.preview}
-            </p>
+
+      {/* doc body */}
+      <div className="flex-1 rounded-lg p-3.5 overflow-hidden" style={{ background: 'var(--surface-2)', border: '1px solid var(--divider)' }}>
+        {[
+          { h: '1 · Executive Summary', lines: [96, 78] },
+          { h: '2 · Scope of Work',     lines: [100, 70] },
+        ].map(s => (
+          <div key={s.h} className="mb-3">
+            <div className="text-[9px] font-semibold mb-1.5" style={{ color: 'var(--text-primary)' }}>{s.h}</div>
+            {s.lines.map((w, i) => (
+              <div key={i} className="h-1.5 rounded-full mb-1.5" style={{ width: `${w}%`, background: 'var(--surface-hover)' }} />
+            ))}
           </div>
         ))}
-      </div>
-      {/* Progress bar */}
-      <div className="mt-auto pt-3 flex-shrink-0">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>Generation complete</span>
-          <span className="text-[9px] font-medium" style={{ color: '#F472B6' }}>75%</span>
+        {/* commercial callout */}
+        <div className="rounded-lg px-3 py-2.5 flex items-center justify-between" style={{ background: 'rgba(244,114,182,0.08)', border: '1px solid rgba(244,114,182,0.22)' }}>
+          <div>
+            <div className="text-[8px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Total contract value</div>
+            <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>₹12,00,000</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[8px]" style={{ color: 'var(--text-muted)' }}>Milestones</div>
+            <div className="text-[10px] font-semibold" style={{ color: '#F472B6' }}>4 payments</div>
+          </div>
         </div>
-        <div className="h-1 rounded-full w-full" style={{ background: 'var(--surface-3)' }}>
-          <div className="h-1 rounded-full" style={{ width: '75%', background: '#F472B6' }} />
+      </div>
+
+      {/* footer */}
+      <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>Authorized</span>
+          <div className="w-16 h-px" style={{ background: 'var(--border)' }} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Check className="w-3 h-3" style={{ color: '#22C55E' }} />
+          <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>4 of 4 sections generated</span>
         </div>
       </div>
     </div>
@@ -389,20 +544,20 @@ function SowPanel() {
 }
 
 const ARTIFACTS = [
-  { id: 'gantt', label: 'Gantt',        icon: Calendar,  Panel: GanttPanel },
-  { id: 'raci',  label: 'RACI',         icon: Users,     Panel: RaciPanel  },
-  { id: 'bpmn',  label: 'Process Flow', icon: GitBranch, Panel: BpmnPanel  },
-  { id: 'arch',  label: 'Architecture', icon: Network,   Panel: ArchPanel  },
-  { id: 'sow',   label: 'SOW',          icon: FileText,  Panel: SowPanel   },
+  { id: 'gantt', label: 'Gantt',        title: 'Gantt Chart',     icon: Calendar,  Panel: GanttPanel },
+  { id: 'raci',  label: 'RACI',         title: 'RACI Matrix',     icon: Users,     Panel: RaciPanel  },
+  { id: 'bpmn',  label: 'Process Flow', title: 'Process Flow',    icon: GitBranch, Panel: BpmnPanel  },
+  { id: 'arch',  label: 'Architecture', title: 'Architecture',    icon: Network,   Panel: ArchPanel  },
+  { id: 'sow',   label: 'SOW',          title: 'Proposal / SOW',  icon: FileText,  Panel: SowPanel   },
 ];
 
-/* ─── Hero product window — clean, framed, no blur theatrics ─── */
+/* ─── Hero product window — elevated app frame, clearly visible on black ─── */
 function AppPreview() {
   const [active, setActive] = useState(0);
   const total = ARTIFACTS.length;
 
   useEffect(() => {
-    const t = setInterval(() => setActive(a => (a + 1) % total), 3800);
+    const t = setInterval(() => setActive(a => (a + 1) % total), 4200);
     return () => clearInterval(t);
   }, [total]);
 
@@ -411,38 +566,57 @@ function AppPreview() {
   const Icon = artifact.icon;
 
   return (
-    <div className="select-none">
+    <div className="relative select-none">
+      {/* soft elevation ambient — hugs the window, not a hero blob */}
+      <div
+        className="absolute -inset-8 pointer-events-none"
+        style={{ background: 'radial-gradient(58% 50% at 50% 42%, rgba(37,99,235,0.10), transparent 72%)' }}
+      />
+
       {/* Window */}
       <div
-        className="rounded-xl overflow-hidden"
+        className="relative rounded-2xl overflow-hidden"
         style={{
-          background: 'var(--surface-1)',
-          border: '1px solid var(--border)',
-          boxShadow: '0 30px 60px -28px rgba(0,0,0,0.75)',
+          background: 'linear-gradient(180deg, #1B1E27 0%, #14171E 100%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 30px 60px -24px rgba(0,0,0,0.85), 0 12px 28px -16px rgba(0,0,0,0.7)',
         }}
       >
-        {/* Title bar */}
+        {/* App chrome bar */}
         <div
-          className="flex items-center justify-between px-4 h-10"
-          style={{ borderBottom: '1px solid var(--divider)', background: 'var(--surface-2)' }}
+          className="flex items-center justify-between px-3.5 h-11"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-secondary)' }} />
-            <span className="text-xs font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
-              {ARTIFACTS[active].label === 'SOW' ? 'Proposal / SOW' : ARTIFACTS[active].label}
-            </span>
+            <BrandMark className="w-5 h-5" glyph={11} />
+            <span className="text-[11px] font-medium hidden sm:inline" style={{ color: 'var(--text-muted)' }}>Acme Fintech</span>
+            <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--text-disabled)' }} />
+            <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--accent-hover)' }} />
+            <span className="text-xs font-medium truncate" style={{ color: 'var(--text-secondary)' }}>{artifact.title}</span>
           </div>
-          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Auto-generated</span>
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <span
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium"
+              style={{ background: 'var(--accent-soft-bg)', color: 'var(--accent-hover)', border: '1px solid var(--accent-soft-bd)' }}
+            >
+              <Cpu className="w-2.5 h-2.5" /> AI
+            </span>
+            <div className="hidden sm:flex -space-x-2">
+              <Avatar t="AM" c="#3B82F6" size={20} />
+              <Avatar t="RK" c="#38BDF8" size={20} />
+            </div>
+          </div>
         </div>
+
         {/* Body */}
-        <div style={{ height: 320, position: 'relative' }}>
+        <div style={{ height: 364, position: 'relative' }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={artifact.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.28, ease: 'easeOut' }}
               className="absolute inset-0"
             >
               <Panel />
@@ -452,15 +626,15 @@ function AppPreview() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center justify-center gap-1.5 mt-4 flex-wrap">
+      <div className="relative flex items-center justify-center gap-1.5 mt-5 flex-wrap">
         {ARTIFACTS.map((a, i) => (
           <button
             key={a.id}
             onClick={() => setActive(i)}
-            className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-150"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
             style={{
               background: i === active ? 'var(--surface-2)' : 'transparent',
-              border: `1px solid ${i === active ? 'var(--border)' : 'transparent'}`,
+              border: `1px solid ${i === active ? 'rgba(255,255,255,0.12)' : 'transparent'}`,
               color: i === active ? 'var(--text-primary)' : 'var(--text-muted)',
             }}
           >
