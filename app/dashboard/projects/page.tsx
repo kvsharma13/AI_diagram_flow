@@ -83,15 +83,15 @@ export default function ProjectsPage() {
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-all duration-200"
             style={{
               background: 'var(--accent)',
-              boxShadow: '0 0 16px rgba(124,58,237,0.3)',
+              boxShadow: '0 0 16px rgba(37,99,235,0.3)',
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)';
-              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px rgba(124,58,237,0.4)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px rgba(37,99,235,0.4)';
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLElement).style.background = 'var(--accent)';
-              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 16px rgba(124,58,237,0.3)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 16px rgba(37,99,235,0.3)';
             }}
           >
             <Plus className="w-4 h-4" />
@@ -209,7 +209,7 @@ export default function ProjectsPage() {
                           border: '1px solid var(--accent-soft-bd)',
                         }}
                         onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.22)';
+                          (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.22)';
                         }}
                         onMouseLeave={(e) => {
                           (e.currentTarget as HTMLElement).style.background = 'var(--accent-soft-bg)';

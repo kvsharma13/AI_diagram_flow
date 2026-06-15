@@ -26,11 +26,11 @@
   --text-disabled:  #52525B;
 
   /* Accent — violet */
-  --accent:         #7C3AED;
-  --accent-hover:   #8B5CF6;
-  --accent-active:  #6D28D9;
-  --accent-soft-bg: rgba(124,58,237,0.14);
-  --accent-soft-bd: rgba(124,58,237,0.35);
+  --accent:         #2563EB;
+  --accent-hover:   #3B82F6;
+  --accent-active:  #1D4ED8;
+  --accent-soft-bg: rgba(37,99,235,0.14);
+  --accent-soft-bd: rgba(37,99,235,0.35);
 
   /* Status */
   --success:        #22C55E;
@@ -45,19 +45,19 @@
   --card-foreground:     220 13% 95%;
   --popover:             224 20% 9%;
   --popover-foreground:  220 13% 95%;
-  --primary:             263 70% 56%;
+  --primary:             221 83% 53%;
   --primary-foreground:  0 0% 100%;
   --secondary:           224 18% 10%;
   --secondary-foreground:220 10% 65%;
   --muted:               224 16% 11%;
   --muted-foreground:    220 9% 46%;
-  --accent:              263 70% 56%;
+  --accent:              221 83% 53%;
   --accent-foreground:   0 0% 100%;
   --destructive:         0 62% 50%;
   --destructive-foreground: 0 0% 100%;
   --border:              224 14% 12%;
   --input:               224 14% 12%;
-  --ring:                263 70% 56%;
+  --ring:                221 83% 53%;
   --radius:              0.5rem;
 }
 
@@ -118,7 +118,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(124,58,237,0.4);
+  background: rgba(37,99,235,0.4);
   border-radius: 999px;
   transition: background 0.2s ease;
 }
@@ -131,7 +131,7 @@ body {
    SELECTION / FOCUS
    ============================================================ */
 ::selection {
-  background-color: rgba(124,58,237,0.4);
+  background-color: rgba(37,99,235,0.4);
   color: #fff;
 }
 
@@ -158,7 +158,7 @@ body {
 .card-dark:hover {
   background: rgba(255,255,255,0.05);
   border-color: rgba(255,255,255,0.10);
-  box-shadow: 0 0 0 1px rgba(124,58,237,0.08);
+  box-shadow: 0 0 0 1px rgba(37,99,235,0.08);
 }
 
 .glass {
@@ -172,11 +172,11 @@ body {
    ACCENT UTILITIES
    ============================================================ */
 .accent-glow {
-  box-shadow: 0 0 20px rgba(124,58,237,0.25), 0 0 40px rgba(124,58,237,0.08);
+  box-shadow: 0 0 20px rgba(37,99,235,0.25), 0 0 40px rgba(37,99,235,0.08);
 }
 
 .accent-glow-sm {
-  box-shadow: 0 0 12px rgba(124,58,237,0.20);
+  box-shadow: 0 0 12px rgba(37,99,235,0.20);
 }
 
 .text-accent { color: var(--accent-hover); }
@@ -210,8 +210,8 @@ body {
 }
 
 @keyframes pulse-accent {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.4); }
-  50%       { box-shadow: 0 0 0 6px rgba(124,58,237,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(37,99,235,0); }
 }
 
 /* ============================================================
@@ -260,7 +260,7 @@ body {
 .mermaid-container .node:hover rect,
 .mermaid-container .node:hover circle,
 .mermaid-container .node:hover polygon {
-  filter: drop-shadow(0 4px 12px rgba(124,58,237,0.3));
+  filter: drop-shadow(0 4px 12px rgba(37,99,235,0.3));
 }
 
 .mermaid-container .edgeLabel {

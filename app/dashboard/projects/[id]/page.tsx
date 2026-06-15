@@ -228,7 +228,7 @@ export default function ProjectEditorPage() {
               ) : (
                 <h1
                   onClick={() => setIsEditingName(true)}
-                  className="text-2xl font-bold cursor-pointer transition-colors px-3 py-1 rounded-lg hover:bg-[rgba(124,58,237,0.08)]"
+                  className="text-2xl font-bold cursor-pointer transition-colors px-3 py-1 rounded-lg hover:bg-[rgba(37,99,235,0.08)]"
                   style={{ color: 'var(--text-primary)' }}
                 >
                   {project?.name}

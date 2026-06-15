@@ -150,8 +150,8 @@ export default function DashboardPage() {
         <div
           className="flex items-center justify-between px-6 py-3 text-sm"
           style={{
-            background: 'rgba(124,58,237,0.12)',
-            borderBottom: '1px solid rgba(124,58,237,0.25)',
+            background: 'rgba(37,99,235,0.12)',
+            borderBottom: '1px solid rgba(37,99,235,0.25)',
           }}
         >
           <div className="flex items-center gap-3" style={{ color: 'var(--text-secondary)' }}>
@@ -313,7 +313,7 @@ export default function DashboardPage() {
                 border: '1px solid var(--accent-soft-bd)',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.20)';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.20)';
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.background = 'var(--accent-soft-bg)';

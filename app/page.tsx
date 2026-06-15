@@ -1,13 +1,29 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
-  Sparkles, ArrowRight, Check, Calendar, Users,
-  Network, FileText, Zap, GitBranch,
-  Shield, BarChart3, Cpu,
+  ArrowRight, Check, Calendar, Users,
+  Network, FileText, GitBranch, Cpu,
 } from 'lucide-react';
+
+/* ─── Brand mark — a small flow/graph glyph (no ✨) ─── */
+function BrandMark({ className = '', glyph = 14 }: { className?: string; glyph?: number }) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center rounded-md ${className}`}
+      style={{ background: 'var(--text-primary)' }}
+    >
+      <svg width={glyph} height={glyph} viewBox="0 0 24 24" fill="none">
+        <circle cx="6" cy="6" r="2.4" fill="#0B0D10" />
+        <circle cx="6" cy="18" r="2.4" fill="#0B0D10" />
+        <circle cx="18" cy="12" r="2.4" fill="#0B0D10" />
+        <path d="M8.1 6.9 L15.9 11.1 M8.1 17.1 L15.9 12.9" stroke="#0B0D10" strokeWidth="1.7" strokeLinecap="round" />
+      </svg>
+    </span>
+  );
+}
 
 /* ─── Scroll-reveal hook ─── */
 function useReveal() {
@@ -28,11 +44,11 @@ function useReveal() {
 
 /* ─── Animated workflow demo ─── */
 const WORKFLOW_STEPS = [
-  { id: 'gantt',  label: 'Gantt Chart',       icon: Calendar,  color: '#38BDF8' },
-  { id: 'raci',   label: 'RACI Matrix',        icon: Users,     color: '#22C55E' },
-  { id: 'bpmn',   label: 'Process Flow',       icon: GitBranch, color: '#A78BFA' },
-  { id: 'arch',   label: 'Architecture',       icon: Network,   color: '#FB923C' },
-  { id: 'sow',    label: 'Proposal / SOW',     icon: FileText,  color: '#F472B6' },
+  { id: 'gantt', label: 'Gantt Chart',   icon: Calendar  },
+  { id: 'raci',  label: 'RACI Matrix',   icon: Users     },
+  { id: 'bpmn',  label: 'Process Flow',  icon: GitBranch },
+  { id: 'arch',  label: 'Architecture',  icon: Network   },
+  { id: 'sow',   label: 'Proposal / SOW',icon: FileText  },
 ];
 
 function WorkflowDemo() {
@@ -65,91 +81,68 @@ function WorkflowDemo() {
   }, [visible]);
 
   return (
-    <div ref={ref} className="max-w-4xl mx-auto">
+    <div ref={ref} className="max-w-3xl mx-auto">
       {/* Prompt */}
       <div
-        className="rounded-xl p-5 mb-6 font-mono text-sm"
-        style={{
-          background: 'var(--surface-2)',
-          border: '1px solid var(--border)',
-        }}
+        className="rounded-lg p-4 mb-5 font-mono text-sm"
+        style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
       >
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]/70" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]/70" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#22C55E]/70" />
-          <span className="ml-2 text-xs" style={{ color: 'var(--text-muted)' }}>AI Prompt</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span style={{ color: 'var(--accent-hover)' }}>›</span>
-          <span style={{ color: 'var(--text-secondary)' }}>{typed}</span>
-          <span
-            className="inline-block w-0.5 h-4 ml-0.5"
-            style={{
-              background: 'var(--accent-hover)',
-              animation: typed.length < prompt.length ? 'none' : 'blink 1s step-end infinite',
-            }}
-          />
+        <div className="text-[11px] mb-2.5" style={{ color: 'var(--text-muted)' }}>Prompt</div>
+        <div className="flex items-start gap-2">
+          <span style={{ color: 'var(--text-muted)' }}>›</span>
+          <span style={{ color: 'var(--text-secondary)' }}>
+            {typed}
+            <span
+              className="inline-block w-px h-4 ml-0.5 align-middle"
+              style={{
+                background: 'var(--text-secondary)',
+                animation: typed.length < prompt.length ? 'none' : 'blink 1s step-end infinite',
+              }}
+            />
+          </span>
         </div>
       </div>
 
       {/* Steps */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
         {WORKFLOW_STEPS.map((step, idx) => {
           const Icon = step.icon;
           const isActive = activeStep >= idx;
           return (
             <div
               key={step.id}
-              className="rounded-xl p-4 text-center transition-all duration-500"
+              className="rounded-lg p-3.5 text-center transition-all duration-500"
               style={{
-                background: isActive
-                  ? `rgba(${step.id === 'gantt' ? '56,189,248' : step.id === 'raci' ? '34,197,94' : step.id === 'bpmn' ? '167,139,250' : step.id === 'arch' ? '251,146,60' : '244,114,182'},0.10)`
-                  : 'var(--surface-1)',
-                border: `1px solid ${isActive ? step.color + '30' : 'var(--border)'}`,
-                opacity: isActive ? 1 : 0.4,
-                transform: isActive ? 'translateY(0)' : 'translateY(4px)',
+                background: isActive ? 'var(--surface-2)' : 'transparent',
+                border: `1px solid ${isActive ? 'var(--border)' : 'var(--divider)'}`,
+                opacity: isActive ? 1 : 0.45,
               }}
             >
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2"
-                style={{ background: isActive ? step.color + '20' : 'var(--surface-2)' }}
+                className="w-7 h-7 rounded-md flex items-center justify-center mx-auto mb-2"
+                style={{ background: isActive ? 'var(--accent-soft-bg)' : 'var(--surface-2)' }}
               >
-                <Icon className="w-4 h-4" style={{ color: isActive ? step.color : 'var(--text-muted)' }} />
+                <Icon className="w-3.5 h-3.5" style={{ color: isActive ? 'var(--accent-hover)' : 'var(--text-muted)' }} />
               </div>
-              <p className="text-xs font-medium" style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+              <p className="text-[11px] font-medium" style={{ color: isActive ? 'var(--text-secondary)' : 'var(--text-muted)' }}>
                 {step.label}
               </p>
-              {isActive && (
-                <div className="mt-2 flex items-center justify-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: step.color }} />
-                  <span className="text-[10px]" style={{ color: step.color }}>Generated</span>
-                </div>
-              )}
             </div>
           );
         })}
       </div>
 
       {done && (
-        <div
-          className="mt-4 rounded-lg px-4 py-3 flex items-center gap-3 text-sm"
-          style={{
-            background: 'rgba(34,197,94,0.08)',
-            border: '1px solid rgba(34,197,94,0.20)',
-          }}
-        >
-          <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#22C55E' }} />
-          <span style={{ color: '#22C55E' }}>
-            5 project artifacts generated in 4.2 seconds — ready to export
-          </span>
+        <div className="mt-5 flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <Check className="w-3.5 h-3.5" style={{ color: 'var(--text-secondary)' }} />
+          Five artifacts generated — ready to edit and export
         </div>
       )}
     </div>
   );
 }
 
-/* ─── Individual artifact panels ─── */
+/* ─── Individual artifact panels (kept colorful — this is real product UI) ─── */
 function GanttPanel() {
   return (
     <div className="p-4 h-full flex flex-col overflow-hidden">
@@ -163,9 +156,9 @@ function GanttPanel() {
         ))}
       </div>
       {[
-        { label: 'Discovery',   bar: [0, 1.5],  color: '#7C3AED' },
+        { label: 'Discovery',   bar: [0, 1.5],  color: '#2563EB' },
         { label: 'Design',      bar: [1, 2.5],  color: '#38BDF8' },
-        { label: 'Development', bar: [2.5, 5],  color: '#8B5CF6' },
+        { label: 'Development', bar: [2.5, 5],  color: '#3B82F6' },
         { label: 'QA Testing',  bar: [4.5, 5.5],color: '#22C55E' },
         { label: 'Launch',      bar: [5.5, 6],  color: '#F59E0B' },
       ].map(row => (
@@ -184,7 +177,7 @@ function GanttPanel() {
         </div>
       ))}
       <div className="mt-auto flex items-center gap-3 pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
-        {[['#7C3AED','Discovery'],['#38BDF8','Design'],['#22C55E','QA']].map(([c,l]) => (
+        {[['#2563EB','Discovery'],['#38BDF8','Design'],['#22C55E','QA']].map(([c,l]) => (
           <div key={l} className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-sm" style={{ background: c }} />
             <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{l}</span>
@@ -205,7 +198,7 @@ function RaciPanel() {
     'Backend API':  ['A','R','I','C'],
     'QA Testing':   ['A','C','I','R'],
   };
-  const colors: Record<string,string> = { R:'#7C3AED', A:'#22C55E', C:'#38BDF8', I:'#52525B' };
+  const colors: Record<string,string> = { R:'#2563EB', A:'#22C55E', C:'#38BDF8', I:'#52525B' };
   return (
     <div className="p-4 h-full flex flex-col overflow-hidden">
       <div className="flex items-center gap-2 mb-4">
@@ -223,7 +216,7 @@ function RaciPanel() {
             </tr>
           </thead>
           <tbody>
-            {tasks.map((task, ti) => (
+            {tasks.map((task) => (
               <tr key={task}>
                 <td className="py-1.5 pr-2 text-[9px]" style={{ color: 'var(--text-secondary)' }}>{task}</td>
                 {matrix[task].map((mark, mi) => (
@@ -244,7 +237,7 @@ function RaciPanel() {
         </table>
       </div>
       <div className="flex gap-3 mt-3 pt-3" style={{ borderTop: '1px solid var(--divider)' }}>
-        {[['R','Responsible','#7C3AED'],['A','Accountable','#22C55E'],['C','Consulted','#38BDF8'],['I','Informed','#71717A']].map(([k,v,c]) => (
+        {[['R','Responsible','#2563EB'],['A','Accountable','#22C55E'],['C','Consulted','#38BDF8'],['I','Informed','#71717A']].map(([k,v,c]) => (
           <div key={k} className="flex items-center gap-1">
             <span className="text-[8px] font-bold" style={{ color: c as string }}>{k}</span>
             <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>{v}</span>
@@ -320,7 +313,7 @@ function ArchPanel() {
         <div className="flex justify-center"><div className="w-px h-4" style={{ background: 'var(--accent-soft-bd)' }} /></div>
         {/* API Gateway */}
         <div className="flex justify-center">
-          <div className="py-2 px-4 rounded-lg text-[9px] text-center font-semibold" style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.30)', color: '#8B5CF6', minWidth: 110 }}>API Gateway</div>
+          <div className="py-2 px-4 rounded-lg text-[9px] text-center font-semibold" style={{ background: 'rgba(37,99,235,0.12)', border: '1px solid rgba(37,99,235,0.30)', color: '#3B82F6', minWidth: 110 }}>API Gateway</div>
         </div>
         <div className="flex justify-center"><div className="w-px h-4" style={{ background: 'var(--accent-soft-bd)' }} /></div>
         {/* Row 2 */}
@@ -396,174 +389,98 @@ function SowPanel() {
 }
 
 const ARTIFACTS = [
-  { id: 'gantt', label: 'Gantt Chart',    icon: Calendar,  color: '#38BDF8', Panel: GanttPanel },
-  { id: 'raci',  label: 'RACI Matrix',    icon: Users,     color: '#22C55E', Panel: RaciPanel  },
-  { id: 'bpmn',  label: 'Process Flow',   icon: GitBranch, color: '#A78BFA', Panel: BpmnPanel  },
-  { id: 'arch',  label: 'Architecture',   icon: Network,   color: '#FB923C', Panel: ArchPanel  },
-  { id: 'sow',   label: 'Proposal / SOW', icon: FileText,  color: '#F472B6', Panel: SowPanel   },
+  { id: 'gantt', label: 'Gantt',        icon: Calendar,  Panel: GanttPanel },
+  { id: 'raci',  label: 'RACI',         icon: Users,     Panel: RaciPanel  },
+  { id: 'bpmn',  label: 'Process Flow', icon: GitBranch, Panel: BpmnPanel  },
+  { id: 'arch',  label: 'Architecture', icon: Network,   Panel: ArchPanel  },
+  { id: 'sow',   label: 'SOW',          icon: FileText,  Panel: SowPanel   },
 ];
 
-/* ─── Hero App Preview carousel ─── */
+/* ─── Hero product window — clean, framed, no blur theatrics ─── */
 function AppPreview() {
   const [active, setActive] = useState(0);
   const total = ARTIFACTS.length;
 
   useEffect(() => {
-    const t = setInterval(() => setActive(a => (a + 1) % total), 3400);
+    const t = setInterval(() => setActive(a => (a + 1) % total), 3800);
     return () => clearInterval(t);
   }, [total]);
 
-  const getCardStyle = (idx: number) => {
-    const offset = ((idx - active) % total + total) % total;
-    if (offset === 0) return {
-      transform: 'translateX(0%) scale(1)',
-      filter: 'blur(0px)',
-      opacity: 1,
-      zIndex: 10,
-      pointerEvents: 'auto' as const,
-    };
-    if (offset === 1) return {
-      transform: 'translateX(68%) scale(0.86)',
-      filter: 'blur(4px)',
-      opacity: 0.38,
-      zIndex: 5,
-      pointerEvents: 'none' as const,
-    };
-    if (offset === total - 1) return {
-      transform: 'translateX(-68%) scale(0.86)',
-      filter: 'blur(4px)',
-      opacity: 0.38,
-      zIndex: 5,
-      pointerEvents: 'none' as const,
-    };
-    return {
-      transform: offset < total / 2 ? 'translateX(130%) scale(0.72)' : 'translateX(-130%) scale(0.72)',
-      filter: 'blur(10px)',
-      opacity: 0,
-      zIndex: 1,
-      pointerEvents: 'none' as const,
-    };
-  };
-
-  const activeArtifact = ARTIFACTS[active];
-  const Icon = activeArtifact.icon;
+  const artifact = ARTIFACTS[active];
+  const Panel = artifact.Panel;
+  const Icon = artifact.icon;
 
   return (
-    <div className="relative select-none">
-      {/* Ambient glow behind active card */}
+    <div className="select-none">
+      {/* Window */}
       <div
-        className="absolute inset-0 pointer-events-none transition-all duration-700"
+        className="rounded-xl overflow-hidden"
         style={{
-          background: `radial-gradient(ellipse 60% 50% at 50% 60%, ${activeArtifact.color}18, transparent 70%)`,
-          filter: 'blur(20px)',
+          background: 'var(--surface-1)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 30px 60px -28px rgba(0,0,0,0.75)',
         }}
-      />
-
-      {/* Carousel stage — cards float freely, no clipping box */}
-      <div className="relative" style={{ height: 340 }}>
-        {ARTIFACTS.map((artifact, idx) => {
-          const { Panel } = artifact;
-          const s = getCardStyle(idx);
-          const isHidden = s.opacity === 0;
-          return (
-            <div
+      >
+        {/* Title bar */}
+        <div
+          className="flex items-center justify-between px-4 h-10"
+          style={{ borderBottom: '1px solid var(--divider)', background: 'var(--surface-2)' }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-secondary)' }} />
+            <span className="text-xs font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
+              {ARTIFACTS[active].label === 'SOW' ? 'Proposal / SOW' : ARTIFACTS[active].label}
+            </span>
+          </div>
+          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Auto-generated</span>
+        </div>
+        {/* Body */}
+        <div style={{ height: 320, position: 'relative' }}>
+          <AnimatePresence mode="wait">
+            <motion.div
               key={artifact.id}
-              className="absolute inset-0 rounded-2xl"
-              style={{
-                transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.7s ease, filter 0.7s ease',
-                transformOrigin: 'center center',
-                background: 'var(--surface-1)',
-                border: `1px solid ${idx === active ? activeArtifact.color + '28' : 'rgba(255,255,255,0.06)'}`,
-                boxShadow: idx === active
-                  ? `0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px ${activeArtifact.color}10`
-                  : 'none',
-                visibility: isHidden ? 'hidden' : 'visible',
-                ...s,
-              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="absolute inset-0"
             >
               <Panel />
-            </div>
-          );
-        })}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Artifact label — animated fade swap */}
-      <div className="flex flex-col items-center gap-4 mt-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeArtifact.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="flex items-center gap-2"
+      {/* Tabs */}
+      <div className="flex items-center justify-center gap-1.5 mt-4 flex-wrap">
+        {ARTIFACTS.map((a, i) => (
+          <button
+            key={a.id}
+            onClick={() => setActive(i)}
+            className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-150"
+            style={{
+              background: i === active ? 'var(--surface-2)' : 'transparent',
+              border: `1px solid ${i === active ? 'var(--border)' : 'transparent'}`,
+              color: i === active ? 'var(--text-primary)' : 'var(--text-muted)',
+            }}
           >
-            {/* Glowing icon */}
-            <motion.div
-              className="w-6 h-6 rounded-lg flex items-center justify-center"
-              style={{ background: activeArtifact.color + '18', border: `1px solid ${activeArtifact.color}35` }}
-              animate={{ boxShadow: [`0 0 0px ${activeArtifact.color}00`, `0 0 10px ${activeArtifact.color}50`, `0 0 0px ${activeArtifact.color}00`] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <Icon className="w-3 h-3" style={{ color: activeArtifact.color }} />
-            </motion.div>
-            <span className="text-xs font-semibold tracking-wide" style={{ color: activeArtifact.color }}>
-              {activeArtifact.label}
-            </span>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Premium dot track */}
-        <div className="flex items-center gap-2">
-          {ARTIFACTS.map((a, i) => (
-            <motion.button
-              key={a.id}
-              onClick={() => setActive(i)}
-              className="relative rounded-full overflow-hidden"
-              animate={{
-                width: i === active ? 32 : 8,
-                height: 8,
-              }}
-              transition={{ type: 'spring', stiffness: 500, damping: 38 }}
-              style={{ background: 'rgba(255,255,255,0.08)' }}
-            >
-              {i === active && (
-                <motion.div
-                  layoutId="activePill"
-                  className="absolute inset-0 rounded-full"
-                  style={{ background: activeArtifact.color }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 38 }}
-                />
-              )}
-              {/* Shimmer sweep on active */}
-              {i === active && (
-                <motion.div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%)',
-                    x: '-100%',
-                  }}
-                  animate={{ x: ['−100%', '200%'] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1 }}
-                />
-              )}
-            </motion.button>
-          ))}
-        </div>
+            {a.label}
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
 /* ─── Reveal wrapper ─── */
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
   const { ref, visible } = useReveal();
   return (
     <div
       ref={ref}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transform: visible ? 'translateY(0)' : 'translateY(16px)',
         transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
       }}
     >
@@ -571,6 +488,40 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
     </div>
   );
 }
+
+/* ─── Feature list ─── */
+const FEATURES = [
+  {
+    icon: Cpu, accent: true,
+    title: 'AI Generation Engine',
+    body: 'Paste a brief project description and get a full planning suite — Gantt, RACI, BPMN, architecture, and SOW — in seconds.',
+  },
+  {
+    icon: Calendar,
+    title: 'Gantt Charts',
+    body: 'Interactive timelines with drag-and-drop phases, milestones, and a clean multi-month breakdown.',
+  },
+  {
+    icon: Users,
+    title: 'RACI Matrix',
+    body: 'Define clear ownership across stakeholders with dual-mark support and one-click Word export.',
+  },
+  {
+    icon: GitBranch,
+    title: 'Process Flows',
+    body: 'A full BPMN 2.0 editor with swimlanes, gateways, events, and sequence flows.',
+  },
+  {
+    icon: Network,
+    title: 'Architecture Diagrams',
+    body: 'Application diagrams, a drag-and-drop infrastructure canvas, and pure AI generation — three modes, one editor.',
+  },
+  {
+    icon: FileText,
+    title: 'Export Anywhere',
+    body: 'Send polished deliverables to clients as PDF, Word, PNG, or SVG — no formatting work required.',
+  },
+];
 
 /* ═══════════════════════════════════════════
    MAIN LANDING PAGE
@@ -591,27 +542,22 @@ export default function LandingPage() {
       <nav
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
-          background: scrolled ? 'rgba(11,13,16,0.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(20px)' : 'none',
-          borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
+          background: scrolled ? 'rgba(11,13,16,0.85)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(16px)' : 'none',
+          borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`,
         }}
       >
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'var(--accent)' }}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-            </div>
+            <BrandMark className="w-7 h-7" glyph={15} />
             <span className="text-sm font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              ProjectFlow <span style={{ color: 'var(--accent-hover)' }}>AI</span>
+              ProjectFlow <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>AI</span>
             </span>
           </Link>
 
           {/* Nav links */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-8">
             {['Features', 'Workflow', 'Pricing'].map(label => (
               <a
                 key={label}
@@ -627,7 +573,7 @@ export default function LandingPage() {
           </div>
 
           {/* CTAs */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Link
               href="/sign-in"
               className="text-sm transition-colors duration-150 hidden md:block"
@@ -639,21 +585,12 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/sign-in?redirect_url=/pricing"
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium text-white transition-all duration-200"
-              style={{
-                background: 'var(--accent)',
-                boxShadow: '0 0 16px rgba(124,58,237,0.3)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px rgba(124,58,237,0.4)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--accent)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 0 16px rgba(124,58,237,0.3)';
-              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium text-white transition-colors duration-200"
+              style={{ background: 'var(--accent)' }}
+              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)')}
+              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'var(--accent)')}
             >
-              Get Started
+              Get started
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -661,168 +598,111 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section
-        className="relative pt-32 pb-24 px-6 overflow-hidden"
-        style={{
-          background: `
-            radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,58,237,0.12), transparent),
-            var(--bg-base)
-          `,
-        }}
-      >
-        {/* Subtle grid */}
+      <section className="relative pt-36 pb-24 px-6 overflow-hidden">
+        {/* faint neutral top vignette — no blue glow */}
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)
-            `,
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent)',
-          }}
+          style={{ background: 'radial-gradient(ellipse 90% 50% at 50% -20%, rgba(255,255,255,0.035), transparent 70%)' }}
         />
-
         <div className="max-w-6xl mx-auto relative">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-16 items-center">
             {/* Left */}
             <div>
-              {/* Pill badge */}
-              <div
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-8"
-                style={{
-                  background: 'var(--accent-soft-bg)',
-                  border: '1px solid var(--accent-soft-bd)',
-                  color: 'var(--accent-hover)',
-                }}
-              >
-                <Sparkles className="w-3 h-3" />
-                AI-powered project planning workspace
-              </div>
-
               <h1
-                className="text-5xl lg:text-6xl font-extrabold leading-[1.08] tracking-tight mb-6"
-                style={{ color: 'var(--text-primary)', letterSpacing: '-0.03em' }}
+                className="text-5xl lg:text-[64px] font-semibold leading-[1.04] mb-6"
+                style={{ color: 'var(--text-primary)', letterSpacing: '-0.035em' }}
               >
-                Plan projects.
-                <br />
-                <span style={{ color: 'var(--accent-hover)' }}>Ship faster.</span>
-                <br />
-                Zero friction.
+                Go from brief to delivery&nbsp;plan in{' '}
+                <span style={{ color: 'var(--accent-hover)' }}>one paragraph.</span>
               </h1>
 
-              <p className="text-base mb-8 leading-relaxed max-w-md" style={{ color: 'var(--text-secondary)' }}>
-                Describe your project in plain language. ProjectFlow AI generates Gantt charts, RACI matrices, process flows, architecture diagrams, and full SOW proposals — instantly.
+              <p className="text-lg mb-9 leading-relaxed max-w-md" style={{ color: 'var(--text-secondary)' }}>
+                Paste a few sentences about your project. Get a Gantt chart, RACI matrix, process
+                flow, architecture diagram, and a client-ready SOW back — all editable, all yours.
               </p>
 
               {/* CTAs */}
               <div className="flex items-center gap-3 mb-10">
                 <Link
                   href="/sign-in?redirect_url=/pricing"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white transition-all duration-200"
-                  style={{
-                    background: 'var(--accent)',
-                    boxShadow: '0 0 20px rgba(124,58,237,0.35)',
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 0 30px rgba(124,58,237,0.5)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'var(--accent)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 0 20px rgba(124,58,237,0.35)';
-                  }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white transition-colors duration-200"
+                  style={{ background: 'var(--accent)' }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'var(--accent)')}
                 >
-                  Start free
+                  Start planning
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="#workflow"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: 'var(--text-secondary)',
-                  }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200"
+                  style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
                   onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.16)';
                     (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)';
                   }}
                   onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
                     (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
                   }}
                 >
-                  See how it works
+                  See a sample
                 </Link>
               </div>
 
-              {/* Social proof */}
-              <div className="flex items-center gap-6 text-xs" style={{ color: 'var(--text-muted)' }}>
-                {[
-                  { icon: Check, label: 'No credit card required' },
-                  { icon: Zap, label: 'Generate in seconds' },
-                  { icon: Shield, label: 'SOC 2 compliant' },
-                ].map(({ icon: Icon, label }) => (
+              {/* Quiet proof line */}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                {['Free to start', 'Export to PDF, DOCX & PNG', 'You own everything you create'].map(label => (
                   <div key={label} className="flex items-center gap-1.5">
-                    <Icon className="w-3.5 h-3.5" style={{ color: 'var(--accent-hover)' }} />
+                    <Check className="w-3.5 h-3.5" style={{ color: 'var(--text-secondary)' }} />
                     {label}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right — floating artifact carousel */}
-            <div
-              style={{
-                animation: 'slideInRight 0.9s cubic-bezier(0.4,0,0.2,1) forwards',
-                opacity: 0,
-              }}
-            >
+            {/* Right — product window */}
+            <div style={{ animation: 'heroIn 0.8s cubic-bezier(0.4,0,0.2,1) both' }}>
               <AppPreview />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── STATS BAR ── */}
+      {/* ── CAPABILITY STRIP ── */}
       <section style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', background: 'var(--surface-1)' }}>
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4">
             {[
-              { value: '12,000+', label: 'Projects Generated' },
-              { value: '850+',    label: 'Teams Active' },
-              { value: '4.2s',    label: 'Avg. Generation Time' },
-              { value: '40hrs',   label: 'Saved Per Project' },
-            ].map(({ value, label }) => (
-              <Reveal key={label}>
-                <div className="text-center">
-                  <div className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{value}</div>
-                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</div>
-                </div>
-              </Reveal>
+              { value: 'Five artifacts', label: 'Gantt · RACI · BPMN · Arch · SOW' },
+              { value: 'Seconds',        label: 'From brief to full plan' },
+              { value: 'Fully editable', label: 'Drag, connect, regenerate' },
+              { value: 'Export-ready',   label: 'PDF, DOCX & PNG' },
+            ].map(({ value, label }, i) => (
+              <div
+                key={label}
+                className="px-6 py-7 text-center md:text-left"
+                style={{ borderLeft: i === 0 ? 'none' : '1px solid var(--divider)' }}
+              >
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>{value}</div>
+                <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{label}</div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── AI WORKFLOW DEMO ── */}
-      <section id="workflow" className="py-24 px-6">
+      {/* ── WORKFLOW DEMO ── */}
+      <section id="workflow" className="py-28 px-6">
         <div className="max-w-6xl mx-auto">
           <Reveal>
             <div className="text-center mb-14">
-              <div
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-5"
-                style={{ background: 'var(--accent-soft-bg)', border: '1px solid var(--accent-soft-bd)', color: 'var(--accent-hover)' }}
-              >
-                <Cpu className="w-3 h-3" />
-                AI Workflow Engine
-              </div>
-              <h2 className="text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                One prompt.<br />Five artifacts.
+              <p className="text-xs font-medium mb-4" style={{ color: 'var(--text-muted)' }}>How it works</p>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4" style={{ color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
+                One prompt. A full delivery plan.
               </h2>
-              <p className="text-sm max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-                Describe your project in plain language. The AI builds every planning artifact simultaneously — no templates, no manual work.
+              <p className="text-base max-w-xl mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                Describe your project in plain language. Every planning artifact is built at once — no templates, no manual setup.
               </p>
             </div>
           </Reveal>
@@ -830,231 +710,59 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── BENTO FEATURE GRID ── */}
-      <section id="features" className="py-24 px-6" style={{ background: 'var(--bg-secondary)' }}>
+      {/* ── FEATURES ── */}
+      <section id="features" className="py-28 px-6" style={{ background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)' }}>
         <div className="max-w-6xl mx-auto">
           <Reveal>
-            <div className="text-center mb-14">
-              <h2 className="text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                Every tool a PM needs.
+            <div className="max-w-2xl mb-14">
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4" style={{ color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
+                Everything a delivery team needs.
               </h2>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                From kickoff to delivery. No other tool required.
+              <p className="text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                From kickoff to sign-off — in one place. No other tool required.
               </p>
             </div>
           </Reveal>
 
-          {/* Row 1 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            {/* Large card - AI Generation */}
-            <Reveal delay={0}>
-              <div
-                className="md:col-span-2 rounded-2xl p-7 h-full min-h-[240px] relative overflow-hidden group transition-all duration-200"
-                style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-soft-bd)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
-                }}
-              >
-                <div className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.08), transparent 70%)', transform: 'translate(30%, -30%)' }} />
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: 'var(--accent-soft-bg)', border: '1px solid var(--accent-soft-bd)' }}
-                >
-                  <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-hover)' }} />
-                </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>AI Generation Engine</h3>
-                <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--text-muted)' }}>
-                  Paste a brief project description and receive a complete planning suite — Gantt, RACI, BPMN, architecture diagram, and SOW — in under 5 seconds.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {['Gantt', 'RACI', 'BPMN', 'Architecture', 'SOW'].map(tag => (
-                    <span
-                      key={tag}
-                      className="px-2.5 py-0.5 rounded-full text-xs"
-                      style={{ background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px rounded-2xl overflow-hidden" style={{ background: 'var(--border)' }}>
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <Reveal key={f.title} delay={(i % 3) * 70}>
+                  <div
+                    className="p-7 h-full transition-colors duration-200"
+                    style={{ background: 'var(--surface-1)' }}
+                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--surface-2)')}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'var(--surface-1)')}
+                  >
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center mb-5"
+                      style={{
+                        background: f.accent ? 'var(--accent-soft-bg)' : 'var(--surface-3)',
+                        border: `1px solid ${f.accent ? 'var(--accent-soft-bd)' : 'var(--border)'}`,
+                      }}
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-
-            {/* Small card - Export */}
-            <Reveal delay={100}>
-              <div
-                className="rounded-2xl p-7 min-h-[240px] transition-all duration-200 group"
-                style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.20)' }}
-                >
-                  <BarChart3 className="w-4 h-4" style={{ color: '#22C55E' }} />
-                </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Export Anywhere</h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  Export to PDF, Word, PNG, or SVG. Send polished deliverables to clients without formatting work.
-                </p>
-              </div>
-            </Reveal>
+                      <Icon className="w-4 h-4" style={{ color: f.accent ? 'var(--accent-hover)' : 'var(--text-secondary)' }} />
+                    </div>
+                    <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>{f.title}</h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.body}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
-
-          {/* Row 2 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            {/* Gantt */}
-            <Reveal delay={0}>
-              <div
-                className="rounded-2xl p-7 min-h-[220px] transition-all duration-200"
-                style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(56,189,248,0.25)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: 'rgba(56,189,248,0.10)', border: '1px solid rgba(56,189,248,0.20)' }}
-                >
-                  <Calendar className="w-4 h-4" style={{ color: '#38BDF8' }} />
-                </div>
-                <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Gantt Charts</h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  Interactive timelines with drag-and-drop phases, milestones, and multi-month breakdown.
-                </p>
-              </div>
-            </Reveal>
-
-            {/* RACI */}
-            <Reveal delay={80}>
-              <div
-                className="rounded-2xl p-7 min-h-[220px] transition-all duration-200"
-                style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(167,139,250,0.25)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)' }}
-                >
-                  <Users className="w-4 h-4" style={{ color: '#A78BFA' }} />
-                </div>
-                <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>RACI Matrix</h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  Define clear ownership across stakeholders with dual-mark support and Word export.
-                </p>
-              </div>
-            </Reveal>
-
-            {/* BPMN */}
-            <Reveal delay={160}>
-              <div
-                className="rounded-2xl p-7 min-h-[220px] transition-all duration-200"
-                style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(251,146,60,0.25)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: 'rgba(251,146,60,0.10)', border: '1px solid rgba(251,146,60,0.20)' }}
-                >
-                  <GitBranch className="w-4 h-4" style={{ color: '#FB923C' }} />
-                </div>
-                <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Process Flows</h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  Full BPMN 2.0 editor with swimlanes, gateways, events, and sequence flows.
-                </p>
-              </div>
-            </Reveal>
-          </div>
-
-          {/* Row 3 — wide architecture card */}
-          <Reveal delay={0}>
-            <div
-              className="rounded-2xl p-8 grid md:grid-cols-2 gap-8 items-center transition-all duration-200"
-              style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-soft-bd)'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
-            >
-              <div>
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-5"
-                  style={{ background: 'var(--accent-soft-bg)', border: '1px solid var(--accent-soft-bd)' }}
-                >
-                  <Network className="w-4 h-4" style={{ color: 'var(--accent-hover)' }} />
-                </div>
-                <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-                  Architecture Diagrams
-                </h3>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-                  Three modes in one editor: Mermaid-based application diagrams, drag-and-drop infrastructure canvas, and pure AI generation from a text description.
-                </p>
-                <div className="flex gap-2">
-                  {['Application', 'Infrastructure', 'AI Mode'].map(m => (
-                    <span
-                      key={m}
-                      className="px-2.5 py-0.5 rounded-full text-xs"
-                      style={{ background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-                    >
-                      {m}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              {/* Mini architecture mockup */}
-              <div
-                className="rounded-xl p-4"
-                style={{ background: 'var(--surface-2)', border: '1px solid var(--divider)' }}
-              >
-                <div className="flex flex-col gap-2">
-                  {/* Node row */}
-                  <div className="flex justify-center gap-3">
-                    {['API Gateway', 'Auth Service', 'Cache'].map(n => (
-                      <div
-                        key={n}
-                        className="px-3 py-2 rounded-lg text-[10px] font-medium text-center"
-                        style={{ background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)', minWidth: 70 }}
-                      >
-                        {n}
-                      </div>
-                    ))}
-                  </div>
-                  {/* connector */}
-                  <div className="flex justify-center">
-                    <div className="h-4 w-px" style={{ background: 'var(--accent-soft-bd)' }} />
-                  </div>
-                  {/* second row */}
-                  <div className="flex justify-center gap-3">
-                    {['Database', 'Queue', 'Storage'].map(n => (
-                      <div
-                        key={n}
-                        className="px-3 py-2 rounded-lg text-[10px] font-medium text-center"
-                        style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--accent-hover)', border: '1px solid var(--accent-soft-bd)', minWidth: 70 }}
-                      >
-                        {n}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Reveal>
         </div>
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="py-24 px-6">
+      <section id="pricing" className="py-28 px-6">
         <div className="max-w-4xl mx-auto">
           <Reveal>
             <div className="text-center mb-14">
-              <h2 className="text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4" style={{ color: 'var(--text-primary)', letterSpacing: '-0.025em' }}>
                 Simple, honest pricing.
               </h2>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
                 All features included. Only AI generations are plan-limited.
               </p>
             </div>
@@ -1064,15 +772,15 @@ export default function LandingPage() {
             {/* Basic */}
             <Reveal delay={0}>
               <div
-                className="rounded-2xl p-8 h-full transition-all duration-200"
+                className="rounded-2xl p-8 h-full transition-colors duration-200"
                 style={{ background: 'var(--surface-1)', border: '1px solid var(--border)' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)')}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
               >
                 <div className="mb-6">
                   <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Basic</p>
                   <div className="flex items-end gap-2 mb-1">
-                    <span className="text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>₹900</span>
+                    <span className="text-4xl font-semibold" style={{ color: 'var(--text-primary)' }}>₹900</span>
                     <span className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>/month</span>
                   </div>
                 </div>
@@ -1085,23 +793,19 @@ export default function LandingPage() {
                     'Cloud auto-save',
                   ].map(f => (
                     <div key={f} className="flex items-center gap-2.5 text-sm">
-                      <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#22C55E' }} />
+                      <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--text-secondary)' }} />
                       <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
                     </div>
                   ))}
                 </div>
                 <Link
                   href="/sign-in?redirect_url=/pricing"
-                  className="block text-center py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.10)',
-                    color: 'var(--text-primary)',
-                  }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.09)'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'}
+                  className="block text-center py-2.5 rounded-lg text-sm font-medium transition-colors duration-200"
+                  style={{ border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--surface-2)')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
                 >
-                  Get Started
+                  Get started
                 </Link>
               </div>
             </Reveal>
@@ -1109,35 +813,25 @@ export default function LandingPage() {
             {/* Pro */}
             <Reveal delay={120}>
               <div
-                className="rounded-2xl p-8 h-full relative transition-all duration-200"
-                style={{
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--accent-soft-bd)',
-                  boxShadow: '0 0 40px rgba(124,58,237,0.08)',
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.5)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 60px rgba(124,58,237,0.14)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-soft-bd)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 40px rgba(124,58,237,0.08)';
-                }}
+                className="rounded-2xl p-8 h-full relative transition-colors duration-200"
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--accent-soft-bd)' }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(37,99,235,0.55)')}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-soft-bd)')}
               >
-                {/* Popular badge */}
-                <div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium"
-                  style={{ background: 'var(--accent)', color: 'white' }}
-                >
-                  Most Popular
-                </div>
-
-                <div className="mb-6 mt-2">
-                  <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--accent-hover)' }}>Pro</p>
-                  <div className="flex items-end gap-2 mb-1">
-                    <span className="text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>₹2,000</span>
-                    <span className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>/month</span>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--accent-hover)' }}>Pro</p>
+                    <div className="flex items-end gap-2 mb-1">
+                      <span className="text-4xl font-semibold" style={{ color: 'var(--text-primary)' }}>₹2,000</span>
+                      <span className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>/month</span>
+                    </div>
                   </div>
+                  <span
+                    className="px-2.5 py-1 rounded-full text-[11px] font-medium"
+                    style={{ background: 'var(--accent-soft-bg)', border: '1px solid var(--accent-soft-bd)', color: 'var(--accent-hover)' }}
+                  >
+                    Most popular
+                  </span>
                 </div>
                 <div className="space-y-3 mb-8">
                   {[
@@ -1157,19 +851,10 @@ export default function LandingPage() {
                 </div>
                 <Link
                   href="/sign-in?redirect_url=/pricing"
-                  className="block text-center py-2.5 rounded-lg text-sm font-medium text-white transition-all duration-200"
-                  style={{
-                    background: 'var(--accent)',
-                    boxShadow: '0 0 20px rgba(124,58,237,0.3)',
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 0 30px rgba(124,58,237,0.45)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'var(--accent)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 0 20px rgba(124,58,237,0.3)';
-                  }}
+                  className="block text-center py-2.5 rounded-lg text-sm font-medium text-white transition-colors duration-200"
+                  style={{ background: 'var(--accent)' }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'var(--accent)')}
                 >
                   Start with Pro
                 </Link>
@@ -1181,53 +866,29 @@ export default function LandingPage() {
 
       {/* ── FINAL CTA ── */}
       <section
-        className="py-32 px-6 relative overflow-hidden"
-        style={{
-          background: `
-            radial-gradient(ellipse 60% 60% at 50% 100%, rgba(124,58,237,0.14), transparent),
-            var(--bg-secondary)
-          `,
-          borderTop: '1px solid var(--border)',
-        }}
+        className="py-32 px-6"
+        style={{ background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)' }}
       >
-        <div className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
-            `,
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(ellipse 70% 70% at 50% 100%, black, transparent)',
-          }}
-        />
         <Reveal>
-          <div className="max-w-2xl mx-auto text-center relative">
+          <div className="max-w-2xl mx-auto text-center">
             <h2
-              className="text-5xl font-extrabold tracking-tight mb-5"
+              className="text-4xl md:text-5xl font-semibold tracking-tight mb-5"
               style={{ color: 'var(--text-primary)', letterSpacing: '-0.03em' }}
             >
               Your next project starts here.
             </h2>
-            <p className="text-base mb-10" style={{ color: 'var(--text-secondary)' }}>
-              Stop spending hours in Excel and Visio. Generate professional project planning artifacts in seconds with AI — and actually ship.
+            <p className="text-base mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Stop spending hours in Excel and Visio. Generate professional planning artifacts in
+              seconds — then edit, connect, and ship.
             </p>
             <Link
               href="/sign-in?redirect_url=/pricing"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold text-white transition-all duration-200"
-              style={{
-                background: 'var(--accent)',
-                boxShadow: '0 0 40px rgba(124,58,237,0.35)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 0 60px rgba(124,58,237,0.5)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--accent)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 0 40px rgba(124,58,237,0.35)';
-              }}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-lg text-base font-medium text-white transition-colors duration-200"
+              style={{ background: 'var(--accent)' }}
+              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--accent-hover)')}
+              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'var(--accent)')}
             >
-              Get Started Free
+              Get started free
               <ArrowRight className="w-5 h-5" />
             </Link>
             <p className="mt-4 text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -1240,20 +901,13 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--surface-1)' }}>
         <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div
-              className="w-6 h-6 rounded-md flex items-center justify-center"
-              style={{ background: 'var(--accent)' }}
-            >
-              <Sparkles className="w-3 h-3 text-white" />
-            </div>
+          <div className="flex items-center gap-2.5">
+            <BrandMark className="w-6 h-6" glyph={13} />
             <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
               ProjectFlow AI
             </span>
           </div>
 
-          {/* Links */}
           <div className="flex items-center gap-6 text-xs" style={{ color: 'var(--text-muted)' }}>
             {[
               { label: 'Pricing',  href: '/pricing' },
@@ -1264,8 +918,8 @@ export default function LandingPage() {
                 key={label}
                 href={href}
                 style={{ color: 'var(--text-muted)' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--text-primary)')}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--text-muted)')}
               >
                 {label}
               </Link>
@@ -1273,16 +927,16 @@ export default function LandingPage() {
           </div>
 
           <p className="text-xs" style={{ color: 'var(--text-disabled)' }}>
-            © 2025 ProjectFlow AI
+            © 2026 ProjectFlow AI
           </p>
         </div>
       </footer>
 
-      {/* Keyframe styles for this page */}
+      {/* Keyframes */}
       <style>{`
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(24px); }
-          to   { opacity: 1; transform: translateX(0); }
+        @keyframes heroIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes blink {
           0%, 100% { opacity: 1; }
