@@ -201,16 +201,29 @@ export default function ProjectEditorPage() {
       <div className="flex-shrink-0" style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
         <div className="px-6 py-3">
           <div className="flex items-center justify-between mb-2.5">
-            <Link
-              href="/dashboard/projects"
-              className="flex items-center gap-2 transition-colors"
-              style={{ color: 'var(--text-secondary)' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Projects
-            </Link>
+            {activeEditor === 'baDashboard' ? (
+              <Link
+                href="/dashboard/projects"
+                className="flex items-center gap-2 transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Projects
+              </Link>
+            ) : (
+              <button
+                onClick={() => setActiveEditor('baDashboard')}
+                className="flex items-center gap-2 transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </button>
+            )}
 
             {/* Save Status */}
             <div className="flex items-center gap-3">
