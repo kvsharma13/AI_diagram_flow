@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Save, Check, FileText, Calendar, Users, Network, GitBranch, Boxes, Workflow, FileSignature } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Check } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import GanttEditor from '@/editors/GanttEditor';
 import RACIMatrixEditor from '@/editors/RACIMatrixEditor';
@@ -195,14 +195,6 @@ export default function ProjectEditorPage() {
     );
   }
 
-  const editors = [
-    { type: 'gantt' as EditorType, label: 'Gantt Chart', icon: Calendar },
-    { type: 'raci' as EditorType, label: 'RACI Matrix', icon: Users },
-    { type: 'architecture' as EditorType, label: 'Architecture', icon: Boxes },
-    { type: 'bpmn' as EditorType, label: 'Process Flow', icon: Workflow },
-    { type: 'proposal' as EditorType, label: 'Proposal', icon: FileSignature },
-  ];
-
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg-base)' }}>
       {/* Header */}
@@ -246,7 +238,7 @@ export default function ProjectEditorPage() {
             </div>
           </div>
 
-          {/* Project Name & Editor Tabs - Single Row */}
+          {/* Project Name & Navigation - Single Row */}
           <div className="flex items-center justify-between gap-4">
             {/* Project Name */}
             <div>
@@ -278,29 +270,8 @@ export default function ProjectEditorPage() {
               )}
             </div>
 
-            {/* Editor Tabs */}
+            {/* Navigation — all views (dashboard, BA modules, generators) open from here / the dashboard grid */}
             <div className="flex items-center gap-2">
-              {editors.map((editor) => {
-                const Icon = editor.icon;
-                const isActive = activeEditor === editor.type;
-
-                return (
-                  <button
-                    key={editor.type}
-                    onClick={() => setActiveEditor(editor.type)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                      isActive
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                        : ''
-                    }`}
-                    style={!isActive ? { background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' } : {}}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {editor.label}
-                  </button>
-                );
-              })}
-              <div className="w-px h-6 mx-1" style={{ background: 'var(--border)' }} />
               <BAModuleNav active={activeEditor} onSelect={setActiveEditor} />
             </div>
           </div>
