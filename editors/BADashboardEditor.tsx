@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { LayoutDashboard, ArrowRight, CheckCircle2, Circle, Layers, Download, Loader2, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, ArrowRight, CheckCircle2, Circle, Download, Loader2, Calendar, Users, Boxes, Workflow, FileSignature, type LucideIcon } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
 import ModuleShell from '@/components/ba/ModuleShell';
 import { BA_MODULES } from '@/lib/ba/modules';
@@ -84,15 +84,21 @@ export default function BADashboardEditor({ onOpen }: { onOpen: (id: EditorType)
   const bc = project.businessCase;
   const bcFilled = !!bc && ((bc.costBenefit?.length || 0) > 0 || (bc.risks?.length || 0) > 0 || [bc.executiveSummary, bc.problemStatement, bc.proposedSolution, bc.stakeholders, bc.recommendation].some((v) => (v || '').trim()));
 
-  const genFlags = [
-    (project.ganttPhases?.length || 0) > 0,
-    (project.raciTasks?.length || 0) > 0,
-    (project.architectureComponents?.length || 0) > 0 || !!project.architectureMermaidCode,
-    (project.flowchartSteps?.length || 0) > 0,
-    (project.bpmnDiagram?.nodes.length || 0) > 0,
-    (project.proposalDocument?.sections.length || 0) > 0,
+  // Artifact generators — one openable card each (mirrors the editor tabs)
+  const ganttPhases = project.ganttPhases?.length || 0;
+  const raciTasks = project.raciTasks?.length || 0;
+  const archCreated = (project.architectureComponents?.length || 0) > 0 || !!project.architectureMermaidCode;
+  const bpmnNodes = project.bpmnDiagram?.nodes?.length || 0;
+  const proposalSections = project.proposalDocument?.sections?.length || 0;
+
+  const generatorCards: { id: EditorType; label: string; icon: LucideIcon; text: string; done: boolean }[] = [
+    { id: 'gantt', label: 'Gantt Chart', icon: Calendar, text: ganttPhases ? `${ganttPhases} phase${ganttPhases === 1 ? '' : 's'}` : 'Empty', done: ganttPhases > 0 },
+    { id: 'raci', label: 'RACI Matrix', icon: Users, text: raciTasks ? `${raciTasks} task${raciTasks === 1 ? '' : 's'}` : 'Empty', done: raciTasks > 0 },
+    { id: 'architecture', label: 'Architecture', icon: Boxes, text: archCreated ? 'Created' : 'Not started', done: archCreated },
+    { id: 'bpmn', label: 'Process Flow', icon: Workflow, text: bpmnNodes ? `${bpmnNodes} node${bpmnNodes === 1 ? '' : 's'}` : 'Empty', done: bpmnNodes > 0 },
+    { id: 'proposal', label: 'Proposal / SOW', icon: FileSignature, text: proposalSections ? `${proposalSections} section${proposalSections === 1 ? '' : 's'}` : 'Empty', done: proposalSections > 0 },
   ];
-  const genCount = genFlags.filter(Boolean).length;
+  const genDone = generatorCards.filter((g) => g.done).length;
 
   const status: Record<string, { text: string; done: boolean }> = {
     brd: { text: brdFilled ? 'Filled' : 'Empty', done: brdFilled },
@@ -139,11 +145,24 @@ export default function BADashboardEditor({ onOpen }: { onOpen: (id: EditorType)
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {/* BA Modules */}
+        <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
+          BA Modules <span style={{ color: 'var(--text-disabled)' }}>· {doneCount}/{moduleCards.length}</span>
+        </h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
           {moduleCards.map((m) => (
             <Card key={m.id} icon={m.icon} title={m.label} statusText={status[m.id].text} done={status[m.id].done} onOpen={() => onOpen(m.id)} />
           ))}
-          <Card icon={Layers} title="Artifact Generators" statusText={`${genCount} of 6 used`} done={genCount > 0} onOpen={() => onOpen('gantt')} actionLabel="Open" />
+        </div>
+
+        {/* Artifact Generators */}
+        <h2 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
+          Artifact Generators <span style={{ color: 'var(--text-disabled)' }}>· {genDone}/{generatorCards.length}</span>
+        </h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {generatorCards.map((g) => (
+            <Card key={g.id} icon={g.icon} title={g.label} statusText={g.text} done={g.done} onOpen={() => onOpen(g.id)} />
+          ))}
         </div>
       </div>
     </ModuleShell>
