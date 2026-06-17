@@ -59,18 +59,19 @@ export default function BADashboardEditor({ onOpen }: { onOpen: (id: EditorType)
   const brdFilled = !!project.brd && Object.values(project.brd).some((v) => (v || '').trim());
   const reqs = project.requirements || [];
   const reqCount = reqs.length;
-  const stories = project.userStories?.epics.reduce((n, e) => n + e.stories.length, 0) || 0;
-  const epics = project.userStories?.epics.length || 0;
-  const ucCount = project.useCaseDiagram?.nodes.length || 0;
-  const erdCount = project.erd?.nodes.length || 0;
-  const asIs = project.asIsToBe?.asIs.nodes.length || 0;
-  const toBe = project.asIsToBe?.toBe.nodes.length || 0;
+  const stories = (project.userStories?.epics || []).reduce((n, e) => n + (e.stories?.length || 0), 0);
+  const epics = project.userStories?.epics?.length || 0;
+  const ucCount = project.useCaseDiagram?.nodes?.length || 0;
+  const erdCount = project.erd?.nodes?.length || 0;
+  const asIs = project.asIsToBe?.asIs?.nodes?.length || 0;
+  const toBe = project.asIsToBe?.toBe?.nodes?.length || 0;
 
   const tm = project.traceabilityMatrix;
   let tracePct = 0;
   if (tm && reqs.length) {
     const cols = tm.columns || [];
-    const full = reqs.filter((r) => cols.length && cols.every((c) => ((tm.cells[r.reqId] || {})[c.id] || '').trim())).length;
+    const cells = tm.cells || {};
+    const full = reqs.filter((r) => cols.length && cols.every((c) => ((cells[r.reqId] || {})[c.id] || '').trim())).length;
     tracePct = Math.round((full / reqs.length) * 100);
   }
 
@@ -78,10 +79,10 @@ export default function BADashboardEditor({ onOpen }: { onOpen: (id: EditorType)
   const testPass = project.testCases?.filter((t) => t.status === 'Pass').length || 0;
 
   const gap = project.gapAnalysis;
-  const gapFilled = !!gap && (gap.gaps.length > 0 || [gap.currentState, gap.futureState, gap.impactAssessment, gap.recommendations].some((v) => (v || '').trim()));
+  const gapFilled = !!gap && ((gap.gaps?.length || 0) > 0 || [gap.currentState, gap.futureState, gap.impactAssessment, gap.recommendations].some((v) => (v || '').trim()));
 
   const bc = project.businessCase;
-  const bcFilled = !!bc && (bc.costBenefit.length > 0 || bc.risks.length > 0 || [bc.executiveSummary, bc.problemStatement, bc.proposedSolution, bc.stakeholders, bc.recommendation].some((v) => (v || '').trim()));
+  const bcFilled = !!bc && ((bc.costBenefit?.length || 0) > 0 || (bc.risks?.length || 0) > 0 || [bc.executiveSummary, bc.problemStatement, bc.proposedSolution, bc.stakeholders, bc.recommendation].some((v) => (v || '').trim()));
 
   const genFlags = [
     (project.ganttPhases?.length || 0) > 0,

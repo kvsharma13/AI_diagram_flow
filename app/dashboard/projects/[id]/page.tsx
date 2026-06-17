@@ -96,17 +96,19 @@ export default function ProjectEditorPage() {
           author: dbProject.proposal_author,
           version: dbProject.proposal_version,
         },
-        // BA modules (default-safe: works even before the migration runs)
-        brd: dbProject.brd || EMPTY_BRD(),
+        // BA modules. The DB defaults object columns to '{}', which is truthy
+        // but lacks the expected nested fields — so MERGE onto the full empty
+        // shape rather than `|| EMPTY()` (arrays stay `|| []`).
+        brd: { ...EMPTY_BRD(), ...(dbProject.brd || {}) },
         requirements: dbProject.requirements || EMPTY_REQUIREMENTS(),
-        userStories: dbProject.user_stories || EMPTY_USER_STORIES(),
-        useCaseDiagram: dbProject.use_case_diagram || EMPTY_USECASE(),
-        erd: dbProject.erd || EMPTY_ERD(),
-        asIsToBe: dbProject.as_is_to_be || EMPTY_AS_IS_TO_BE(),
-        traceabilityMatrix: dbProject.traceability_matrix || EMPTY_TRACEABILITY(),
+        userStories: { ...EMPTY_USER_STORIES(), ...(dbProject.user_stories || {}) },
+        useCaseDiagram: { ...EMPTY_USECASE(), ...(dbProject.use_case_diagram || {}) },
+        erd: { ...EMPTY_ERD(), ...(dbProject.erd || {}) },
+        asIsToBe: { ...EMPTY_AS_IS_TO_BE(), ...(dbProject.as_is_to_be || {}) },
+        traceabilityMatrix: { ...EMPTY_TRACEABILITY(), ...(dbProject.traceability_matrix || {}) },
         testCases: dbProject.test_cases || EMPTY_TEST_CASES(),
-        gapAnalysis: dbProject.gap_analysis || EMPTY_GAP_ANALYSIS(),
-        businessCase: dbProject.business_case || EMPTY_BUSINESS_CASE(),
+        gapAnalysis: { ...EMPTY_GAP_ANALYSIS(), ...(dbProject.gap_analysis || {}) },
+        businessCase: { ...EMPTY_BUSINESS_CASE(), ...(dbProject.business_case || {}) },
         timelineMonths: dbProject.timeline_months || 12,
         timelineUnit: dbProject.timeline_unit || 'months',
         createdAt: new Date(dbProject.created_at),
