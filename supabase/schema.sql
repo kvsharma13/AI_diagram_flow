@@ -49,6 +49,18 @@ CREATE TABLE IF NOT EXISTS projects (
   proposal_author TEXT,
   proposal_version TEXT,
 
+  -- BA Modules (additive; see supabase/migrations/0001_ba_modules.sql)
+  brd JSONB DEFAULT '{}',
+  requirements JSONB DEFAULT '[]',
+  user_stories JSONB DEFAULT '{}',
+  use_case_diagram JSONB DEFAULT '{}',
+  erd JSONB DEFAULT '{}',
+  as_is_to_be JSONB DEFAULT '{}',
+  traceability_matrix JSONB DEFAULT '{}',
+  test_cases JSONB DEFAULT '[]',
+  gap_analysis JSONB DEFAULT '{}',
+  business_case JSONB DEFAULT '{}',
+
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

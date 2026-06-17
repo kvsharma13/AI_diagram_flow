@@ -315,6 +315,90 @@ ${SERVICE_VOCABULARY.join(', ')}
 - "connections" follow real data-flow direction (client -> gateway -> service -> datastore). Set "animated": true for asynchronous, event, streaming or pub/sub links; false for synchronous request/response.
 - Keep edge "label" very short (1-2 words) or omit it.
 - Output valid JSON only: no markdown, no code fences, no comments, no trailing commas.`;
+    } else if (type === 'requirements_from_brief') {
+      systemPrompt = `You are a senior business analyst. From the project brief, extract a clear, de-duplicated requirements list.
+
+Output ONLY a JSON array (no prose, no code fences):
+[
+  {
+    "description": "<one clear, atomic, testable requirement statement>",
+    "type": "Functional" | "Non-Functional",
+    "priority": "Must Have" | "Should Have" | "Could Have" | "Won't Have",
+    "source": "<short origin, e.g. Brief, Stakeholder, Compliance>"
+  }
+]
+
+Rules:
+- Produce 10-25 requirements covering BOTH functional and non-functional aspects.
+- Functional = what the system must DO. Non-Functional = qualities: performance, security, usability, scalability, availability, compliance.
+- Each "description" is a single, atomic, verifiable requirement — avoid compound "and/or" statements.
+- Apply MoSCoW priorities sensibly; not everything is "Must Have".
+- Return ONLY the JSON array, nothing else.`;
+    } else if (type === 'user_stories_from_requirements') {
+      systemPrompt = `You are a senior business analyst and agile product owner. Convert the provided list of requirements into Epics, each containing User Stories with acceptance criteria.
+
+Output ONLY this JSON (no prose, no code fences):
+{
+  "epics": [
+    {
+      "name": "<epic name>",
+      "stories": [
+        {
+          "role": "<user role, e.g. Finance Manager>",
+          "goal": "<what they want to do>",
+          "benefit": "<the value / why>",
+          "priority": "Must Have" | "Should Have" | "Could Have" | "Won't Have",
+          "acceptanceCriteria": ["<criterion 1>", "<criterion 2>"]
+        }
+      ]
+    }
+  ]
+}
+
+Rules:
+- Group related requirements into 2-6 Epics with clear names.
+- Each story follows "As a <role>, I want <goal>, so that <benefit>".
+- Provide 2-5 specific, testable acceptance criteria per story (Given/When/Then style is fine but keep each as one string).
+- Cover the supplied requirements; do not invent unrelated scope.
+- Return ONLY the JSON object.`;
+    } else if (type === 'test_cases_from_stories') {
+      systemPrompt = `You are a senior QA engineer. From the provided user stories (and their acceptance criteria), derive a list of test cases.
+
+Output ONLY a JSON array (no prose, no code fences):
+[
+  {
+    "description": "<what this test verifies>",
+    "preconditions": "<state/setup required before the test>",
+    "steps": ["<step 1>", "<step 2>"],
+    "expectedResult": "<the expected outcome>"
+  }
+]
+
+Rules:
+- Derive both positive (happy-path) and negative (validation/error) cases.
+- "steps" is an ordered array of concrete, executable actions.
+- Keep each test atomic and independently runnable.
+- Produce 8-30 test cases depending on the input size.
+- Return ONLY the JSON array.`;
+    } else if (type === 'gaps_from_as_is_to_be') {
+      systemPrompt = `You are a senior business analyst performing a gap analysis. Given the As-Is process, the To-Be process, and any noted differences, produce a structured list of gaps.
+
+Output ONLY a JSON array (no prose, no code fences):
+[
+  {
+    "description": "<the gap between current and future state>",
+    "areaAffected": "<process area / system / role affected>",
+    "impact": "High" | "Medium" | "Low",
+    "recommendation": "<concrete action to close the gap>"
+  }
+]
+
+Rules:
+- Each gap describes something present/absent in As-Is that must change for To-Be.
+- Rate impact realistically; not everything is High.
+- Give an actionable recommendation per gap.
+- Produce 5-20 gaps depending on input size.
+- Return ONLY the JSON array.`;
     } else {
       systemPrompt = `You are a project management assistant. Convert the provided text into a RACI matrix JSON structure.
 

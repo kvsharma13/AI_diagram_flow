@@ -11,6 +11,24 @@ import ArchitectureEditor from '@/editors/ArchitectureEditor';
 import BPMNEditor from '@/editors/BPMNEditor';
 import ProposalEditor from '@/editors/ProposalEditor';
 import { EditorType } from '@/types/project';
+import {
+  EMPTY_BRD, EMPTY_REQUIREMENTS, EMPTY_USER_STORIES, EMPTY_USECASE, EMPTY_ERD,
+  EMPTY_AS_IS_TO_BE, EMPTY_TRACEABILITY, EMPTY_TEST_CASES, EMPTY_GAP_ANALYSIS, EMPTY_BUSINESS_CASE,
+} from '@/lib/ba/defaults';
+import BAModuleNav from '@/components/ba/BAModuleNav';
+import ComingSoon from '@/components/ba/ComingSoon';
+import { isBAModule } from '@/lib/ba/modules';
+import BRDEditor from '@/editors/BRDEditor';
+import RequirementsEditor from '@/editors/RequirementsEditor';
+import UserStoriesEditor from '@/editors/UserStoriesEditor';
+import UseCaseEditor from '@/editors/UseCaseEditor';
+import ERDEditor from '@/editors/ERDEditor';
+import AsIsToBeEditor from '@/editors/AsIsToBeEditor';
+import TraceabilityEditor from '@/editors/TraceabilityEditor';
+import TestCaseEditor from '@/editors/TestCaseEditor';
+import GapAnalysisEditor from '@/editors/GapAnalysisEditor';
+import BusinessCaseEditor from '@/editors/BusinessCaseEditor';
+import BADashboardEditor from '@/editors/BADashboardEditor';
 
 export default function ProjectEditorPage() {
   const params = useParams();
@@ -21,7 +39,7 @@ export default function ProjectEditorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [activeEditor, setActiveEditor] = useState<EditorType>('gantt');
+  const [activeEditor, setActiveEditor] = useState<EditorType>('baDashboard');
   const [projectName, setProjectName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
 
@@ -78,6 +96,17 @@ export default function ProjectEditorPage() {
           author: dbProject.proposal_author,
           version: dbProject.proposal_version,
         },
+        // BA modules (default-safe: works even before the migration runs)
+        brd: dbProject.brd || EMPTY_BRD(),
+        requirements: dbProject.requirements || EMPTY_REQUIREMENTS(),
+        userStories: dbProject.user_stories || EMPTY_USER_STORIES(),
+        useCaseDiagram: dbProject.use_case_diagram || EMPTY_USECASE(),
+        erd: dbProject.erd || EMPTY_ERD(),
+        asIsToBe: dbProject.as_is_to_be || EMPTY_AS_IS_TO_BE(),
+        traceabilityMatrix: dbProject.traceability_matrix || EMPTY_TRACEABILITY(),
+        testCases: dbProject.test_cases || EMPTY_TEST_CASES(),
+        gapAnalysis: dbProject.gap_analysis || EMPTY_GAP_ANALYSIS(),
+        businessCase: dbProject.business_case || EMPTY_BUSINESS_CASE(),
         timelineMonths: dbProject.timeline_months || 12,
         timelineUnit: dbProject.timeline_unit || 'months',
         createdAt: new Date(dbProject.created_at),
@@ -121,6 +150,17 @@ export default function ProjectEditorPage() {
           proposalSubtitle: project.proposalDocument?.subtitle,
           proposalAuthor: project.proposalDocument?.author,
           proposalVersion: project.proposalDocument?.version,
+          // BA modules
+          brd: project.brd,
+          requirements: project.requirements,
+          userStories: project.userStories,
+          useCaseDiagram: project.useCaseDiagram,
+          erd: project.erd,
+          asIsToBe: project.asIsToBe,
+          traceabilityMatrix: project.traceabilityMatrix,
+          testCases: project.testCases,
+          gapAnalysis: project.gapAnalysis,
+          businessCase: project.businessCase,
           timelineMonths: project.timelineMonths,
           timelineUnit: project.timelineUnit,
         }),
@@ -258,6 +298,8 @@ export default function ProjectEditorPage() {
                   </button>
                 );
               })}
+              <div className="w-px h-6 mx-1" style={{ background: 'var(--border)' }} />
+              <BAModuleNav active={activeEditor} onSelect={setActiveEditor} />
             </div>
           </div>
         </div>
@@ -270,6 +312,19 @@ export default function ProjectEditorPage() {
         {activeEditor === 'architecture' && <ArchitectureEditor />}
         {activeEditor === 'bpmn' && <BPMNEditor />}
         {activeEditor === 'proposal' && <ProposalEditor />}
+        {/* BA modules */}
+        {activeEditor === 'brd' && <BRDEditor />}
+        {activeEditor === 'requirements' && <RequirementsEditor />}
+        {activeEditor === 'userStories' && <UserStoriesEditor />}
+        {activeEditor === 'useCase' && <UseCaseEditor />}
+        {activeEditor === 'erd' && <ERDEditor />}
+        {activeEditor === 'asIsToBe' && <AsIsToBeEditor />}
+        {activeEditor === 'traceability' && <TraceabilityEditor />}
+        {activeEditor === 'testCases' && <TestCaseEditor />}
+        {activeEditor === 'gapAnalysis' && <GapAnalysisEditor />}
+        {activeEditor === 'businessCase' && <BusinessCaseEditor />}
+        {activeEditor === 'baDashboard' && <BADashboardEditor onOpen={setActiveEditor} />}
+        {isBAModule(activeEditor) && !['baDashboard', 'brd', 'requirements', 'userStories', 'useCase', 'erd', 'asIsToBe', 'traceability', 'testCases', 'gapAnalysis', 'businessCase'].includes(activeEditor) && <ComingSoon module={activeEditor} />}
       </div>
     </div>
   );

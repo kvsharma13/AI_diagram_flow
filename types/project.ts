@@ -28,6 +28,17 @@ export interface Project {
   flowchartSteps: FlowchartStep[];
   bpmnDiagram?: BPMNDiagram;
   proposalDocument?: ProposalDocument;
+  // ── BA Modules (additive — do not affect existing generators) ──
+  brd?: BRDDocument;
+  requirements?: Requirement[];
+  userStories?: UserStoriesBoard;
+  useCaseDiagram?: UseCaseDiagram;
+  erd?: ERDiagram;
+  asIsToBe?: AsIsToBe;
+  traceabilityMatrix?: TraceabilityMatrix;
+  testCases?: TestCase[];
+  gapAnalysis?: GapAnalysis;
+  businessCase?: BusinessCase;
   timelineMonths?: number; // Total duration for Gantt timeline (default: 12)
   timelineUnit?: TimelineUnit; // Unit for timeline (default: 'months')
   createdAt: Date;
@@ -208,5 +219,215 @@ export interface ProposalDocument {
   version?: string;
 }
 
+/* ════════════════════════════════════════════════════════════
+   BA MODULES — additive data model (Modules 1–6)
+   Diagram modules (Use-Case, ERD, As-Is/To-Be) reuse the existing
+   React Flow node/edge shape so they ride on the same infra.
+   ════════════════════════════════════════════════════════════ */
+
+// Module 1A — BRD (fixed-section document; each field is Markdown text)
+export interface BRDDocument {
+  projectOverview: string;
+  objectives: string;
+  scopeIn: string;
+  scopeOut: string;
+  assumptions: string;
+  constraints: string;
+  stakeholders: string;
+}
+
+// Module 1B — Requirements
+export type RequirementType = 'Functional' | 'Non-Functional';
+export type MoSCoW = 'Must Have' | 'Should Have' | 'Could Have' | "Won't Have";
+export type RequirementStatus = 'Draft' | 'Approved' | 'Rejected';
+
+export interface Requirement {
+  id: string;          // internal uuid
+  reqId: string;       // display id, e.g. REQ-001
+  description: string;
+  type: RequirementType;
+  priority: MoSCoW;
+  status: RequirementStatus;
+  source: string;
+}
+
+// Module 1C — User Stories
+export type StoryStatus = 'Draft' | 'Ready' | 'Done';
+
+export interface AcceptanceCriterion {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
+export interface UserStory {
+  id: string;
+  storyId: string;     // e.g. US-001
+  role: string;        // As a [role]
+  goal: string;        // I want [goal]
+  benefit: string;     // So that [benefit]
+  acceptanceCriteria: AcceptanceCriterion[];
+  priority: MoSCoW;
+  status: StoryStatus;
+}
+
+export interface Epic {
+  id: string;
+  name: string;
+  stories: UserStory[];
+}
+
+export interface UserStoriesBoard {
+  epics: Epic[];
+}
+
+// Shared React-Flow diagram shape (reused by Use-Case & ERD)
+export interface DiagramNode {
+  id: string;
+  type: string;
+  position: { x: number; y: number };
+  data?: Record<string, any>;
+  parentNode?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface DiagramEdge {
+  id: string;
+  type: string;
+  source: string;
+  target: string;
+  label?: string;
+  data?: Record<string, any>;
+}
+
+// Module 2A — Use-Case Diagram
+export type UseCaseNodeType = 'actor' | 'useCase' | 'boundary';
+export type UseCaseEdgeType = 'association' | 'include' | 'extend' | 'generalization';
+
+export interface UseCaseDiagram {
+  nodes: DiagramNode[];
+  edges: DiagramEdge[];
+}
+
+// Module 2B — ERD / Data Model
+export type ERDKey = 'PK' | 'FK' | 'regular' | 'derived';
+export type ERDCardinality = '1:1' | '1:N' | 'M:N';
+
+export interface ERDAttribute {
+  id: string;
+  name: string;
+  dataType: string;
+  key: ERDKey;
+}
+// Entity node stores attributes on node.data.attributes and node.data.weak
+export interface ERDiagram {
+  nodes: DiagramNode[];
+  edges: DiagramEdge[]; // edge.data.cardinality: ERDCardinality
+}
+
+// Module 2C — As-Is / To-Be
+export type ChangeType = 'Added' | 'Removed' | 'Modified' | 'Unchanged';
+
+export interface ComparisonRow {
+  id: string;
+  area: string;
+  asIsState: string;
+  toBeState: string;
+  changeType: ChangeType;
+}
+
+export interface AsIsToBe {
+  asIs: BPMNDiagram;
+  toBe: BPMNDiagram;
+  comparison: ComparisonRow[];
+}
+
+// Module 3 — Requirements Traceability Matrix
+export interface TraceabilityColumn {
+  id: string;
+  name: string;
+}
+
+export interface TraceabilityMatrix {
+  columns: TraceabilityColumn[];                  // user-defined; 3 defaults
+  cells: Record<string, Record<string, string>>; // cells[reqId][columnId] = value
+}
+
+// Module 4 — Test Cases
+export type TestStatus = 'Pending' | 'Pass' | 'Fail';
+
+export interface TestCase {
+  id: string;
+  testId: string;        // TC-001
+  requirementId: string; // links Requirement.reqId
+  description: string;
+  preconditions: string;
+  steps: string[];
+  expectedResult: string;
+  actualResult: string;
+  status: TestStatus;
+  assignedTo: string;
+}
+
+// Module 5 — Gap Analysis
+export type ImpactLevel = 'High' | 'Medium' | 'Low';
+
+export interface GapRow {
+  id: string;
+  gapId: string;         // GAP-001
+  description: string;
+  areaAffected: string;
+  impact: ImpactLevel;
+  recommendation: string;
+}
+
+export interface GapAnalysis {
+  currentState: string;
+  futureState: string;
+  gaps: GapRow[];
+  impactAssessment: string;
+  recommendations: string;
+}
+
+// Module 6 — Business Case
+export type CostBenefitType = 'Cost' | 'Benefit';
+export type HML = 'H' | 'M' | 'L';
+
+export interface CostBenefitRow {
+  id: string;
+  item: string;
+  type: CostBenefitType;
+  year1: string;
+  year2: string;
+  year3: string;
+  notes: string;
+}
+
+export interface RiskRow {
+  id: string;
+  riskId: string;        // RISK-001
+  description: string;
+  likelihood: HML;
+  impact: HML;
+  mitigation: string;
+}
+
+export interface BusinessCase {
+  executiveSummary: string;
+  problemStatement: string;
+  proposedSolution: string;
+  stakeholders: string;
+  costBenefit: CostBenefitRow[];
+  risks: RiskRow[];
+  recommendation: string;
+}
+
 // Editor types
-export type EditorType = 'gantt' | 'raci' | 'architecture' | 'flowchart' | 'bpmn' | 'proposal' | 'templates';
+export type EditorType =
+  | 'gantt' | 'raci' | 'architecture' | 'flowchart' | 'bpmn' | 'proposal' | 'templates'
+  // BA modules
+  | 'baDashboard'
+  | 'brd' | 'requirements' | 'userStories'
+  | 'useCase' | 'erd' | 'asIsToBe'
+  | 'traceability' | 'testCases' | 'gapAnalysis' | 'businessCase';

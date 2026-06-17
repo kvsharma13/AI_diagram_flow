@@ -20,7 +20,21 @@ import {
   ProposalBranding,
   ProposalDocument,
   ProposalTemplateId,
+  BRDDocument,
+  Requirement,
+  UserStoriesBoard,
+  UseCaseDiagram,
+  ERDiagram,
+  AsIsToBe,
+  TraceabilityMatrix,
+  TestCase,
+  GapAnalysis,
+  BusinessCase,
 } from '@/types/project';
+import {
+  EMPTY_BRD, EMPTY_REQUIREMENTS, EMPTY_USER_STORIES, EMPTY_USECASE, EMPTY_ERD,
+  EMPTY_AS_IS_TO_BE, EMPTY_TRACEABILITY, EMPTY_TEST_CASES, EMPTY_GAP_ANALYSIS, EMPTY_BUSINESS_CASE,
+} from '@/lib/ba/defaults';
 
 interface ProjectStore {
   // State
@@ -91,6 +105,18 @@ interface ProjectStore {
   // Import/Export actions
   importGanttFromCode: (data: any) => void;
   importRACIFromCode: (data: any) => void;
+
+  // ── BA module setters (bulk; editors build immutable updates then set) ──
+  setBRD: (brd: BRDDocument) => void;
+  setRequirements: (requirements: Requirement[]) => void;
+  setUserStories: (board: UserStoriesBoard) => void;
+  setUseCaseDiagram: (diagram: UseCaseDiagram) => void;
+  setErd: (diagram: ERDiagram) => void;
+  setAsIsToBe: (data: AsIsToBe) => void;
+  setTraceabilityMatrix: (matrix: TraceabilityMatrix) => void;
+  setTestCases: (testCases: TestCase[]) => void;
+  setGapAnalysis: (gap: GapAnalysis) => void;
+  setBusinessCase: (businessCase: BusinessCase) => void;
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
@@ -118,6 +144,17 @@ export const useProjectStore = create<ProjectStore>((set) => ({
           templateId: 'blank',
           title: '',
         },
+        // BA modules
+        brd: EMPTY_BRD(),
+        requirements: EMPTY_REQUIREMENTS(),
+        userStories: EMPTY_USER_STORIES(),
+        useCaseDiagram: EMPTY_USECASE(),
+        erd: EMPTY_ERD(),
+        asIsToBe: EMPTY_AS_IS_TO_BE(),
+        traceabilityMatrix: EMPTY_TRACEABILITY(),
+        testCases: EMPTY_TEST_CASES(),
+        gapAnalysis: EMPTY_GAP_ANALYSIS(),
+        businessCase: EMPTY_BUSINESS_CASE(),
         timelineMonths: 12,
         timelineUnit: 'months',
         createdAt: new Date(),
@@ -130,6 +167,28 @@ export const useProjectStore = create<ProjectStore>((set) => ({
 
   setCurrentEditor: (editor: EditorType) =>
     set({ currentEditor: editor }),
+
+  // ── BA module setters ──
+  setBRD: (brd) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, brd, updatedAt: new Date() } })),
+  setRequirements: (requirements) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, requirements, updatedAt: new Date() } })),
+  setUserStories: (userStories) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, userStories, updatedAt: new Date() } })),
+  setUseCaseDiagram: (useCaseDiagram) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, useCaseDiagram, updatedAt: new Date() } })),
+  setErd: (erd) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, erd, updatedAt: new Date() } })),
+  setAsIsToBe: (asIsToBe) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, asIsToBe, updatedAt: new Date() } })),
+  setTraceabilityMatrix: (traceabilityMatrix) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, traceabilityMatrix, updatedAt: new Date() } })),
+  setTestCases: (testCases) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, testCases, updatedAt: new Date() } })),
+  setGapAnalysis: (gapAnalysis) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, gapAnalysis, updatedAt: new Date() } })),
+  setBusinessCase: (businessCase) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, businessCase, updatedAt: new Date() } })),
 
   setTimelineMonths: (months: number) =>
     set((state) => {

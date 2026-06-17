@@ -107,6 +107,36 @@ export async function PUT(
       return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
     }
 
+    // BA modules — best-effort, separate update so existing saves never break
+    // if the BA-columns migration (supabase/migrations/0001_ba_modules.sql)
+    // has not been applied yet.
+    try {
+      const baUpdate: Record<string, any> = {};
+      if (body.brd !== undefined) baUpdate.brd = body.brd;
+      if (body.requirements !== undefined) baUpdate.requirements = body.requirements;
+      if (body.userStories !== undefined) baUpdate.user_stories = body.userStories;
+      if (body.useCaseDiagram !== undefined) baUpdate.use_case_diagram = body.useCaseDiagram;
+      if (body.erd !== undefined) baUpdate.erd = body.erd;
+      if (body.asIsToBe !== undefined) baUpdate.as_is_to_be = body.asIsToBe;
+      if (body.traceabilityMatrix !== undefined) baUpdate.traceability_matrix = body.traceabilityMatrix;
+      if (body.testCases !== undefined) baUpdate.test_cases = body.testCases;
+      if (body.gapAnalysis !== undefined) baUpdate.gap_analysis = body.gapAnalysis;
+      if (body.businessCase !== undefined) baUpdate.business_case = body.businessCase;
+
+      if (Object.keys(baUpdate).length > 0) {
+        const { error: baError } = await supabaseAdmin
+          .from('projects')
+          .update(baUpdate)
+          .eq('id', projectId)
+          .eq('user_id', user.id);
+        if (baError) {
+          console.warn('BA module columns not saved — run supabase/migrations/0001_ba_modules.sql:', baError.message);
+        }
+      }
+    } catch (e) {
+      console.warn('BA module update skipped:', e);
+    }
+
     return NextResponse.json({ project });
   } catch (error) {
     console.error('Update project error:', error);
