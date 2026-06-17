@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   ArrowRight, Check, Calendar, Users, Network, FileText, GitBranch, Cpu,
   ChevronRight, Server, Database, Cloud, Shield, Smartphone, Globe,
-  CheckCircle2, XCircle, type LucideIcon,
+  CheckCircle2, XCircle, Code2, FolderKanban, Download, type LucideIcon,
 } from 'lucide-react';
 
 /* ─── Brand mark — a small flow/graph glyph (no ✨) ─── */
@@ -496,7 +496,7 @@ function SowPanel() {
           </div>
           <div>
             <h4 className="text-sm font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>Statement of Work</h4>
-            <p className="text-[9px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Acme Fintech · v1.2 · Draft</p>
+            <p className="text-[9px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Project · v1.2 · Draft</p>
           </div>
         </div>
         <span className="px-2 py-0.5 rounded text-[9px] font-medium" style={{ background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>PDF</span>
@@ -589,7 +589,7 @@ function AppPreview() {
         >
           <div className="flex items-center gap-2 min-w-0">
             <BrandMark className="w-5 h-5" glyph={11} />
-            <span className="text-[11px] font-medium hidden sm:inline" style={{ color: 'var(--text-muted)' }}>Acme Fintech</span>
+            <span className="text-[11px] font-medium hidden sm:inline" style={{ color: 'var(--text-muted)' }}>Project</span>
             <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: 'var(--text-disabled)' }} />
             <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--accent-hover)' }} />
             <span className="text-xs font-medium truncate" style={{ color: 'var(--text-secondary)' }}>{artifact.title}</span>
@@ -668,32 +668,47 @@ const FEATURES = [
   {
     icon: Cpu, accent: true,
     title: 'AI Generation Engine',
-    body: 'Paste a brief project description and get a full planning suite — Gantt, RACI, BPMN, architecture, and SOW — in seconds.',
+    body: 'Describe a project in a few sentences and get a full planning suite — Gantt, RACI, BPMN, architecture, and SOW — generated in seconds.',
   },
   {
     icon: Calendar,
     title: 'Gantt Charts',
-    body: 'Interactive timelines with drag-and-drop phases, milestones, and a clean multi-month breakdown.',
+    body: 'Interactive timelines with phases, milestones, and a clean multi-month view — start from a template or generate from your brief.',
   },
   {
     icon: Users,
     title: 'RACI Matrix',
-    body: 'Define clear ownership across stakeholders with dual-mark support and one-click Word export.',
+    body: 'Assign clear ownership across stakeholders with dual-mark support, then export straight to Word.',
   },
   {
     icon: GitBranch,
     title: 'Process Flows',
-    body: 'A full BPMN 2.0 editor with swimlanes, gateways, events, and sequence flows.',
+    body: 'A full BPMN 2.0 editor — swimlanes, gateways, events, and sequence & message flows, with a properties panel for every node.',
   },
   {
     icon: Network,
     title: 'Architecture Diagrams',
-    body: 'Application diagrams, a drag-and-drop infrastructure canvas, and pure AI generation — three modes, one editor.',
+    body: 'Three modes in one editor: application diagrams, a drag-and-drop infrastructure canvas, and pure AI generation from text.',
   },
   {
     icon: FileText,
+    title: 'Proposals & SOWs',
+    body: 'Generate client-ready proposals with AI-written sections, cover pages, your own branding, and embedded diagrams.',
+  },
+  {
+    icon: Code2,
+    title: 'Import & Reverse-engineer',
+    body: 'Bring in existing BPMN XML or turn code and plain text into fully editable diagrams — no rebuilding from scratch.',
+  },
+  {
+    icon: FolderKanban,
+    title: 'Cloud Workspace',
+    body: 'Organize everything into projects with automatic cloud save — pick up exactly where you left off, on any device.',
+  },
+  {
+    icon: Download,
     title: 'Export Anywhere',
-    body: 'Send polished deliverables to clients as PDF, Word, PNG, or SVG — no formatting work required.',
+    body: 'Send polished deliverables as PDF, Word, PNG, or SVG — formatted and ready for clients.',
   },
 ];
 
