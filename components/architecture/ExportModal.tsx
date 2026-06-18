@@ -27,109 +27,74 @@ export default function ExportModal({ isOpen, onClose, diagramRef, fileName }: E
 
     setExporting(true);
 
-    try {
-      // Find the SVG (for Mermaid) or React Flow viewport
-      let targetElement: HTMLElement | null = null;
-
-      // Try to find SVG first (Mermaid)
-      const svgElement = diagramRef.current.querySelector('svg');
-      if (svgElement) {
-        targetElement = svgElement.parentElement || (svgElement as unknown as HTMLElement);
-      }
-
-      // If no SVG, try React Flow
-      if (!targetElement) {
-        const reactFlowViewport = diagramRef.current.querySelector('.react-flow__viewport');
-        if (reactFlowViewport) {
-          targetElement = reactFlowViewport.parentElement as HTMLElement;
-        }
-      }
-
-      // Fallback to ref itself
-      if (!targetElement) {
-        targetElement = diagramRef.current;
-      }
-
-      // For React Flow, we need to capture the viewport element with proper dimensions
-      if (targetElement) {
-        const viewport = targetElement.querySelector('.react-flow__viewport') as HTMLElement;
-        if (viewport) {
-          // Get all nodes to calculate bounds
-          const nodes = viewport.querySelectorAll('.react-flow__node');
-          if (nodes.length > 0) {
-            // Calculate bounding box of all nodes
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-            nodes.forEach((node) => {
-              const rect = node.getBoundingClientRect();
-              const parentRect = targetElement!.getBoundingClientRect();
-              minX = Math.min(minX, rect.left - parentRect.left);
-              minY = Math.min(minY, rect.top - parentRect.top);
-              maxX = Math.max(maxX, rect.right - parentRect.left);
-              maxY = Math.max(maxY, rect.bottom - parentRect.top);
-            });
-
-            // Add padding
-            const padding = 100;
-            minX -= padding;
-            minY -= padding;
-            maxX += padding;
-            maxY += padding;
-
-            // Override target element to use viewport with calculated dimensions
-            targetElement = viewport.parentElement as HTMLElement;
-          }
-        }
-      }
-
-      // Ensure we have a target element
-      if (!targetElement) {
-        throw new Error('No element to export');
-      }
-
-      // Configure export options
-      const exportOptions = {
-        backgroundColor: theme === 'light' ? '#ffffff' : '#0f172a',
-        quality: format === 'jpg' ? 0.95 : 1.0,
-        pixelRatio: 2,
-        cacheBust: true,
-        width: targetElement.scrollWidth || targetElement.offsetWidth,
-        height: targetElement.scrollHeight || targetElement.offsetHeight,
-        filter: (node: HTMLElement) => {
-          // Exclude controls, minimap, and other UI elements
-          const className = node.className || '';
-          if (typeof className === 'string') {
-            return !(
-              className.includes('react-flow__controls') ||
-              className.includes('react-flow__minimap') ||
-              className.includes('react-flow__attribution')
-            );
-          }
-          return true;
-        },
-      };
-
-      let dataUrl: string;
-
-      // Export based on format
-      switch (format) {
-        case 'png':
-          dataUrl = await toPng(targetElement, exportOptions);
-          break;
-        case 'jpg':
-          dataUrl = await toJpeg(targetElement, exportOptions);
-          break;
-        case 'svg':
-          dataUrl = await toSvg(targetElement, exportOptions);
-          break;
-      }
-
-      // Download
+    const bg = theme === 'light' ? '#F4F6FB' : '#0B0F1A';
+    const capture = (el: HTMLElement, extra: Record<string, any>) => {
+      const opts = { backgroundColor: bg, cacheBust: true, pixelRatio: 2, ...extra };
+      if (format === 'jpg') return toJpeg(el, { ...opts, quality: 0.95 });
+      if (format === 'svg') return toSvg(el, opts);
+      return toPng(el, opts);
+    };
+    const download = (dataUrl: string) => {
       const link = document.createElement('a');
       link.download = `${fileName}.${format}`;
       link.href = dataUrl;
       link.click();
+    };
 
+    try {
+      const root = diagramRef.current;
+      const viewport = root.querySelector('.react-flow__viewport') as HTMLElement | null;
+
+      // Mermaid / SVG diagrams: capture the SVG container directly.
+      if (!viewport) {
+        const svg = root.querySelector('svg');
+        const el = (svg?.parentElement as HTMLElement) || root;
+        download(await capture(el, {}));
+        onClose();
+        return;
+      }
+
+      // React Flow: measure the WHOLE graph in flow coordinates, then capture the
+      // viewport at 1:1 scale — so the export is the full diagram at full size and
+      // resolution, independent of the current zoom/pan (the old code captured the
+      // visible box at the current zoom, which made everything tiny).
+      const parent = viewport.parentElement as HTMLElement;
+      const pRect = parent.getBoundingClientRect();
+      const tr = getComputedStyle(viewport).transform;
+      const m = tr && tr !== 'none' ? new DOMMatrix(tr) : new DOMMatrix();
+      const k = m.a || 1;
+      const tx = m.e;
+      const ty = m.f;
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      viewport.querySelectorAll('.react-flow__node').forEach((n) => {
+        const r = (n as HTMLElement).getBoundingClientRect();
+        const fx = (r.left - pRect.left - tx) / k;
+        const fy = (r.top - pRect.top - ty) / k;
+        minX = Math.min(minX, fx);
+        minY = Math.min(minY, fy);
+        maxX = Math.max(maxX, fx + r.width / k);
+        maxY = Math.max(maxY, fy + r.height / k);
+      });
+      if (!isFinite(minX)) throw new Error('No nodes to export');
+
+      const pad = 60;
+      minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+      const W = Math.ceil(maxX - minX);
+      const H = Math.ceil(maxY - minY);
+
+      download(
+        await capture(viewport, {
+          width: W,
+          height: H,
+          style: {
+            width: `${W}px`,
+            height: `${H}px`,
+            transform: `translate(${-minX}px, ${-minY}px) scale(1)`,
+            transformOrigin: '0 0',
+          },
+        })
+      );
       onClose();
     } catch (error) {
       console.error('Export failed:', error);
