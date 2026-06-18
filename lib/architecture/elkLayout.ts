@@ -113,8 +113,9 @@ export async function applyElkLayout(
       : {
           'elk.algorithm': 'layered',
           'elk.direction': dir,
-          'elk.spacing.nodeNode': '28',
-          'elk.layered.spacing.nodeNodeBetweenLayers': '60',
+          'elk.spacing.nodeNode': '34',
+          // Wider gap between layers so edge labels fit between adjacent nodes.
+          'elk.layered.spacing.nodeNodeBetweenLayers': '120',
           'elk.padding': '[top=46,left=20,bottom=20,right=20]',
         };
 

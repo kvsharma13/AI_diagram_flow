@@ -254,6 +254,11 @@ body {
   background-color: var(--bg-base) !important;
 }
 
+/* Keep edge labels above all nodes (React Flow v11 doesn't guarantee this). */
+.react-flow__edgelabel-renderer {
+  z-index: 1001 !important;
+}
+
 /* Light-canvas mode for the architecture diagram (overrides the dark default) */
 .arch-light.react-flow .react-flow__background,
 .arch-light .react-flow__background {
