@@ -44,9 +44,10 @@ export default function ArchitectureEditor() {
     return <LoadingState mode="Editor" />;
   }
 
-  // Normalise mode: anything that isn't the AI generator renders in the Editor
-  // (this also gracefully handles legacy diagrams saved with the old 'application' mode).
-  const activeMode = architectureMode === 'ai' ? 'ai' : 'infrastructure';
+  // The AI generator is its own view; everything else is the canvas editor —
+  // 'cloud' is the same editor with the diagram wrapped in a labeled frame.
+  const isAI = architectureMode === 'ai';
+  const framed = architectureMode === 'cloud';
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -62,8 +63,7 @@ export default function ArchitectureEditor() {
 
       {/* Mode Content */}
       <div className="flex-1 overflow-hidden">
-        {activeMode === 'ai' && <AIMode />}
-        {activeMode === 'infrastructure' && <InfrastructureMode />}
+        {isAI ? <AIMode /> : <InfrastructureMode framed={framed} />}
       </div>
     </div>
   );

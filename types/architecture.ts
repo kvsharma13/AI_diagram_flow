@@ -1,6 +1,8 @@
 // Unified Architecture Types
 
-export type ArchitectureMode = 'infrastructure' | 'ai';
+// 'infrastructure' = Flowchart editor, 'cloud' = same editor framed as a cloud
+// board (whole diagram wrapped in one labeled rectangle), 'ai' = AI generator.
+export type ArchitectureMode = 'infrastructure' | 'ai' | 'cloud';
 
 export interface Node {
   id: string;

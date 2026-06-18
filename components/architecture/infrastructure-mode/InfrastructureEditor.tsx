@@ -13,7 +13,7 @@ import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRigh
 import { applyElkLayout } from '@/lib/architecture/elkLayout';
 import NodeSidebarDropdown from './NodeSidebar';
 
-export default function InfrastructureEditor() {
+export default function InfrastructureEditor({ framed = false }: { framed?: boolean }) {
   const { diagram, setNodes, setEdges } = useArchitectureStore();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -317,6 +317,7 @@ connections:
             showCodePanel={viewMode === 'code'}
             onDeleteNode={handleDeleteSelected}
             lightBg={lightBg}
+            framed={framed}
           />
         </div>
       </div>

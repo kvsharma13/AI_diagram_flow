@@ -275,6 +275,7 @@ const ServiceNode = ({ data, selected }: any) => {
 // Group Node — subtle dashed border, downward tag badge from top
 const GroupNode = ({ data, selected }: any) => {
   const borderColor = data.borderColor || '#6b7280';
+  const isFrame = !!data.__frame;
 
   return (
     <div
@@ -282,15 +283,15 @@ const GroupNode = ({ data, selected }: any) => {
         position: 'relative',
         width: '100%',
         height: '100%',
-        background: `${borderColor}0D`,
-        border: `1px solid ${borderColor}30`,
-        borderRadius: '14px',
-        boxShadow: `inset 0 0 40px ${borderColor}08`,
+        background: isFrame ? `${borderColor}06` : `${borderColor}0D`,
+        border: isFrame ? `1.5px dashed ${borderColor}55` : `1px solid ${borderColor}30`,
+        borderRadius: isFrame ? '20px' : '14px',
+        boxShadow: isFrame ? `inset 0 0 80px ${borderColor}06` : `inset 0 0 40px ${borderColor}08`,
       }}
     >
       <NodeResizer
         color={borderColor}
-        isVisible={selected}
+        isVisible={selected && !isFrame}
         minWidth={220}
         minHeight={130}
         handleStyle={{ width: 9, height: 9, borderRadius: 2 }}
@@ -350,6 +351,7 @@ interface Props {
   showCodePanel: boolean;
   onDeleteNode?: () => void;
   lightBg?: boolean;
+  framed?: boolean;
 }
 
 export default function ReactFlowCanvas({
@@ -358,6 +360,7 @@ export default function ReactFlowCanvas({
   showCodePanel,
   onDeleteNode,
   lightBg = false,
+  framed = false,
 }: Props) {
   const { diagram, setNodes: storeSetNodes, setEdges: storeSetEdges } = useArchitectureStore();
 
@@ -551,7 +554,41 @@ export default function ReactFlowCanvas({
     };
   });
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
+  // Cloud-architecture mode: wrap the whole diagram in ONE labeled frame. The
+  // frame is a non-interactive backdrop group sized to the bounding box of all
+  // top-level nodes — the tiers already render as nested zone boxes inside it.
+  const frameNode: RFNode | null = (() => {
+    if (!framed) return null;
+    const tops = rfNodes.filter((n: any) => !n.layerId);
+    if (tops.length === 0) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    tops.forEach((n: any) => {
+      const w = n.type === 'group'
+        ? parseInt(n.data?.width) || 320
+        : Math.min(300, Math.max(190, 78 + String(n.data?.label || n.label || '').length * 7.2));
+      const h = n.type === 'group' ? parseInt(n.data?.height) || 160 : 64;
+      minX = Math.min(minX, n.position.x);
+      minY = Math.min(minY, n.position.y);
+      maxX = Math.max(maxX, n.position.x + w);
+      maxY = Math.max(maxY, n.position.y + h);
+    });
+    const PAD = 58;
+    const TITLE = 16;
+    return {
+      id: '__frame__',
+      type: 'group',
+      position: { x: minX - PAD, y: minY - PAD - TITLE },
+      draggable: false,
+      selectable: false,
+      deletable: false,
+      data: { label: diagram?.name || 'Cloud Architecture', borderColor: '#64748B', __frame: true },
+      style: { width: maxX - minX + PAD * 2, height: maxY - minY + PAD * 2 + TITLE, zIndex: -5 },
+    } as RFNode;
+  })();
+
+  const allNodes = frameNode ? [frameNode, ...convertedNodes] : convertedNodes;
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(allNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
   const isInitialMount = useRef(true);
   const prevNodeIdsRef = useRef<string>('');
@@ -565,16 +602,16 @@ export default function ReactFlowCanvas({
     // store only updates on drag-end, so this never fights an in-progress drag.
     // Position-only signature: re-sync on layout/structure changes, but NOT on a
     // group resize (size-only), so NodeResizer is not reset mid-drag.
-    const syncSig = (diagram?.nodes || [])
+    const syncSig = `${framed ? 'F' : 'N'}|` + (diagram?.nodes || [])
       .map((n: any) => `${n.id}:${Math.round(n.position?.x ?? 0)},${Math.round(n.position?.y ?? 0)}`)
       .join('|');
 
     if (isInitialMount.current || prevNodeIdsRef.current !== syncSig) {
-      setNodes(convertedNodes);
+      setNodes(allNodes);
       prevNodeIdsRef.current = syncSig;
       if (isInitialMount.current) isInitialMount.current = false;
     }
-  }, [diagram?.nodes, setNodes]);
+  }, [diagram?.nodes, framed, setNodes]);
 
   // Sync edges when they change
   useEffect(() => {

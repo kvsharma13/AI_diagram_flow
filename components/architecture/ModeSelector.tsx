@@ -2,7 +2,7 @@
 
 import { useArchitectureStore } from '@/store/architectureStore';
 import { ArchitectureMode } from '@/types/architecture';
-import { Cloud, Sparkles } from 'lucide-react';
+import { Cloud, Sparkles, Workflow } from 'lucide-react';
 
 const modes: {
   id: ArchitectureMode;
@@ -18,9 +18,15 @@ const modes: {
   },
   {
     id: 'infrastructure',
-    label: 'Editor',
-    icon: Cloud,
+    label: 'Flowchart',
+    icon: Workflow,
     description: 'Drag, connect and edit the diagram',
+  },
+  {
+    id: 'cloud',
+    label: 'Cloud Architecture',
+    icon: Cloud,
+    description: 'The same diagram wrapped in one labeled cloud frame',
   },
 ];
 
