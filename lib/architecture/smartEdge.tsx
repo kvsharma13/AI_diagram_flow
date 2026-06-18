@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { EdgeProps, EdgeLabelRenderer, getSmoothStepPath, useNodes } from 'reactflow';
+import { EdgeProps, EdgeLabelRenderer, useNodes } from 'reactflow';
 
 interface Point {
   x: number;
@@ -234,6 +234,42 @@ function buildSmoothPath(points: Point[]): string {
   return d;
 }
 
+// Clean orthogonal route between two handles: leave the source perpendicular to
+// its face, cross the gap on a middle segment, enter the target perpendicular.
+function orthogonalRoute(
+  sx: number, sy: number, sPos: any,
+  tx: number, ty: number, tPos: any
+): Point[] {
+  const sH = sPos === 'left' || sPos === 'right';
+  const tH = tPos === 'left' || tPos === 'right';
+  if (sH && tH) {
+    const midX = (sx + tx) / 2;
+    return [{ x: sx, y: sy }, { x: midX, y: sy }, { x: midX, y: ty }, { x: tx, y: ty }];
+  }
+  if (!sH && !tH) {
+    const midY = (sy + ty) / 2;
+    return [{ x: sx, y: sy }, { x: sx, y: midY }, { x: tx, y: midY }, { x: tx, y: ty }];
+  }
+  // Mixed faces → single L-bend.
+  if (sH) return [{ x: sx, y: sy }, { x: tx, y: sy }, { x: tx, y: ty }];
+  return [{ x: sx, y: sy }, { x: sx, y: ty }, { x: tx, y: ty }];
+}
+
+// Midpoint of the longest straight segment — the most open spot for a label.
+function longestSegmentMidpoint(pts: Point[]): [number, number] {
+  if (pts.length < 2) return [pts[0]?.x || 0, pts[0]?.y || 0];
+  let best = -1, bx = 0, by = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const len = Math.abs(pts[i + 1].x - pts[i].x) + Math.abs(pts[i + 1].y - pts[i].y);
+    if (len > best) {
+      best = len;
+      bx = (pts[i].x + pts[i + 1].x) / 2;
+      by = (pts[i].y + pts[i + 1].y) / 2;
+    }
+  }
+  return [bx, by];
+}
+
 export function SmartEdge({
   id,
   sourceX,
@@ -250,20 +286,12 @@ export function SmartEdge({
 }: EdgeProps) {
   const nodes = useNodes();
 
-  // Decide the path: a precomputed route (if any), else a clean orthogonal path,
-  // else A* around obstacles. All three feed one shared render below.
-  let pathD = '';
-  let labelX = (sourceX + targetX) / 2;
-  let labelY = (sourceY + targetY) / 2;
-
+  // Build an orthogonal point list for the edge: a precomputed route if present,
+  // an A* detour when a straight shot is blocked, else a clean orthogonal route.
+  let points: Point[];
   const route = (data as any)?.points as Point[] | undefined;
   if (route && route.length >= 2) {
-    pathD = buildSmoothPath(route);
-    const i = Math.floor(route.length / 2);
-    const a = route[i - 1] || route[0];
-    const b = route[i];
-    labelX = (a.x + b.x) / 2;
-    labelY = (a.y + b.y) / 2;
+    points = route;
   } else {
     const obstacles = getNodeBounds(nodes, '', '').filter((rect) => {
       const nearSource =
@@ -274,30 +302,15 @@ export function SmartEdge({
         Math.abs(rect.y + rect.height / 2 - targetY) < rect.height;
       return !nearSource && !nearTarget;
     });
-
     const hasObstacles = lineIntersectsRects(sourceX, sourceY, targetX, targetY, obstacles, PADDING / 2);
-
-    if (!hasObstacles) {
-      const [edgePath, lx, ly] = getSmoothStepPath({
-        sourceX,
-        sourceY,
-        sourcePosition,
-        targetX,
-        targetY,
-        targetPosition,
-        borderRadius: 12,
-      });
-      pathD = edgePath;
-      labelX = lx;
-      labelY = ly;
-    } else {
-      const pts = findSmartPath({ x: sourceX, y: sourceY }, { x: targetX, y: targetY }, obstacles);
-      pathD = buildSmoothPath(pts);
-      const midIdx = Math.floor(pts.length / 2);
-      labelX = (pts[midIdx - 1]?.x + pts[midIdx]?.x) / 2 || sourceX;
-      labelY = (pts[midIdx - 1]?.y + pts[midIdx]?.y) / 2 || sourceY;
-    }
+    points = hasObstacles
+      ? findSmartPath({ x: sourceX, y: sourceY }, { x: targetX, y: targetY }, obstacles)
+      : orthogonalRoute(sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition);
   }
+
+  const pathD = buildSmoothPath(points);
+  // Label on the longest segment → open space between nodes, never on a box.
+  const [labelX, labelY] = longestSegmentMidpoint(points);
 
   const labelStr = typeof label === 'string' ? label : '';
   // Per-edge colour (tinted by source tier); indigo when selected/animated.
