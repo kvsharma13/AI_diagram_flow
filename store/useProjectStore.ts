@@ -924,7 +924,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
 
         const phases = phasesData.map((p: any, index: number) => {
           // Calculate startMonth and duration from various formats
-          let startMonth = p.startMonth || p.start || 1;
+          let startMonth = p.startMonth || p.start || p.startWeek || p.start_week || p.startUnit || 1;
           let duration = p.duration || p.duration_months || 1;
 
           // Handle endMonth format
@@ -971,7 +971,10 @@ export const useProjectStore = create<ProjectStore>((set) => ({
 
         // Calculate total timeline months
         const maxEndMonth = Math.max(...phases.map((p: GanttPhase) => p.startMonth + p.duration - 1));
-        const timelineMonths = timelineData.totalMonths || data.timelineMonths || data.duration || maxEndMonth || 12;
+        const settings = data.settings || timelineData.settings || {};
+        const timelineMonths =
+          timelineData.totalMonths || timelineData.totalWeeks || settings.totalWeeks || settings.totalMonths ||
+          data.timelineMonths || data.totalWeeks || data.duration || maxEndMonth || 12;
 
         console.log('Import complete:', {
           phases: phases.length,
@@ -984,7 +987,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
             ...state.project,
             ganttPhases: phases,
             timelineMonths: timelineMonths,
-            timelineUnit: data.timelineUnit || 'months',
+            timelineUnit: (data.timelineUnit || settings.unit || timelineData.unit || data.unit) === 'weeks' ? 'weeks' : 'months',
             ganttTemplateStyle: data.style || state.project.ganttTemplateStyle,
             updatedAt: new Date(),
           },
