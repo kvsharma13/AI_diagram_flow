@@ -32,6 +32,32 @@ export default function InfrastructureEditor({ framed = false }: { framed?: bool
     }
   }, []);
 
+  // Re-arrange when switching Flowchart <-> Cloud: Cloud packs the tiers into a
+  // compact rectangle, Flowchart lays them out as tiers. We only re-layout on an
+  // actual transition (and on first load if it opens in Cloud) so a Flowchart
+  // diagram keeps its saved/edited positions.
+  const prevFramed = useRef<boolean | undefined>(undefined);
+  useEffect(() => {
+    if (!diagram || diagram.nodes.length === 0) {
+      prevFramed.current = framed;
+      return;
+    }
+    const isToggle = prevFramed.current !== undefined && prevFramed.current !== framed;
+    const isInitialCloud = prevFramed.current === undefined && framed;
+    prevFramed.current = framed;
+    if (!isToggle && !isInitialCloud) return;
+    (async () => {
+      try {
+        const result = await applyElkLayout(diagram.nodes, diagram.edges, layoutDirection, framed);
+        setNodes(result.nodes);
+        setEdges(result.edges);
+      } catch {
+        /* keep current positions on failure */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [framed, diagram, layoutDirection]);
+
   const handleGenerateFromCode = async () => {
     try {
       const infraCode = parseInfrastructureCode(code);
@@ -39,7 +65,7 @@ export default function InfrastructureEditor({ framed = false }: { framed?: bool
       // Auto-layout: organize the diagram into clean tiers, size groups to
       // contain their children, and compute orthogonal edge routes.
       try {
-        const result = await applyElkLayout(nodes, edges, layoutDirection);
+        const result = await applyElkLayout(nodes, edges, layoutDirection, framed);
         setNodes(result.nodes);
         setEdges(result.edges);
       } catch {
@@ -90,7 +116,8 @@ export default function InfrastructureEditor({ framed = false }: { framed?: bool
         const result = await applyElkLayout(
           diagram.nodes,
           diagram.edges,
-          newDirection
+          newDirection,
+          framed
         );
         setNodes(result.nodes);
         setEdges(result.edges);
@@ -188,7 +215,7 @@ connections:
       const infraCode = parseInfrastructureCode(selectedTemplate);
       const { nodes, edges } = generateNodesAndEdges(infraCode);
       try {
-        const result = await applyElkLayout(nodes, edges, layoutDirection);
+        const result = await applyElkLayout(nodes, edges, layoutDirection, framed);
         setNodes(result.nodes);
         setEdges(result.edges);
       } catch {

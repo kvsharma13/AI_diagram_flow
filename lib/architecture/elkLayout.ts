@@ -12,7 +12,8 @@ export interface ElkLayoutResult {
 export async function applyElkLayout(
   nodes: Node[],
   edges: Edge[],
-  direction: 'horizontal' | 'vertical'
+  direction: 'horizontal' | 'vertical',
+  pack = false
 ): Promise<ElkLayoutResult> {
   const ROOT = '__root__';
   const dir = direction === 'horizontal' ? 'RIGHT' : 'DOWN';
@@ -93,15 +94,24 @@ export async function applyElkLayout(
 
     const isRoot = container === ROOT;
     const layoutOptions: Record<string, string> = isRoot
-      ? {
-          'elk.algorithm': 'layered',
-          'elk.direction': dir,
-          'elk.edgeRouting': 'ORTHOGONAL',
-          'elk.spacing.nodeNode': '70',
-          'elk.layered.spacing.nodeNodeBetweenLayers': '130',
-          'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-          'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
-        }
+      ? pack
+        ? {
+            // Cloud board: pack the tier boxes into a compact, balanced
+            // rectangle (eraser-style) instead of one long layered flow.
+            'elk.algorithm': 'rectpacking',
+            'elk.aspectRatio': '1.3',
+            'elk.spacing.nodeNode': '64',
+            'elk.padding': '[top=24,left=24,bottom=24,right=24]',
+          }
+        : {
+            'elk.algorithm': 'layered',
+            'elk.direction': dir,
+            'elk.edgeRouting': 'ORTHOGONAL',
+            'elk.spacing.nodeNode': '70',
+            'elk.layered.spacing.nodeNodeBetweenLayers': '130',
+            'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+            'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+          }
       : elkEdges.length === 0
       ? {
           // No internal edges → pack tiles into a compact, balanced grid.
