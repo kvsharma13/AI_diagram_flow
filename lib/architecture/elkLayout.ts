@@ -14,225 +14,139 @@ export async function applyElkLayout(
   edges: Edge[],
   direction: 'horizontal' | 'vertical'
 ): Promise<ElkLayoutResult> {
+  const ROOT = '__root__';
+  const dir = direction === 'horizontal' ? 'RIGHT' : 'DOWN';
+
   const groupNodes = nodes.filter((n) => n.type === 'group');
   const serviceNodes = nodes.filter((n) => n.type !== 'group');
+  const groupIds = new Set(groupNodes.map((g) => g.id));
 
-  // Build parent → children map
-  const childrenByGroup = new Map<string, Node[]>();
-  const topLevelServices: Node[] = [];
-
-  for (const node of serviceNodes) {
-    if (node.layerId) {
-      if (!childrenByGroup.has(node.layerId)) {
-        childrenByGroup.set(node.layerId, []);
-      }
-      childrenByGroup.get(node.layerId)!.push(node);
-    } else {
-      topLevelServices.push(node);
-    }
+  // Immediate parent of every node (only when the parent is a real group).
+  const parentOf = new Map<string, string>();
+  for (const n of nodes) {
+    if (n.layerId && groupIds.has(n.layerId)) parentOf.set(n.id, n.layerId);
   }
 
-  // Also handle nested groups
-  const childGroupsByParent = new Map<string, Node[]>();
-  const topLevelGroups: Node[] = [];
-
-  for (const group of groupNodes) {
-    if (group.layerId) {
-      if (!childGroupsByParent.has(group.layerId)) {
-        childGroupsByParent.set(group.layerId, []);
-      }
-      childGroupsByParent.get(group.layerId)!.push(group);
-    } else {
-      topLevelGroups.push(group);
-    }
-  }
-
-  // Size each node to its label so groups are sized to actually contain their
-  // children (the rendered cards are wider/taller than a fixed 160×56).
+  // Size each node to its label so groups are sized to contain the rendered card.
   const sizeFor = (n: Node) => {
     const label = String((n as any).data?.label || n.label || '');
     const width = Math.min(300, Math.max(190, 78 + label.length * 7.2));
     return { width, height: 64 };
   };
 
-  // Recursively build ELK children for a group
-  function buildGroupElkNode(group: Node): ElkNode {
-    const children: ElkNode[] = [];
-
-    // Add service nodes that belong to this group
-    const groupServices = childrenByGroup.get(group.id) || [];
-    for (const svc of groupServices) {
-      const sz = sizeFor(svc);
-      children.push({ id: svc.id, width: sz.width, height: sz.height });
+  // The direct child of `container` that contains `nodeId` (used to map an edge
+  // between deep nodes to an edge between this level's direct children).
+  const ancestorChildOf = (container: string, nodeId: string): string | null => {
+    let cur = nodeId;
+    let parent = parentOf.get(cur);
+    if (container === ROOT) {
+      while (parent !== undefined) { cur = parent; parent = parentOf.get(cur); }
+      return cur;
     }
-
-    // Add nested groups
-    const nestedGroups = childGroupsByParent.get(group.id) || [];
-    for (const nested of nestedGroups) {
-      children.push(buildGroupElkNode(nested));
+    while (parent !== undefined) {
+      if (parent === container) return cur;
+      cur = parent;
+      parent = parentOf.get(cur);
     }
-
-    return {
-      id: group.id,
-      layoutOptions: {
-        'elk.padding': '[top=48,left=24,bottom=24,right=24]',
-        'elk.spacing.nodeNode': '30',
-        // Keep a group's members compact and balanced rather than a long line.
-        'elk.layered.spacing.nodeNodeBetweenLayers': '60',
-      },
-      children: children.length > 0 ? children : undefined,
-      width: children.length === 0 ? 360 : undefined,
-      height: children.length === 0 ? 180 : undefined,
-    };
-  }
-
-  // Build root graph
-  const rootChildren: ElkNode[] = [];
-
-  // Add top-level groups (with their children)
-  for (const group of topLevelGroups) {
-    rootChildren.push(buildGroupElkNode(group));
-  }
-
-  // Add top-level service nodes
-  for (const svc of topLevelServices) {
-    const sz = sizeFor(svc);
-    rootChildren.push({ id: svc.id, width: sz.width, height: sz.height });
-  }
-
-  // Build ELK edges (only between nodes that exist)
-  const allNodeIds = new Set(nodes.map((n) => n.id));
-  const elkEdges: ElkExtendedEdge[] = edges
-    .filter((e) => allNodeIds.has(e.source) && allNodeIds.has(e.target))
-    .map((e) => ({
-      id: e.id,
-      sources: [e.source],
-      targets: [e.target],
-    }));
-
-  const graph: ElkNode = {
-    id: 'root',
-    layoutOptions: {
-      'elk.algorithm': 'layered',
-      'elk.direction': direction === 'horizontal' ? 'RIGHT' : 'DOWN',
-      // Route edges across group boundaries and lay the whole hierarchy out as
-      // one layered flow — this is what produces clean tiers + orthogonal routes
-      // (without it, cross-group edges are not routed and bend points are wrong).
-      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-      'elk.edgeRouting': 'ORTHOGONAL',
-      'elk.spacing.nodeNode': '48',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '120',
-      'elk.layered.spacing.edgeNodeBetweenLayers': '40',
-      'elk.spacing.edgeNode': '24',
-      'elk.spacing.edgeEdge': '16',
-      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
-    },
-    children: rootChildren,
-    edges: elkEdges,
+    return null;
   };
 
-  const layoutResult = await elk.layout(graph);
+  const nodeIds = new Set(nodes.map((n) => n.id));
+  const validEdges = edges.filter(
+    (e) => e.source !== e.target && nodeIds.has(e.source) && nodeIds.has(e.target)
+  );
 
-  // Extract positions from layout result
-  const positionMap = new Map<string, { x: number; y: number }>();
-  const sizeMap = new Map<string, { width: number; height: number }>();
+  const relPos = new Map<string, { x: number; y: number }>();
+  const contentSize = new Map<string, { width: number; height: number }>();
 
-  function extractPositions(elkNode: ElkNode, offsetX = 0, offsetY = 0) {
-    if (elkNode.id !== 'root') {
-      positionMap.set(elkNode.id, {
-        x: (elkNode.x || 0) + offsetX,
-        y: (elkNode.y || 0) + offsetY,
-      });
-      if (elkNode.width && elkNode.height) {
-        sizeMap.set(elkNode.id, {
-          width: elkNode.width,
-          height: elkNode.height,
-        });
+  // Two-phase layout: lay out each container's direct children INDEPENDENTLY so
+  // every group stays a tight, self-contained box, then arrange those boxes as
+  // tiers. (A single flat pass with INCLUDE_CHILDREN lets group members scatter,
+  // ballooning and overlapping the group boxes — exactly the bug we're fixing.)
+  async function layoutContainer(container: string): Promise<{ width: number; height: number }> {
+    const directServices = serviceNodes.filter((n) => (parentOf.get(n.id) ?? ROOT) === container);
+    const directGroups = groupNodes.filter((n) => (parentOf.get(n.id) ?? ROOT) === container);
+
+    // Lay out nested groups first so their measured size is used at this level.
+    for (const g of directGroups) {
+      contentSize.set(g.id, await layoutContainer(g.id));
+    }
+
+    const elkChildren: ElkNode[] = [
+      ...directServices.map((n) => ({ id: n.id, ...sizeFor(n) })),
+      ...directGroups.map((g) => ({ id: g.id, ...contentSize.get(g.id)! })),
+    ];
+
+    if (elkChildren.length === 0) return { width: 360, height: 180 };
+
+    // Edges between this level's direct children (drives layering / ordering).
+    const seen = new Set<string>();
+    const elkEdges: ElkExtendedEdge[] = [];
+    for (const e of validEdges) {
+      const a = ancestorChildOf(container, e.source);
+      const b = ancestorChildOf(container, e.target);
+      if (a && b && a !== b && !seen.has(`${a}->${b}`)) {
+        seen.add(`${a}->${b}`);
+        elkEdges.push({ id: `${container}:${a}->${b}`, sources: [a], targets: [b] });
       }
     }
 
-    if (elkNode.children) {
-      const childOffsetX = elkNode.id === 'root' ? 0 : (elkNode.x || 0) + offsetX;
-      const childOffsetY = elkNode.id === 'root' ? 0 : (elkNode.y || 0) + offsetY;
-      for (const child of elkNode.children) {
-        extractPositions(child, childOffsetX, childOffsetY);
-      }
-    }
-  }
-
-  extractPositions(layoutResult);
-
-  // Extract edge bend points
-  const edgeBendPoints = new Map<string, Array<{ x: number; y: number }>>();
-  if (layoutResult.edges) {
-    for (const edge of layoutResult.edges) {
-      const elkEdge = edge as ElkExtendedEdge;
-      if (elkEdge.sections) {
-        const points: Array<{ x: number; y: number }> = [];
-        for (const section of elkEdge.sections) {
-          points.push(section.startPoint);
-          if (section.bendPoints) {
-            points.push(...section.bendPoints);
-          }
-          points.push(section.endPoint);
+    const isRoot = container === ROOT;
+    const layoutOptions: Record<string, string> = isRoot
+      ? {
+          'elk.algorithm': 'layered',
+          'elk.direction': dir,
+          'elk.edgeRouting': 'ORTHOGONAL',
+          'elk.spacing.nodeNode': '70',
+          'elk.layered.spacing.nodeNodeBetweenLayers': '130',
+          'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+          'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
         }
-        edgeBendPoints.set(elkEdge.id, points);
-      }
+      : elkEdges.length === 0
+      ? {
+          // No internal edges → pack tiles into a compact, balanced grid.
+          'elk.algorithm': 'rectpacking',
+          'elk.aspectRatio': '1.7',
+          'elk.spacing.nodeNode': '24',
+          'elk.padding': '[top=46,left=20,bottom=20,right=20]',
+        }
+      : {
+          'elk.algorithm': 'layered',
+          'elk.direction': dir,
+          'elk.spacing.nodeNode': '28',
+          'elk.layered.spacing.nodeNodeBetweenLayers': '60',
+          'elk.padding': '[top=46,left=20,bottom=20,right=20]',
+        };
+
+    const graph: ElkNode = {
+      id: isRoot ? 'root' : `inner-${container}`,
+      layoutOptions,
+      children: elkChildren,
+      edges: elkEdges,
+    };
+    const res = await elk.layout(graph);
+
+    for (const c of res.children || []) {
+      relPos.set(c.id, { x: c.x || 0, y: c.y || 0 });
     }
+    return { width: Math.round(res.width || 360), height: Math.round(res.height || 180) };
   }
 
-  // Apply positions back to nodes
+  await layoutContainer(ROOT);
+
   const updatedNodes = nodes.map((node) => {
-    const isGroup = node.type === 'group';
-    const hasParent = !!node.layerId;
-
-    // For nodes with parents, use the position relative to parent
-    // (ELK already computes relative positions for children)
-    if (hasParent) {
-      const parentAbsPos = positionMap.get(node.layerId!);
-      const absPos = positionMap.get(node.id);
-      if (parentAbsPos && absPos) {
-        return {
-          ...node,
-          position: {
-            x: absPos.x - parentAbsPos.x,
-            y: absPos.y - parentAbsPos.y,
-          },
-          ...(isGroup && sizeMap.has(node.id) ? {
-            data: {
-              ...node.data,
-              width: sizeMap.get(node.id)!.width + 'px',
-              height: sizeMap.get(node.id)!.height + 'px',
-            },
-          } : {}),
-        };
-      }
+    const pos = relPos.get(node.id);
+    const placed = pos ? { ...node, position: pos } : node;
+    if (node.type === 'group' && contentSize.has(node.id)) {
+      const sz = contentSize.get(node.id)!;
+      return { ...placed, data: { ...node.data, width: sz.width + 'px', height: sz.height + 'px' } };
     }
-
-    const pos = positionMap.get(node.id);
-    if (pos) {
-      return {
-        ...node,
-        position: pos,
-        ...(isGroup && sizeMap.has(node.id) ? {
-          data: {
-            ...node.data,
-            width: sizeMap.get(node.id)!.width + 'px',
-            height: sizeMap.get(node.id)!.height + 'px',
-          },
-        } : {}),
-      };
-    }
-    return node;
+    return placed;
   });
 
-  // Attach each edge's orthogonal route so renderers can draw the real path
-  // instead of guessing (this is what makes the diagram look industry-grade).
-  const updatedEdges: Edge[] = edges.map((e) => {
-    const pts = edgeBendPoints.get(e.id);
-    return pts && pts.length >= 2 ? { ...e, points: pts } : { ...e, points: undefined };
-  });
+  // On this clean tiered layout the renderer draws orthogonal (smoothstep) edges;
+  // the two-phase pass intentionally does not carry ELK bend points.
+  const updatedEdges: Edge[] = edges.map((e) => ({ ...e, points: undefined }));
 
-  return { nodes: updatedNodes, edges: updatedEdges, edgeBendPoints };
+  return { nodes: updatedNodes, edges: updatedEdges, edgeBendPoints: new Map() };
 }

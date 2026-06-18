@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { EdgeProps, getBezierPath, useNodes } from 'reactflow';
+import { EdgeProps, getSmoothStepPath, useNodes } from 'reactflow';
 
 interface Point {
   x: number;
@@ -335,14 +335,15 @@ export function SmartEdge({
   );
 
   if (!hasobstacles) {
-    // Use default bezier path when no obstacles
-    const [edgePath, labelX, labelY] = getBezierPath({
+    // Clean orthogonal (rounded) path when nothing is in the way.
+    const [edgePath, labelX, labelY] = getSmoothStepPath({
       sourceX,
       sourceY,
       sourcePosition,
       targetX,
       targetY,
       targetPosition,
+      borderRadius: 10,
     });
 
     const labelStr = typeof label === 'string' ? label : '';
