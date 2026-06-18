@@ -22,7 +22,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
-import { SmartEdge, orthogonalRoute, bestLabelPos, Rect } from '@/lib/architecture/smartEdge';
+import { SmartEdge, orthogonalRoute, bundledRoute, bestLabelPos, Rect } from '@/lib/architecture/smartEdge';
 import { resolveIcon } from '@/lib/architecture/iconMap';
 import ServiceIcon from '@/components/architecture/ServiceIcon';
 
@@ -115,7 +115,9 @@ function EdgeLabels() {
       const ts = sideOf(e.targetHandle);
       const hs = handlePt(sr, ss);
       const ht = handlePt(tr, ts);
-      const route = orthogonalRoute(hs.x, hs.y, ss, ht.x, ht.y, ts);
+      const route = e.data?.bundle
+        ? bundledRoute(hs.x, hs.y, ht.x, ht.y, e.data.bundle)
+        : orthogonalRoute(hs.x, hs.y, ss, ht.x, ht.y, ts);
       const [x, y] = bestLabelPos(route, obstacles);
       const label = String(e.label);
       return { id: e.id, label, x, y, w: label.length * 6 + 18, h: 20 };
@@ -462,44 +464,92 @@ export default function ReactFlowCanvas({
     return g?.data?.borderColor ? normalizeEdgeColor(g.data.borderColor) : '#64748B';
   };
 
-  const rfEdges: RFEdge[] =
-    diagram?.edges.map((edge) => {
-      const s = absCenter(edge.source);
-      const t = absCenter(edge.target);
-      const bothServices =
-        (nodeById.get(edge.source) as any)?.type !== 'group' &&
-        (nodeById.get(edge.target) as any)?.type !== 'group';
-      let sourceHandle: string | undefined;
-      let targetHandle: string | undefined;
-      if (s && t && bothServices) {
-        const dx = t.x - s.x;
-        const dy = t.y - s.y;
-        if (Math.abs(dx) >= Math.abs(dy)) {
-          // Attach to the face that points at the other node.
-          sourceHandle = dx >= 0 ? 's-right' : 's-left';
-          targetHandle = dx >= 0 ? 't-left' : 't-right';
-        } else {
-          sourceHandle = dy >= 0 ? 's-bottom' : 's-top';
-          targetHandle = dy >= 0 ? 't-top' : 't-bottom';
-        }
+  // Estimated edge-of-node handle point (only used to position a shared trunk;
+  // the actual line endpoints come from React Flow's real geometry).
+  const estSize = (n: any) =>
+    n?.type === 'group'
+      ? { w: parseInt(n.data?.width) || 320, h: parseInt(n.data?.height) || 160 }
+      : { w: Math.min(300, Math.max(190, 78 + String(n?.data?.label || n?.label || '').length * 7.2)), h: 64 };
+  const handleEst = (id: string, side: string) => {
+    const c = absCenter(id);
+    const n = nodeById.get(id) as any;
+    if (!c || !n) return null;
+    const { w, h } = estSize(n);
+    if (side === 'right') return { x: c.x + w / 2, y: c.y };
+    if (side === 'left') return { x: c.x - w / 2, y: c.y };
+    if (side === 'top') return { x: c.x, y: c.y - h / 2 };
+    return { x: c.x, y: c.y + h / 2 };
+  };
+
+  // First, choose each edge's attachment faces.
+  const sided = (diagram?.edges || []).map((edge) => {
+    const s = absCenter(edge.source);
+    const t = absCenter(edge.target);
+    const bothServices =
+      (nodeById.get(edge.source) as any)?.type !== 'group' &&
+      (nodeById.get(edge.target) as any)?.type !== 'group';
+    let sSide: string | undefined;
+    let tSide: string | undefined;
+    if (s && t && bothServices) {
+      const dx = t.x - s.x;
+      const dy = t.y - s.y;
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        sSide = dx >= 0 ? 'right' : 'left';
+        tSide = dx >= 0 ? 'left' : 'right';
+      } else {
+        sSide = dy >= 0 ? 'bottom' : 'top';
+        tSide = dy >= 0 ? 'top' : 'bottom';
       }
-      const color = edgeColorFor(edge.source);
-      return {
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle,
-        targetHandle,
-        type: 'smart',
-        animated: edge.animated,
-        style: { stroke: color, strokeWidth: 2.2 },
-        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color },
-        // Labels are rendered globally by <EdgeLabels/> (see above) so they can
-        // be de-collided; the edge keeps `label` only as data for that overlay.
-        data: { points: (edge as any).points, color },
-        ...(edge.label ? { label: edge.label } : {}),
-      };
-    }) || [];
+    }
+    return { edge, sSide, tSide };
+  });
+
+  // Count fan-out (per source face) and fan-in (per target face) so we can bundle
+  // hubs through a shared trunk instead of spraying N parallel lines.
+  const outDeg = new Map<string, number>();
+  const inDeg = new Map<string, number>();
+  sided.forEach(({ edge, sSide, tSide }) => {
+    if (sSide) outDeg.set(`${edge.source}|${sSide}`, (outDeg.get(`${edge.source}|${sSide}`) || 0) + 1);
+    if (tSide) inDeg.set(`${edge.target}|${tSide}`, (inDeg.get(`${edge.target}|${tSide}`) || 0) + 1);
+  });
+
+  const BUNDLE = 46;
+  const rfEdges: RFEdge[] = sided.map(({ edge, sSide, tSide }) => {
+    let bundle: { axis: 'x' | 'y'; at: number } | undefined;
+    if (sSide && tSide) {
+      const od = outDeg.get(`${edge.source}|${sSide}`) || 0;
+      const id_ = inDeg.get(`${edge.target}|${tSide}`) || 0;
+      const horiz = sSide === 'left' || sSide === 'right';
+      if (od >= 3 && od >= id_) {
+        // Fan-out: trunk just past the source.
+        const h = handleEst(edge.source, sSide);
+        if (h) bundle = horiz
+          ? { axis: 'x', at: h.x + (sSide === 'right' ? BUNDLE : -BUNDLE) }
+          : { axis: 'y', at: h.y + (sSide === 'bottom' ? BUNDLE : -BUNDLE) };
+      } else if (id_ >= 3) {
+        // Fan-in: trunk just before the target.
+        const h = handleEst(edge.target, tSide);
+        if (h) bundle = horiz
+          ? { axis: 'x', at: h.x + (tSide === 'left' ? -BUNDLE : BUNDLE) }
+          : { axis: 'y', at: h.y + (tSide === 'top' ? -BUNDLE : BUNDLE) };
+      }
+    }
+    const color = edgeColorFor(edge.source);
+    return {
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: sSide ? `s-${sSide}` : undefined,
+      targetHandle: tSide ? `t-${tSide}` : undefined,
+      type: 'smart',
+      animated: edge.animated,
+      style: { stroke: color, strokeWidth: 2.2 },
+      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color },
+      // Labels render globally in <EdgeLabels/>; `bundle` is the shared trunk.
+      data: { color, bundle },
+      ...(edge.label ? { label: edge.label } : {}),
+    };
+  });
 
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);

@@ -255,6 +255,19 @@ export function orthogonalRoute(
   return [{ x: sx, y: sy }, { x: sx, y: ty }, { x: tx, y: ty }];
 }
 
+// Bundled route through a shared trunk (axis 'x' = a vertical trunk at x=at;
+// axis 'y' = a horizontal trunk at y=at). Edges sharing a hub share `at`, so
+// they overlap into one trunk and branch near the ends (the eraser "bus" look).
+export function bundledRoute(
+  sx: number, sy: number, tx: number, ty: number,
+  bundle: { axis: 'x' | 'y'; at: number }
+): Point[] {
+  if (bundle.axis === 'x') {
+    return [{ x: sx, y: sy }, { x: bundle.at, y: sy }, { x: bundle.at, y: ty }, { x: tx, y: ty }];
+  }
+  return [{ x: sx, y: sy }, { x: sx, y: bundle.at }, { x: tx, y: bundle.at }, { x: tx, y: ty }];
+}
+
 // Best label spot: the longest segment whose MIDPOINT is clear of boxes (so a
 // long cross-tier edge doesn't drop its label on a node or a group header).
 // Falls back to the longest segment overall if every midpoint is blocked.
@@ -288,12 +301,12 @@ export function SmartEdge({
 }: EdgeProps) {
   const nodes = useNodes();
 
-  // Build an orthogonal point list for the edge: a precomputed route if present,
+  // Build an orthogonal point list for the edge: a bundled trunk route at a hub,
   // an A* detour when a straight shot is blocked, else a clean orthogonal route.
   let points: Point[];
-  const route = (data as any)?.points as Point[] | undefined;
-  if (route && route.length >= 2) {
-    points = route;
+  const bundle = (data as any)?.bundle as { axis: 'x' | 'y'; at: number } | undefined;
+  if (bundle) {
+    points = bundledRoute(sourceX, sourceY, targetX, targetY, bundle);
   } else {
     const obstacles = getNodeBounds(nodes, '', '').filter((rect) => {
       const nearSource =
