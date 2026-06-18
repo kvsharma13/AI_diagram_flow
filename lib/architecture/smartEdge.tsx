@@ -300,8 +300,9 @@ export function SmartEdge({
   }
 
   const labelStr = typeof label === 'string' ? label : '';
-  // Slate-500 reads clearly on BOTH the dark and the light canvas.
-  const stroke = selected ? '#6366F1' : animated ? '#6366F1' : '#64748B';
+  // Per-edge colour (tinted by source tier); indigo when selected/animated.
+  const baseColor = (data as any)?.color || '#64748B';
+  const stroke = selected || animated ? '#6366F1' : baseColor;
   const width = selected ? 3 : 2.2;
 
   return (

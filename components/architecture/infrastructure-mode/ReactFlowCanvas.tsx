@@ -35,6 +35,40 @@ const handleStyle = {
 
 // Unified Service Node — icon-forward, eraser-style card with brand logo,
 // left accent bar, type badge and bold service name.
+// Normalize a group colour to a mid-lightness tone that stays legible on BOTH
+// the dark and the light canvas (avoids invisible dark navies and neon brights).
+function normalizeEdgeColor(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+  if (!m) return '#64748B';
+  const int = parseInt(m[1], 16);
+  let r = ((int >> 16) & 255) / 255;
+  let g = ((int >> 8) & 255) / 255;
+  let b = (int & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h /= 6;
+  }
+  const S = Math.min(Math.max(s, 0.4), 0.62);
+  const L = 0.62;
+  const hue2rgb = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1; if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  const q = L < 0.5 ? L * (1 + S) : L + S - L * S;
+  const p = 2 * L - q;
+  const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
+  return `#${toHex(hue2rgb(p, q, h + 1 / 3))}${toHex(hue2rgb(p, q, h))}${toHex(hue2rgb(p, q, h - 1 / 3))}`;
+}
+
 const ServiceNode = ({ data, selected }: any) => {
   const spec = resolveIcon({
     service: data.service || data.icon,
@@ -70,11 +104,16 @@ const ServiceNode = ({ data, selected }: any) => {
         }}
       />
 
-      {/* Handles — invisible by default, shown on hover */}
-      <Handle type="target" position={Position.Top} style={handleStyle} className="group-hover:!opacity-70" />
-      <Handle type="source" position={Position.Bottom} style={handleStyle} className="group-hover:!opacity-70" />
-      <Handle type="target" position={Position.Left} style={handleStyle} className="group-hover:!opacity-70" />
-      <Handle type="source" position={Position.Right} style={handleStyle} className="group-hover:!opacity-70" />
+      {/* Handles on every side (source + target) so edges can attach to the face
+          that points at the other node — this is what keeps fan-outs tidy. */}
+      <Handle id="t-top" type="target" position={Position.Top} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle id="s-top" type="source" position={Position.Top} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle id="t-bottom" type="target" position={Position.Bottom} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle id="s-bottom" type="source" position={Position.Bottom} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle id="t-left" type="target" position={Position.Left} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle id="s-left" type="source" position={Position.Left} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle id="t-right" type="target" position={Position.Right} style={handleStyle} className="group-hover:!opacity-70" />
+      <Handle id="s-right" type="source" position={Position.Right} style={handleStyle} className="group-hover:!opacity-70" />
 
       {/* Content */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '11px', padding: '10px 14px 10px 17px' }}>
@@ -290,18 +329,69 @@ export default function ReactFlowCanvas({
       return order(a) - order(b);
     });
 
+  // Absolute centre of any node (accounting for parent-group offset).
+  const nodeById = new Map(rfNodes.map((n) => [n.id, n]));
+  const absCenter = (id: string): { x: number; y: number } | null => {
+    const n = nodeById.get(id) as any;
+    if (!n) return null;
+    let x = n.position?.x || 0;
+    let y = n.position?.y || 0;
+    let pid = n.layerId;
+    while (pid && nodeById.has(pid)) {
+      const p = nodeById.get(pid) as any;
+      x += p.position?.x || 0;
+      y += p.position?.y || 0;
+      pid = p.layerId;
+    }
+    const w = n.type === 'group' ? parseInt(n.data?.width) || 320 : 210;
+    const h = n.type === 'group' ? parseInt(n.data?.height) || 160 : 64;
+    return { x: x + w / 2, y: y + h / 2 };
+  };
+
+  // Edge colour = the (normalised) colour of the group the edge originates in,
+  // so each tier's flows are visually distinct. Falls back to neutral slate.
+  const edgeColorFor = (sourceId: string): string => {
+    const n = nodeById.get(sourceId) as any;
+    const g = n?.layerId ? (nodeById.get(n.layerId) as any) : null;
+    return g?.data?.borderColor ? normalizeEdgeColor(g.data.borderColor) : '#64748B';
+  };
+
   const rfEdges: RFEdge[] =
-    diagram?.edges.map((edge) => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      type: 'smart',
-      animated: edge.animated,
-      style: { stroke: '#64748B', strokeWidth: 2.2 },
-      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: '#64748B' },
-      data: { points: (edge as any).points },
-      ...(edge.label ? { label: edge.label } : {}),
-    })) || [];
+    diagram?.edges.map((edge) => {
+      const s = absCenter(edge.source);
+      const t = absCenter(edge.target);
+      const bothServices =
+        (nodeById.get(edge.source) as any)?.type !== 'group' &&
+        (nodeById.get(edge.target) as any)?.type !== 'group';
+      let sourceHandle: string | undefined;
+      let targetHandle: string | undefined;
+      if (s && t && bothServices) {
+        const dx = t.x - s.x;
+        const dy = t.y - s.y;
+        if (Math.abs(dx) >= Math.abs(dy)) {
+          // Attach to the face that points at the other node.
+          sourceHandle = dx >= 0 ? 's-right' : 's-left';
+          targetHandle = dx >= 0 ? 't-left' : 't-right';
+        } else {
+          sourceHandle = dy >= 0 ? 's-bottom' : 's-top';
+          targetHandle = dy >= 0 ? 't-top' : 't-bottom';
+        }
+      }
+      const color = edgeColorFor(edge.source);
+      return {
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle,
+        targetHandle,
+        type: 'smart',
+        animated: edge.animated,
+        style: { stroke: color, strokeWidth: 2.2 },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color },
+        data: { points: (edge as any).points, color },
+        ...(edge.label ? { label: edge.label } : {}),
+      };
+    }) || [];
 
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
