@@ -138,8 +138,6 @@ const GroupNode = ({ data, selected }: any) => {
         background: `${borderColor}0D`,
         border: `1px solid ${borderColor}30`,
         borderRadius: '14px',
-        minWidth: data.width || '400px',
-        minHeight: data.height || '300px',
         boxShadow: `inset 0 0 40px ${borderColor}08`,
       }}
     >
@@ -224,6 +222,21 @@ export default function ReactFlowCanvas({
     rfNodes.filter((n) => n.type === 'group').map((n) => n.id)
   );
 
+  // Bounding box of each group's children, so a group is always sized to contain
+  // them (prevents nodes spilling out, regardless of layout or imported sizes).
+  const groupBounds = new Map<string, { w: number; h: number }>();
+  rfNodes.forEach((n: any) => {
+    const pid = n.layerId;
+    if (pid && validParentIds.has(pid) && n.type !== 'group') {
+      const label = String(n.data?.label || n.label || '');
+      const w = Math.min(300, Math.max(190, 78 + label.length * 7.2));
+      const right = (n.position?.x || 0) + w;
+      const bottom = (n.position?.y || 0) + 72;
+      const cur = groupBounds.get(pid) || { w: 0, h: 0 };
+      groupBounds.set(pid, { w: Math.max(cur.w, right), h: Math.max(cur.h, bottom) });
+    }
+  });
+
   // Convert nodes, validating parent relationships
   const convertedNodes: RFNode[] = rfNodes
     .map((node) => {
@@ -252,11 +265,15 @@ export default function ReactFlowCanvas({
         rfNode.extent = 'parent' as const;
       }
 
-      // Set dimensions for group nodes
-      if (node.type === 'group' && nodeData.data?.width && nodeData.data?.height) {
+      // Size group nodes to at least bound their children — so contents can
+      // never overflow the box — while still allowing a larger manual/code size.
+      if (node.type === 'group') {
+        const b = groupBounds.get(node.id);
+        const dataW = nodeData.data?.width ? parseInt(nodeData.data.width) : 0;
+        const dataH = nodeData.data?.height ? parseInt(nodeData.data.height) : 0;
         rfNode.style = {
-          width: parseInt(nodeData.data.width),
-          height: parseInt(nodeData.data.height),
+          width: Math.max(b ? b.w + 30 : 0, dataW) || 400,
+          height: Math.max(b ? b.h + 30 : 0, dataH) || 200,
           zIndex: nodeData.layerId ? -1 : -2,
         };
       }
