@@ -32,12 +32,19 @@ export default function InfrastructureEditor() {
     }
   }, []);
 
-  const handleGenerateFromCode = () => {
+  const handleGenerateFromCode = async () => {
     try {
       const infraCode = parseInfrastructureCode(code);
       const { nodes, edges } = generateNodesAndEdges(infraCode);
-      setNodes(nodes);
       setEdges(edges);
+      // Auto-layout so groups are sized to contain their children, regardless of
+      // the raw positions in the code (which often overflow).
+      try {
+        const result = await applyElkLayout(nodes, edges, layoutDirection);
+        setNodes(result.nodes);
+      } catch {
+        setNodes(nodes);
+      }
     } catch (error) {
       console.error('Failed to generate diagram:', error);
       alert('Failed to generate diagram. Please check your code syntax.');
@@ -175,11 +182,16 @@ connections:
     setCode(selectedTemplate);
 
     // Auto-generate after loading template
-    setTimeout(() => {
+    setTimeout(async () => {
       const infraCode = parseInfrastructureCode(selectedTemplate);
       const { nodes, edges } = generateNodesAndEdges(infraCode);
-      setNodes(nodes);
       setEdges(edges);
+      try {
+        const result = await applyElkLayout(nodes, edges, layoutDirection);
+        setNodes(result.nodes);
+      } catch {
+        setNodes(nodes);
+      }
     }, 100);
   };
 
@@ -295,7 +307,7 @@ connections:
         )}
 
         {/* Canvas */}
-        <div className="flex-1 min-h-0" ref={canvasRef}>
+        <div className="flex-1 min-h-0" ref={canvasRef} style={{ background: lightBg ? '#F1F5F9' : '#0B0F1A', transition: 'background 0.2s' }}>
           <ReactFlowCanvas
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
