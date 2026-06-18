@@ -281,15 +281,17 @@ export default function ReactFlowCanvas({
   // 1. Initial mount
   // 2. Node IDs completely change (new diagram generated from code)
   useEffect(() => {
-    const currentNodeIds = (diagram?.nodes || []).map(n => n.id).sort().join(',');
+    // Re-sync when structure OR positions/sizes change — so auto-layout and the
+    // direction toggle actually move the nodes (not just on a new diagram). The
+    // store only updates on drag-end, so this never fights an in-progress drag.
+    const syncSig = (diagram?.nodes || [])
+      .map((n: any) => `${n.id}:${Math.round(n.position?.x ?? 0)},${Math.round(n.position?.y ?? 0)}:${n.data?.width || ''}x${n.data?.height || ''}`)
+      .join('|');
 
-    if (isInitialMount.current || prevNodeIdsRef.current !== currentNodeIds) {
+    if (isInitialMount.current || prevNodeIdsRef.current !== syncSig) {
       setNodes(convertedNodes);
-      prevNodeIdsRef.current = currentNodeIds;
-
-      if (isInitialMount.current) {
-        isInitialMount.current = false;
-      }
+      prevNodeIdsRef.current = syncSig;
+      if (isInitialMount.current) isInitialMount.current = false;
     }
   }, [diagram?.nodes, setNodes]);
 

@@ -20,7 +20,7 @@ export default function InfrastructureEditor() {
   const [showIcons, setShowIcons] = useState(false);
   const [code, setCode] = useState(DEFAULT_INFRASTRUCTURE_CODE);
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
-  const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('vertical');
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Load the default template only when the diagram is empty. A non-empty
@@ -232,16 +232,16 @@ connections:
 
               <div className="w-px h-4 bg-slate-700/50 mx-1" />
 
-              {/* Layout */}
+              {/* Layout direction toggle */}
               <button
                 onClick={handleLayoutChange}
-                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
-                title={`Auto-layout: ${layoutDirection}`}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
+                title="Toggle layout direction (top-down ↔ left-right)"
               >
-                {layoutDirection === 'horizontal' ? (
-                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                {layoutDirection === 'vertical' ? (
+                  <><ArrowDownUp className="w-3.5 h-3.5" /> Top-down</>
                 ) : (
-                  <ArrowDownUp className="w-3.5 h-3.5" />
+                  <><ArrowLeftRight className="w-3.5 h-3.5" /> Left-right</>
                 )}
               </button>
 
