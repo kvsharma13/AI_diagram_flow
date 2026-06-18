@@ -297,41 +297,43 @@ const GroupNode = ({ data, selected }: any) => {
         handleStyle={{ width: 9, height: 9, borderRadius: 2 }}
         lineStyle={{ borderColor: `${borderColor}66` }}
       />
-      {/* Downward tag badge from top */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '-1px',
-          left: '16px',
-          background: borderColor,
-          borderRadius: '0 0 6px 6px',
-          padding: '2px 10px 3px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '5px',
-        }}
-      >
+      {/* Downward tag badge from top — not shown on the outer cloud frame. */}
+      {!isFrame && data.label && (
         <div
           style={{
-            width: 5,
-            height: 5,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.55)',
-            flexShrink: 0,
-          }}
-        />
-        <span
-          style={{
-            fontSize: '10px',
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            color: '#fff',
-            textTransform: 'uppercase',
+            position: 'absolute',
+            top: '-1px',
+            left: '16px',
+            background: borderColor,
+            borderRadius: '0 0 6px 6px',
+            padding: '2px 10px 3px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
           }}
         >
-          {data.label}
-        </span>
-      </div>
+          <div
+            style={{
+              width: 5,
+              height: 5,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.55)',
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              color: '#fff',
+              textTransform: 'uppercase',
+            }}
+          >
+            {data.label}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
@@ -581,7 +583,7 @@ export default function ReactFlowCanvas({
       draggable: false,
       selectable: false,
       deletable: false,
-      data: { label: diagram?.name || 'Cloud Architecture', borderColor: '#64748B', __frame: true },
+      data: { borderColor: '#64748B', __frame: true },
       style: { width: maxX - minX + PAD * 2, height: maxY - minY + PAD * 2 + TITLE, zIndex: -5 },
     } as RFNode;
   })();
