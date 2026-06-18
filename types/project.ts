@@ -240,6 +240,11 @@ export interface BRDDocument {
 export type RequirementType = 'Functional' | 'Non-Functional';
 export type MoSCoW = 'Must Have' | 'Should Have' | 'Could Have' | "Won't Have";
 export type RequirementStatus = 'Draft' | 'Approved' | 'Rejected';
+// Volere/IEEE-29148-aligned attributes
+export type NFRCategory =
+  | 'Performance' | 'Security' | 'Usability' | 'Scalability'
+  | 'Reliability' | 'Maintainability' | 'Compliance' | 'Other';
+export type VerificationMethod = 'Test' | 'Demonstration' | 'Inspection' | 'Analysis';
 
 export interface Requirement {
   id: string;          // internal uuid
@@ -249,6 +254,15 @@ export interface Requirement {
   priority: MoSCoW;
   status: RequirementStatus;
   source: string;
+  // ── deepened attributes (Volere/Jama-aligned) — all optional for back-compat ──
+  rationale?: string;                       // why this requirement exists
+  category?: string;                        // functional area, e.g. Authentication
+  nfrCategory?: NFRCategory;                 // only meaningful when type === 'Non-Functional'
+  verification?: VerificationMethod;        // how it will be verified
+  fitCriterion?: string;                    // measurable target (esp. for NFRs)
+  estimate?: string;                        // T-shirt / points
+  acceptanceCriteria?: AcceptanceCriterion[];
+  parentId?: string;                        // decomposition: references another Requirement.id
 }
 
 // Module 1C — User Stories

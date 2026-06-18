@@ -324,12 +324,14 @@ Output ONLY a JSON array (no prose, no code fences):
     "description": "<one clear, atomic, testable requirement statement>",
     "type": "Functional" | "Non-Functional",
     "priority": "Must Have" | "Should Have" | "Could Have" | "Won't Have",
+    "category": "<short functional area, e.g. Authentication, Billing, Reporting>",
     "source": "<short origin, e.g. Brief, Stakeholder, Compliance>"
   }
 ]
 
 Rules:
 - Produce 10-25 requirements covering BOTH functional and non-functional aspects.
+- Group related requirements under a consistent short "category".
 - Functional = what the system must DO. Non-Functional = qualities: performance, security, usability, scalability, availability, compliance.
 - Each "description" is a single, atomic, verifiable requirement — avoid compound "and/or" statements.
 - Apply MoSCoW priorities sensibly; not everything is "Must Have".
@@ -399,6 +401,23 @@ Rules:
 - Give an actionable recommendation per gap.
 - Produce 5-20 gaps depending on input size.
 - Return ONLY the JSON array.`;
+    } else if (type === 'requirement_analyst') {
+      systemPrompt = `You are a senior business analyst reviewing ONE requirement for quality (clarity, atomicity, testability, lack of ambiguity).
+
+Output ONLY this JSON object (no prose, no code fences):
+{
+  "qualityScore": <integer 0-100>,
+  "issues": [ { "severity": "high" | "medium" | "low", "message": "<specific, actionable issue>" } ],
+  "suggestedRewrite": "<a clearer, atomic, testable rewrite of the requirement — or empty string if it is already strong>",
+  "acceptanceCriteria": [ "<testable criterion>", "<testable criterion>" ]
+}
+
+Rules:
+- Penalize vague words (fast, easy, user-friendly, robust, "scalable" with no number, etc.), compound "and/or" requirements, and missing measurable targets.
+- Reward a single, unambiguous, verifiable statement.
+- Provide 2-6 acceptance criteria phrased so a tester could pass or fail them (Given/When/Then is fine).
+- If there are no real issues, return an empty issues array and an empty suggestedRewrite.
+- Return ONLY the JSON object.`;
     } else {
       systemPrompt = `You are a project management assistant. Convert the provided text into a RACI matrix JSON structure.
 
