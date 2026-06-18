@@ -241,6 +241,15 @@ body {
 .react-flow__node { cursor: move; }
 .react-flow__handle { width: 8px; height: 8px; }
 
+/* Kill React Flow's default grey group-node wrapper — we render our own
+   rounded, tinted container inside it. */
+.react-flow__node-group {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
 .react-flow__background {
   background-color: var(--bg-base) !important;
 }

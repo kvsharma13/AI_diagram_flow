@@ -132,10 +132,12 @@ const GroupNode = ({ data }: any) => {
     <div
       style={{
         position: 'relative',
-        background: 'transparent',
-        border: 'none',
+        background: `${borderColor}0D`,
+        border: `1px solid ${borderColor}30`,
+        borderRadius: '14px',
         minWidth: data.width || '400px',
         minHeight: data.height || '300px',
+        boxShadow: `inset 0 0 40px ${borderColor}08`,
       }}
     >
       {/* Downward tag badge from top */}
