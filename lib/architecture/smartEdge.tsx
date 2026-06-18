@@ -255,19 +255,22 @@ function orthogonalRoute(
   return [{ x: sx, y: sy }, { x: sx, y: ty }, { x: tx, y: ty }];
 }
 
-// Midpoint of the longest straight segment — the most open spot for a label.
-function longestSegmentMidpoint(pts: Point[]): [number, number] {
+// Best label spot: the longest segment whose MIDPOINT is clear of boxes (so a
+// long cross-tier edge doesn't drop its label on a node or a group header).
+// Falls back to the longest segment overall if every midpoint is blocked.
+function bestLabelPos(pts: Point[], obstacles: Rect[]): [number, number] {
   if (pts.length < 2) return [pts[0]?.x || 0, pts[0]?.y || 0];
-  let best = -1, bx = 0, by = 0;
+  let clearLen = -1, cx = 0, cy = 0;
+  let anyLen = -1, ax = 0, ay = 0;
   for (let i = 0; i < pts.length - 1; i++) {
+    const mx = (pts[i].x + pts[i + 1].x) / 2;
+    const my = (pts[i].y + pts[i + 1].y) / 2;
     const len = Math.abs(pts[i + 1].x - pts[i].x) + Math.abs(pts[i + 1].y - pts[i].y);
-    if (len > best) {
-      best = len;
-      bx = (pts[i].x + pts[i + 1].x) / 2;
-      by = (pts[i].y + pts[i + 1].y) / 2;
-    }
+    if (len > anyLen) { anyLen = len; ax = mx; ay = my; }
+    const blocked = obstacles.some((r) => pointInRect(mx, my, r, 8));
+    if (!blocked && len > clearLen) { clearLen = len; cx = mx; cy = my; }
   }
-  return [bx, by];
+  return clearLen >= 0 ? [cx, cy] : [ax, ay];
 }
 
 export function SmartEdge({
@@ -309,8 +312,16 @@ export function SmartEdge({
   }
 
   const pathD = buildSmoothPath(points);
-  // Label on the longest segment → open space between nodes, never on a box.
-  const [labelX, labelY] = longestSegmentMidpoint(points);
+  // Label on the longest CLEAR segment — avoid node boxes and group headers
+  // (the strip at the top of a group where its title sits).
+  const labelObstacles: Rect[] = nodes.map((n: any) => {
+    const x = n.positionAbsolute?.x ?? n.position?.x ?? 0;
+    const y = n.positionAbsolute?.y ?? n.position?.y ?? 0;
+    const w = n.width || 200;
+    const h = n.height || 60;
+    return n.type === 'group' ? { x, y, width: w, height: 34 } : { x, y, width: w, height: h };
+  });
+  const [labelX, labelY] = bestLabelPos(points, labelObstacles);
 
   const labelStr = typeof label === 'string' ? label : '';
   // Per-edge colour (tinted by source tier); indigo when selected/animated.
