@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { EdgeProps, getSmoothStepPath, useNodes } from 'reactflow';
+import { EdgeProps, EdgeLabelRenderer, getSmoothStepPath, useNodes } from 'reactflow';
 
 interface Point {
   x: number;
@@ -244,174 +244,70 @@ export function SmartEdge({
   targetPosition,
   animated,
   selected,
-  style = {},
   markerEnd,
   label,
   data,
-  labelStyle,
-  labelBgStyle,
-  labelBgPadding,
-  labelBgBorderRadius,
 }: EdgeProps) {
   const nodes = useNodes();
 
-  // Preferred path: render the orthogonal route the layout engine (ELK) actually
-  // computed. This avoids edge spaghetti and matches industry-grade tools.
+  // Decide the path: a precomputed route (if any), else a clean orthogonal path,
+  // else A* around obstacles. All three feed one shared render below.
+  let pathD = '';
+  let labelX = (sourceX + targetX) / 2;
+  let labelY = (sourceY + targetY) / 2;
+
   const route = (data as any)?.points as Point[] | undefined;
   if (route && route.length >= 2) {
-    const pathD = buildSmoothPath(route);
-    const mid = route[Math.floor(route.length / 2)];
-    const prev = route[Math.floor(route.length / 2) - 1] || route[0];
-    const labelX = (mid.x + prev.x) / 2;
-    const labelY = (mid.y + prev.y) / 2;
-    const labelStr = typeof label === 'string' ? label : '';
-    const pillW = Math.max(labelStr.length * 7 + 16, 32);
-    const pillH = 18;
-
-    return (
-      <>
-        <path d={pathD} fill="none" stroke={animated ? '#6E8BFF' : '#4C5C73'} strokeWidth={(selected ? 2.4 : 1.7) + 3.5} strokeOpacity={0.12} strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }} />
-        <path
-          id={id}
-          className="react-flow__edge-path"
-          d={pathD}
-          markerEnd={markerEnd}
-          fill="none"
-          style={{
-            stroke: selected ? '#93A4FF' : animated ? '#6E8BFF' : '#4C5C73',
-            strokeWidth: selected ? 2.4 : 1.7,
-            strokeLinecap: 'round',
-            strokeLinejoin: 'round',
-            ...(animated ? { strokeDasharray: '7 7', animation: 'archFlow 0.7s linear infinite' } : {}),
-          }}
-        />
-        {label && (
-          <>
-            <rect
-              x={labelX - pillW / 2}
-              y={labelY - pillH / 2}
-              width={pillW}
-              height={pillH}
-              rx={9}
-              style={{ fill: 'rgba(15,23,42,0.88)', stroke: 'rgba(148,163,184,0.18)', strokeWidth: 1 }}
-            />
-            <text
-              x={labelX}
-              y={labelY}
-              textAnchor="middle"
-              dominantBaseline="central"
-              style={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600, letterSpacing: '0.04em' }}
-            >
-              {labelStr}
-            </text>
-          </>
-        )}
-      </>
-    );
-  }
-  const obstacles = getNodeBounds(
-    nodes,
-    // Extract source/target IDs from edge - we use position-based detection
-    '',
-    ''
-  ).filter((rect) => {
-    // Filter out obstacles that are near source or target
-    const nearSource =
-      Math.abs(rect.x + rect.width / 2 - sourceX) < rect.width &&
-      Math.abs(rect.y + rect.height / 2 - sourceY) < rect.height;
-    const nearTarget =
-      Math.abs(rect.x + rect.width / 2 - targetX) < rect.width &&
-      Math.abs(rect.y + rect.height / 2 - targetY) < rect.height;
-    return !nearSource && !nearTarget;
-  });
-
-  const start: Point = { x: sourceX, y: sourceY };
-  const end: Point = { x: targetX, y: targetY };
-
-  // Check if direct path is clear — use bezier in that case for aesthetics
-  const hasobstacles = lineIntersectsRects(
-    sourceX, sourceY, targetX, targetY,
-    obstacles, PADDING / 2
-  );
-
-  if (!hasobstacles) {
-    // Clean orthogonal (rounded) path when nothing is in the way.
-    const [edgePath, labelX, labelY] = getSmoothStepPath({
-      sourceX,
-      sourceY,
-      sourcePosition,
-      targetX,
-      targetY,
-      targetPosition,
-      borderRadius: 10,
+    pathD = buildSmoothPath(route);
+    const i = Math.floor(route.length / 2);
+    const a = route[i - 1] || route[0];
+    const b = route[i];
+    labelX = (a.x + b.x) / 2;
+    labelY = (a.y + b.y) / 2;
+  } else {
+    const obstacles = getNodeBounds(nodes, '', '').filter((rect) => {
+      const nearSource =
+        Math.abs(rect.x + rect.width / 2 - sourceX) < rect.width &&
+        Math.abs(rect.y + rect.height / 2 - sourceY) < rect.height;
+      const nearTarget =
+        Math.abs(rect.x + rect.width / 2 - targetX) < rect.width &&
+        Math.abs(rect.y + rect.height / 2 - targetY) < rect.height;
+      return !nearSource && !nearTarget;
     });
 
-    const labelStr = typeof label === 'string' ? label : '';
-    const pillW = Math.max(labelStr.length * 7 + 16, 32);
-    const pillH = 18;
+    const hasObstacles = lineIntersectsRects(sourceX, sourceY, targetX, targetY, obstacles, PADDING / 2);
 
-    return (
-      <>
-        <path d={edgePath} fill="none" stroke={animated ? '#6E8BFF' : '#4C5C73'} strokeWidth={(selected ? 2.4 : 1.7) + 3.5} strokeOpacity={0.12} strokeLinecap="round" style={{ pointerEvents: 'none' }} />
-        <path
-          id={id}
-          className="react-flow__edge-path"
-          d={edgePath}
-          markerEnd={markerEnd}
-          fill="none"
-          style={{
-            stroke: selected ? '#93A4FF' : animated ? '#6E8BFF' : '#4C5C73',
-            strokeWidth: selected ? 2.4 : 1.7,
-            strokeLinecap: 'round',
-            strokeLinejoin: 'round',
-            ...(animated ? { strokeDasharray: '7 7', animation: 'archFlow 0.7s linear infinite' } : {}),
-          }}
-        />
-        {label && (
-          <>
-            <rect
-              x={labelX - pillW / 2}
-              y={labelY - pillH / 2}
-              width={pillW}
-              height={pillH}
-              rx={9}
-              style={{ fill: 'rgba(15,23,42,0.88)', stroke: 'rgba(148,163,184,0.18)', strokeWidth: 1 }}
-            />
-            <text
-              x={labelX}
-              y={labelY}
-              textAnchor="middle"
-              dominantBaseline="central"
-              style={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600, letterSpacing: '0.04em' }}
-            >
-              {labelStr}
-            </text>
-          </>
-        )}
-      </>
-    );
+    if (!hasObstacles) {
+      const [edgePath, lx, ly] = getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+        borderRadius: 12,
+      });
+      pathD = edgePath;
+      labelX = lx;
+      labelY = ly;
+    } else {
+      const pts = findSmartPath({ x: sourceX, y: sourceY }, { x: targetX, y: targetY }, obstacles);
+      pathD = buildSmoothPath(pts);
+      const midIdx = Math.floor(pts.length / 2);
+      labelX = (pts[midIdx - 1]?.x + pts[midIdx]?.x) / 2 || sourceX;
+      labelY = (pts[midIdx - 1]?.y + pts[midIdx]?.y) / 2 || sourceY;
+    }
   }
 
-  // A* pathfinding for obstacle avoidance
-  const pathPoints = findSmartPath(start, end, obstacles);
-  const pathD = buildSmoothPath(pathPoints);
-
-  // Calculate label position at midpoint of path
-  const midIdx = Math.floor(pathPoints.length / 2);
-  const labelX = pathPoints.length > 1
-    ? (pathPoints[midIdx - 1]?.x + pathPoints[midIdx]?.x) / 2 || sourceX
-    : sourceX;
-  const labelY = pathPoints.length > 1
-    ? (pathPoints[midIdx - 1]?.y + pathPoints[midIdx]?.y) / 2 || sourceY
-    : sourceY;
-
   const labelStr = typeof label === 'string' ? label : '';
-  const pillW = Math.max(labelStr.length * 7 + 16, 32);
-  const pillH = 18;
+  // Slate-500 reads clearly on BOTH the dark and the light canvas.
+  const stroke = selected ? '#6366F1' : animated ? '#6366F1' : '#64748B';
+  const width = selected ? 3 : 2.2;
 
   return (
     <>
-      <path d={pathD} fill="none" stroke={animated ? '#6E8BFF' : '#4C5C73'} strokeWidth={(selected ? 2.4 : 1.7) + 3.5} strokeOpacity={0.12} strokeLinecap="round" style={{ pointerEvents: 'none' }} />
+      {/* soft halo keeps the line legible where it crosses a node/box edge */}
+      <path d={pathD} fill="none" stroke={stroke} strokeWidth={width + 5} strokeOpacity={0.14} strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }} />
       <path
         id={id}
         className="react-flow__edge-path"
@@ -419,33 +315,36 @@ export function SmartEdge({
         markerEnd={markerEnd}
         fill="none"
         style={{
-          stroke: selected ? '#93A4FF' : animated ? '#6E8BFF' : '#4C5C73',
-          strokeWidth: selected ? 2.4 : 1.7,
+          stroke,
+          strokeWidth: width,
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
           ...(animated ? { strokeDasharray: '7 7', animation: 'archFlow 0.7s linear infinite' } : {}),
         }}
       />
-      {label && (
-        <>
-          <rect
-            x={labelX - pillW / 2}
-            y={labelY - pillH / 2}
-            width={pillW}
-            height={pillH}
-            rx={9}
-            style={{ fill: 'rgba(15,23,42,0.88)', stroke: 'rgba(148,163,184,0.18)', strokeWidth: 1 }}
-          />
-          <text
-            x={labelX}
-            y={labelY}
-            textAnchor="middle"
-            dominantBaseline="central"
-            style={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600, letterSpacing: '0.04em' }}
+      {labelStr && (
+        <EdgeLabelRenderer>
+          <div
+            className="nodrag nopan"
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              background: 'rgba(15, 23, 42, 0.94)',
+              color: '#E2E8F0',
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              padding: '3px 8px',
+              borderRadius: 8,
+              border: '1px solid rgba(148, 163, 184, 0.3)',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+            }}
           >
             {labelStr}
-          </text>
-        </>
+          </div>
+        </EdgeLabelRenderer>
       )}
     </>
   );

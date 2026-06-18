@@ -297,8 +297,8 @@ export default function ReactFlowCanvas({
       target: edge.target,
       type: 'smart',
       animated: edge.animated,
-      style: { stroke: '#3F4E63', strokeWidth: 1.5 },
-      markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#8593AD' },
+      style: { stroke: '#64748B', strokeWidth: 2.2 },
+      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: '#64748B' },
       data: { points: (edge as any).points },
       ...(edge.label ? { label: edge.label } : {}),
     })) || [];
