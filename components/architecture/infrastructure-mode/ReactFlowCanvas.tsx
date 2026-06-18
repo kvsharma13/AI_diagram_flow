@@ -496,6 +496,7 @@ export default function ReactFlowCanvas({
     <ReactFlow
       nodes={nodes}
       edges={edges}
+      className={lightBg ? 'arch-light' : undefined}
       onNodesChange={handleNodesChange}
       onEdgesChange={handleEdgesChange}
       onConnect={onConnect}
