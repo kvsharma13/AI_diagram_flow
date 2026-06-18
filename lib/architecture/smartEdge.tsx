@@ -3,12 +3,12 @@
 import React from 'react';
 import { EdgeProps, EdgeLabelRenderer, useNodes } from 'reactflow';
 
-interface Point {
+export interface Point {
   x: number;
   y: number;
 }
 
-interface Rect {
+export interface Rect {
   x: number;
   y: number;
   width: number;
@@ -236,7 +236,7 @@ function buildSmoothPath(points: Point[]): string {
 
 // Clean orthogonal route between two handles: leave the source perpendicular to
 // its face, cross the gap on a middle segment, enter the target perpendicular.
-function orthogonalRoute(
+export function orthogonalRoute(
   sx: number, sy: number, sPos: any,
   tx: number, ty: number, tPos: any
 ): Point[] {
@@ -258,7 +258,7 @@ function orthogonalRoute(
 // Best label spot: the longest segment whose MIDPOINT is clear of boxes (so a
 // long cross-tier edge doesn't drop its label on a node or a group header).
 // Falls back to the longest segment overall if every midpoint is blocked.
-function bestLabelPos(pts: Point[], obstacles: Rect[]): [number, number] {
+export function bestLabelPos(pts: Point[], obstacles: Rect[]): [number, number] {
   if (pts.length < 2) return [pts[0]?.x || 0, pts[0]?.y || 0];
   let clearLen = -1, cx = 0, cy = 0;
   let anyLen = -1, ax = 0, ay = 0;
@@ -321,7 +321,11 @@ export function SmartEdge({
     const h = n.height || 60;
     return n.type === 'group' ? { x, y, width: w, height: 34 } : { x, y, width: w, height: h };
   });
-  const [labelX, labelY] = bestLabelPos(points, labelObstacles);
+  const [baseLabelX, baseLabelY] = bestLabelPos(points, labelObstacles);
+  // Global de-collision nudge (computed across ALL edges in ReactFlowCanvas) so
+  // labels don't pile on top of each other at convergence/divergence hubs.
+  const labelX = baseLabelX + ((data as any)?.labelDX || 0);
+  const labelY = baseLabelY + ((data as any)?.labelDY || 0);
 
   const labelStr = typeof label === 'string' ? label : '';
   // Per-edge colour (tinted by source tier); indigo when selected/animated.
