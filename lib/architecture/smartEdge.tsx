@@ -242,6 +242,8 @@ export function SmartEdge({
   targetY,
   sourcePosition,
   targetPosition,
+  animated,
+  selected,
   style = {},
   markerEnd,
   label,
@@ -293,13 +295,20 @@ export function SmartEdge({
 
     return (
       <>
+        <path d={edgePath} fill="none" stroke={animated ? '#6E8BFF' : '#4C5C73'} strokeWidth={(selected ? 2.4 : 1.7) + 3.5} strokeOpacity={0.12} strokeLinecap="round" style={{ pointerEvents: 'none' }} />
         <path
           id={id}
-          style={style}
           className="react-flow__edge-path"
           d={edgePath}
           markerEnd={markerEnd}
           fill="none"
+          style={{
+            stroke: selected ? '#93A4FF' : animated ? '#6E8BFF' : '#4C5C73',
+            strokeWidth: selected ? 2.4 : 1.7,
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+            ...(animated ? { strokeDasharray: '7 7', animation: 'archFlow 0.7s linear infinite' } : {}),
+          }}
         />
         {label && (
           <>
@@ -345,13 +354,20 @@ export function SmartEdge({
 
   return (
     <>
+      <path d={pathD} fill="none" stroke={animated ? '#6E8BFF' : '#4C5C73'} strokeWidth={(selected ? 2.4 : 1.7) + 3.5} strokeOpacity={0.12} strokeLinecap="round" style={{ pointerEvents: 'none' }} />
       <path
         id={id}
-        style={style}
         className="react-flow__edge-path"
         d={pathD}
         markerEnd={markerEnd}
         fill="none"
+        style={{
+          stroke: selected ? '#93A4FF' : animated ? '#6E8BFF' : '#4C5C73',
+          strokeWidth: selected ? 2.4 : 1.7,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          ...(animated ? { strokeDasharray: '7 7', animation: 'archFlow 0.7s linear infinite' } : {}),
+        }}
       />
       {label && (
         <>

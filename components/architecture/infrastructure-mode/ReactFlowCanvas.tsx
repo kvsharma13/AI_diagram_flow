@@ -43,17 +43,17 @@ const ServiceNode = ({ data, selected }: any) => {
 
   return (
     <div
-      className="group"
+      className="group transition-transform duration-200 hover:-translate-y-[2px]"
       style={{
         position: 'relative',
-        background: '#0F172A',
+        background: 'linear-gradient(180deg, #18243C 0%, #0E1626 100%)',
         border: `1px solid ${selected ? spec.accent + 'CC' : spec.accent + '33'}`,
-        borderRadius: '10px',
+        borderRadius: '11px',
         minWidth: '172px',
         overflow: 'hidden',
         boxShadow: selected
-          ? `0 0 0 1px ${spec.accent}55, 0 8px 24px rgba(0,0,0,0.45)`
-          : '0 2px 8px rgba(0,0,0,0.40)',
+          ? `0 0 0 1px ${spec.accent}66, 0 0 22px ${spec.accent}22, 0 10px 28px rgba(0,0,0,0.5)`
+          : 'inset 0 1px 0 rgba(255,255,255,0.05), 0 3px 12px rgba(0,0,0,0.45)',
       }}
     >
       {/* Left accent strip */}
@@ -132,11 +132,12 @@ const GroupNode = ({ data }: any) => {
     <div
       style={{
         position: 'relative',
-        background: `${borderColor}06`,
-        border: `1.5px dashed ${borderColor}45`,
-        borderRadius: '10px',
+        background: `${borderColor}0D`,
+        border: `1px solid ${borderColor}30`,
+        borderRadius: '14px',
         minWidth: data.width || '400px',
         minHeight: data.height || '300px',
+        boxShadow: `inset 0 0 40px ${borderColor}08`,
       }}
     >
       {/* Downward tag badge from top */}
@@ -267,7 +268,7 @@ export default function ReactFlowCanvas({
       type: 'smart',
       animated: edge.animated,
       style: { stroke: '#3F4E63', strokeWidth: 1.5 },
-      markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#64748B' },
+      markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#8593AD' },
       ...(edge.label ? { label: edge.label } : {}),
     })) || [];
 
@@ -379,7 +380,7 @@ export default function ReactFlowCanvas({
         type: 'smart',
         animated: false,
         style: { stroke: '#3F4E63', strokeWidth: 1.5 },
-        markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#64748B' },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#8593AD' },
       };
       setEdges((eds) => addEdge(newEdge, eds));
 
@@ -455,7 +456,7 @@ export default function ReactFlowCanvas({
         animated: false,
         style: { stroke: '#3F4E63', strokeWidth: 1.5 },
         type: 'smart',
-        markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#64748B' },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#8593AD' },
       }}
       connectionLineStyle={{ stroke: '#64748b', strokeWidth: 1.5 }}
       connectionLineType={ConnectionLineType.SmoothStep}
