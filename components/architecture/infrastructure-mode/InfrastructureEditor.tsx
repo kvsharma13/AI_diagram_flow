@@ -9,7 +9,7 @@ import {
   generateNodesAndEdges,
   DEFAULT_INFRASTRUCTURE_CODE,
 } from '@/lib/architecture/infrastructureCodeGenerator';
-import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight, X, Shapes } from 'lucide-react';
+import { Download, Code, Trash2, Play, Eye, FileCode, ArrowDownUp, ArrowLeftRight, X, Shapes, Sun, Moon } from 'lucide-react';
 import { applyElkLayout } from '@/lib/architecture/elkLayout';
 import NodeSidebarDropdown from './NodeSidebar';
 
@@ -21,6 +21,7 @@ export default function InfrastructureEditor() {
   const [code, setCode] = useState(DEFAULT_INFRASTRUCTURE_CODE);
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
   const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('vertical');
+  const [lightBg, setLightBg] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Load the default template only when the diagram is empty. A non-empty
@@ -245,6 +246,15 @@ connections:
                 )}
               </button>
 
+              {/* Background toggle */}
+              <button
+                onClick={() => setLightBg((v) => !v)}
+                className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+                title={lightBg ? 'Switch to dark background' : 'Switch to white background'}
+              >
+                {lightBg ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+              </button>
+
               {selectedNodeId && (
                 <>
                   <div className="w-px h-4 bg-slate-700/50 mx-1" />
@@ -291,6 +301,7 @@ connections:
             onSelectNode={setSelectedNodeId}
             showCodePanel={viewMode === 'code'}
             onDeleteNode={handleDeleteSelected}
+            lightBg={lightBg}
           />
         </div>
       </div>

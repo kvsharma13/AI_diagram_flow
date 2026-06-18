@@ -16,6 +16,7 @@ import ReactFlow, {
   Handle,
   Position,
   MarkerType,
+  NodeResizer,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
@@ -125,13 +126,15 @@ const ServiceNode = ({ data, selected }: any) => {
 };
 
 // Group Node — subtle dashed border, downward tag badge from top
-const GroupNode = ({ data }: any) => {
+const GroupNode = ({ data, selected }: any) => {
   const borderColor = data.borderColor || '#6b7280';
 
   return (
     <div
       style={{
         position: 'relative',
+        width: '100%',
+        height: '100%',
         background: `${borderColor}0D`,
         border: `1px solid ${borderColor}30`,
         borderRadius: '14px',
@@ -140,6 +143,14 @@ const GroupNode = ({ data }: any) => {
         boxShadow: `inset 0 0 40px ${borderColor}08`,
       }}
     >
+      <NodeResizer
+        color={borderColor}
+        isVisible={selected}
+        minWidth={220}
+        minHeight={130}
+        handleStyle={{ width: 9, height: 9, borderRadius: 2 }}
+        lineStyle={{ borderColor: `${borderColor}66` }}
+      />
       {/* Downward tag badge from top */}
       <div
         style={{
@@ -193,6 +204,7 @@ interface Props {
   onSelectNode: (id: string | null) => void;
   showCodePanel: boolean;
   onDeleteNode?: () => void;
+  lightBg?: boolean;
 }
 
 export default function ReactFlowCanvas({
@@ -200,6 +212,7 @@ export default function ReactFlowCanvas({
   onSelectNode,
   showCodePanel,
   onDeleteNode,
+  lightBg = false,
 }: Props) {
   const { diagram, setNodes: storeSetNodes, setEdges: storeSetEdges } = useArchitectureStore();
 
@@ -284,8 +297,10 @@ export default function ReactFlowCanvas({
     // Re-sync when structure OR positions/sizes change — so auto-layout and the
     // direction toggle actually move the nodes (not just on a new diagram). The
     // store only updates on drag-end, so this never fights an in-progress drag.
+    // Position-only signature: re-sync on layout/structure changes, but NOT on a
+    // group resize (size-only), so NodeResizer is not reset mid-drag.
     const syncSig = (diagram?.nodes || [])
-      .map((n: any) => `${n.id}:${Math.round(n.position?.x ?? 0)},${Math.round(n.position?.y ?? 0)}:${n.data?.width || ''}x${n.data?.height || ''}`)
+      .map((n: any) => `${n.id}:${Math.round(n.position?.x ?? 0)},${Math.round(n.position?.y ?? 0)}`)
       .join('|');
 
     if (isInitialMount.current || prevNodeIdsRef.current !== syncSig) {
@@ -354,6 +369,29 @@ export default function ReactFlowCanvas({
           storeSetNodes(updatedNodes);
           return currentNodes; // Return unchanged, onNodesChange already handled the position update
         });
+      }
+
+      // Persist group container resizes (NodeResizer). Excludes mount auto-measure
+      // (which has no `resizing` flag). Safe to run live — the sync is position-only.
+      const dimChanges = changes.filter(
+        (change: any) => change.type === 'dimensions' && change.dimensions && change.resizing !== undefined
+      );
+      if (dimChanges.length > 0) {
+        const updated = diagram.nodes.map((node) => {
+          const ch = dimChanges.find((c: any) => c.id === node.id);
+          if (ch && node.type === 'group') {
+            return {
+              ...node,
+              data: {
+                ...(node as any).data,
+                width: Math.round(ch.dimensions.width) + 'px',
+                height: Math.round(ch.dimensions.height) + 'px',
+              },
+            };
+          }
+          return node;
+        });
+        storeSetNodes(updated);
       }
     },
     [onNodesChange, diagram, storeSetNodes, storeSetEdges, setNodes]
@@ -462,8 +500,11 @@ export default function ReactFlowCanvas({
       }}
       connectionLineStyle={{ stroke: '#64748b', strokeWidth: 1.5 }}
       connectionLineType={ConnectionLineType.SmoothStep}
+      minZoom={0.15}
+      maxZoom={2.5}
+      style={{ background: lightBg ? '#F1F5F9' : '#0B0F1A', transition: 'background 0.2s' }}
     >
-      <Background color="rgba(71,85,105,0.3)" variant={BackgroundVariant.Dots} gap={20} size={0.6} />
+      <Background color={lightBg ? 'rgba(15,23,42,0.16)' : 'rgba(71,85,105,0.3)'} variant={BackgroundVariant.Dots} gap={20} size={0.6} />
       <Controls showInteractive={false} className="!bg-slate-900/80 !border-slate-700/50 !rounded-lg !shadow-lg [&_button]:!border-slate-700/30 [&_button]:!bg-transparent [&_button:hover]:!bg-slate-700/50 [&_button_svg]:!fill-slate-400" />
       <MiniMap
         nodeColor={(node) => node.type === 'group' ? 'rgba(71,85,105,0.4)' : 'rgba(148,163,184,0.6)'}

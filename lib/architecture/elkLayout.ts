@@ -46,8 +46,13 @@ export async function applyElkLayout(
     }
   }
 
-  const nodeWidth = 160;
-  const nodeHeight = 56;
+  // Size each node to its label so groups are sized to actually contain their
+  // children (the rendered cards are wider/taller than a fixed 160×56).
+  const sizeFor = (n: Node) => {
+    const label = String((n as any).data?.label || n.label || '');
+    const width = Math.min(300, Math.max(190, 78 + label.length * 7.2));
+    return { width, height: 64 };
+  };
 
   // Recursively build ELK children for a group
   function buildGroupElkNode(group: Node): ElkNode {
@@ -56,11 +61,8 @@ export async function applyElkLayout(
     // Add service nodes that belong to this group
     const groupServices = childrenByGroup.get(group.id) || [];
     for (const svc of groupServices) {
-      children.push({
-        id: svc.id,
-        width: nodeWidth,
-        height: nodeHeight,
-      });
+      const sz = sizeFor(svc);
+      children.push({ id: svc.id, width: sz.width, height: sz.height });
     }
 
     // Add nested groups
@@ -72,7 +74,8 @@ export async function applyElkLayout(
     return {
       id: group.id,
       layoutOptions: {
-        'elk.padding': '[top=36,left=16,bottom=16,right=16]',
+        'elk.padding': '[top=46,left=22,bottom=22,right=22]',
+        'elk.spacing.nodeNode': '28',
       },
       children: children.length > 0 ? children : undefined,
       width: children.length === 0 ? 400 : undefined,
@@ -90,11 +93,8 @@ export async function applyElkLayout(
 
   // Add top-level service nodes
   for (const svc of topLevelServices) {
-    rootChildren.push({
-      id: svc.id,
-      width: nodeWidth,
-      height: nodeHeight,
-    });
+    const sz = sizeFor(svc);
+    rootChildren.push({ id: svc.id, width: sz.width, height: sz.height });
   }
 
   // Build ELK edges (only between nodes that exist)
@@ -112,8 +112,8 @@ export async function applyElkLayout(
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': direction === 'horizontal' ? 'RIGHT' : 'DOWN',
-      'elk.spacing.nodeNode': '60',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+      'elk.spacing.nodeNode': '40',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '110',
       'elk.edgeRouting': 'ORTHOGONAL',
       'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
     },
