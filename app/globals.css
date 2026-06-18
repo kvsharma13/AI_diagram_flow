@@ -265,6 +265,12 @@ body {
   background-color: #F4F6FB !important;
 }
 
+/* Dark architecture canvas — a touch lighter than the app's near-black base. */
+.arch-dark.react-flow .react-flow__background,
+.arch-dark .react-flow__background {
+  background-color: #171C28 !important;
+}
+
 /* ============================================================
    MERMAID
    ============================================================ */

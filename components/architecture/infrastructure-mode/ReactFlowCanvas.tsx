@@ -798,7 +798,7 @@ export default function ReactFlowCanvas({
     <ReactFlow
       nodes={nodes}
       edges={edges}
-      className={lightBg ? 'arch-light' : undefined}
+      className={lightBg ? 'arch-light' : 'arch-dark'}
       onNodesChange={handleNodesChange}
       onEdgesChange={handleEdgesChange}
       onConnect={onConnect}
@@ -822,7 +822,7 @@ export default function ReactFlowCanvas({
       connectionLineType={ConnectionLineType.SmoothStep}
       minZoom={0.15}
       maxZoom={2.5}
-      style={{ background: lightBg ? '#F1F5F9' : '#0B0F1A', transition: 'background 0.2s' }}
+      style={{ background: lightBg ? '#F1F5F9' : '#171C28', transition: 'background 0.2s' }}
     >
       <Background color={lightBg ? 'rgba(15,23,42,0.16)' : 'rgba(71,85,105,0.3)'} variant={BackgroundVariant.Dots} gap={20} size={0.6} />
       <EdgeLabels />

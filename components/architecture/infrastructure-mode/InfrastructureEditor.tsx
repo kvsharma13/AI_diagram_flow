@@ -337,7 +337,7 @@ connections:
         )}
 
         {/* Canvas */}
-        <div className="flex-1 min-h-0" ref={canvasRef} style={{ background: lightBg ? '#F1F5F9' : '#0B0F1A', transition: 'background 0.2s' }}>
+        <div className="flex-1 min-h-0" ref={canvasRef} style={{ background: lightBg ? '#F1F5F9' : '#171C28', transition: 'background 0.2s' }}>
           <ReactFlowCanvas
             selectedNodeId={selectedNodeId}
             onSelectNode={setSelectedNodeId}
