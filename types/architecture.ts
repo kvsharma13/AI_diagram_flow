@@ -25,6 +25,8 @@ export interface Edge {
   animated?: boolean;
   label?: string;
   style?: any;
+  /** Orthogonal route computed by the layout engine (absolute flow coords). */
+  points?: Array<{ x: number; y: number }>;
 }
 
 export interface ArchitectureDiagram {

@@ -299,6 +299,7 @@ export default function ReactFlowCanvas({
       animated: edge.animated,
       style: { stroke: '#3F4E63', strokeWidth: 1.5 },
       markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#8593AD' },
+      data: { points: (edge as any).points },
       ...(edge.label ? { label: edge.label } : {}),
     })) || [];
 
@@ -336,6 +337,22 @@ export default function ReactFlowCanvas({
   const handleNodesChange = useCallback(
     (changes: any[]) => {
       onNodesChange(changes);
+
+      // A dragged node invalidates its pre-computed routes — drop them so the
+      // connected edges fall back to a clean direct path until the next layout.
+      const movedIds = changes
+        .filter((c) => c.type === 'position' && c.position)
+        .map((c) => c.id);
+      if (movedIds.length) {
+        const moved = new Set(movedIds);
+        setEdges((eds) =>
+          eds.map((e) =>
+            (moved.has(e.source) || moved.has(e.target)) && (e.data as any)?.points
+              ? { ...e, data: { ...e.data, points: undefined } }
+              : e
+          )
+        );
+      }
 
       if (!diagram) return;
 

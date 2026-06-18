@@ -322,6 +322,9 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
+  // Drop nameless nodes — they render as empty "SERVICE" boxes.
+  const srcNodes = infraCode.nodes.filter((n) => String(n.label || '').trim());
+
   // Create maps for group positions and sizes
   const groupPositions = new Map<string, { x: number; y: number }>();
   const groupSizes = new Map<string, { width: number; height: number }>();
@@ -331,7 +334,7 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
   const groupPositionsAreAbsolute = new Map<string, boolean>();
   for (const group of infraCode.groups) {
     groupSizes.set(group.id, group.size);
-    const nodesInGroup = infraCode.nodes.filter((n) => n.group === group.id);
+    const nodesInGroup = srcNodes.filter((n) => n.group === group.id);
     if (nodesInGroup.length === 0) {
       groupPositionsAreAbsolute.set(group.id, true);
       continue;
@@ -382,7 +385,7 @@ export function generateNodesAndEdges(infraCode: InfrastructureCode): {
   }
 
   // Create service nodes
-  infraCode.nodes.forEach((node) => {
+  srcNodes.forEach((node) => {
     let position = node.position || { x: 0, y: 0 };
 
     // If node belongs to a group, calculate relative position

@@ -36,14 +36,15 @@ export default function InfrastructureEditor() {
     try {
       const infraCode = parseInfrastructureCode(code);
       const { nodes, edges } = generateNodesAndEdges(infraCode);
-      setEdges(edges);
-      // Auto-layout so groups are sized to contain their children, regardless of
-      // the raw positions in the code (which often overflow).
+      // Auto-layout: organize the diagram into clean tiers, size groups to
+      // contain their children, and compute orthogonal edge routes.
       try {
         const result = await applyElkLayout(nodes, edges, layoutDirection);
         setNodes(result.nodes);
+        setEdges(result.edges);
       } catch {
         setNodes(nodes);
+        setEdges(edges);
       }
     } catch (error) {
       console.error('Failed to generate diagram:', error);
@@ -92,6 +93,7 @@ export default function InfrastructureEditor() {
           newDirection
         );
         setNodes(result.nodes);
+        setEdges(result.edges);
       } catch (error) {
         console.error('ELK layout failed:', error);
       }
@@ -185,12 +187,13 @@ connections:
     setTimeout(async () => {
       const infraCode = parseInfrastructureCode(selectedTemplate);
       const { nodes, edges } = generateNodesAndEdges(infraCode);
-      setEdges(edges);
       try {
         const result = await applyElkLayout(nodes, edges, layoutDirection);
         setNodes(result.nodes);
+        setEdges(result.edges);
       } catch {
         setNodes(nodes);
+        setEdges(edges);
       }
     }, 100);
   };

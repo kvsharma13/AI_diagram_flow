@@ -5,6 +5,7 @@ const elk = new ELK();
 
 export interface ElkLayoutResult {
   nodes: Node[];
+  edges: Edge[];
   edgeBendPoints: Map<string, Array<{ x: number; y: number }>>;
 }
 
@@ -74,12 +75,14 @@ export async function applyElkLayout(
     return {
       id: group.id,
       layoutOptions: {
-        'elk.padding': '[top=46,left=22,bottom=22,right=22]',
-        'elk.spacing.nodeNode': '28',
+        'elk.padding': '[top=48,left=24,bottom=24,right=24]',
+        'elk.spacing.nodeNode': '30',
+        // Keep a group's members compact and balanced rather than a long line.
+        'elk.layered.spacing.nodeNodeBetweenLayers': '60',
       },
       children: children.length > 0 ? children : undefined,
-      width: children.length === 0 ? 400 : undefined,
-      height: children.length === 0 ? 200 : undefined,
+      width: children.length === 0 ? 360 : undefined,
+      height: children.length === 0 ? 180 : undefined,
     };
   }
 
@@ -112,10 +115,18 @@ export async function applyElkLayout(
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': direction === 'horizontal' ? 'RIGHT' : 'DOWN',
-      'elk.spacing.nodeNode': '40',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '110',
+      // Route edges across group boundaries and lay the whole hierarchy out as
+      // one layered flow — this is what produces clean tiers + orthogonal routes
+      // (without it, cross-group edges are not routed and bend points are wrong).
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
       'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.spacing.nodeNode': '48',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '120',
+      'elk.layered.spacing.edgeNodeBetweenLayers': '40',
+      'elk.spacing.edgeNode': '24',
+      'elk.spacing.edgeEdge': '16',
       'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
     },
     children: rootChildren,
     edges: elkEdges,
@@ -216,5 +227,12 @@ export async function applyElkLayout(
     return node;
   });
 
-  return { nodes: updatedNodes, edgeBendPoints };
+  // Attach each edge's orthogonal route so renderers can draw the real path
+  // instead of guessing (this is what makes the diagram look industry-grade).
+  const updatedEdges: Edge[] = edges.map((e) => {
+    const pts = edgeBendPoints.get(e.id);
+    return pts && pts.length >= 2 ? { ...e, points: pts } : { ...e, points: undefined };
+  });
+
+  return { nodes: updatedNodes, edges: updatedEdges, edgeBendPoints };
 }

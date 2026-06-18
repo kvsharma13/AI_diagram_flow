@@ -247,12 +247,68 @@ export function SmartEdge({
   style = {},
   markerEnd,
   label,
+  data,
   labelStyle,
   labelBgStyle,
   labelBgPadding,
   labelBgBorderRadius,
 }: EdgeProps) {
   const nodes = useNodes();
+
+  // Preferred path: render the orthogonal route the layout engine (ELK) actually
+  // computed. This avoids edge spaghetti and matches industry-grade tools.
+  const route = (data as any)?.points as Point[] | undefined;
+  if (route && route.length >= 2) {
+    const pathD = buildSmoothPath(route);
+    const mid = route[Math.floor(route.length / 2)];
+    const prev = route[Math.floor(route.length / 2) - 1] || route[0];
+    const labelX = (mid.x + prev.x) / 2;
+    const labelY = (mid.y + prev.y) / 2;
+    const labelStr = typeof label === 'string' ? label : '';
+    const pillW = Math.max(labelStr.length * 7 + 16, 32);
+    const pillH = 18;
+
+    return (
+      <>
+        <path d={pathD} fill="none" stroke={animated ? '#6E8BFF' : '#4C5C73'} strokeWidth={(selected ? 2.4 : 1.7) + 3.5} strokeOpacity={0.12} strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }} />
+        <path
+          id={id}
+          className="react-flow__edge-path"
+          d={pathD}
+          markerEnd={markerEnd}
+          fill="none"
+          style={{
+            stroke: selected ? '#93A4FF' : animated ? '#6E8BFF' : '#4C5C73',
+            strokeWidth: selected ? 2.4 : 1.7,
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+            ...(animated ? { strokeDasharray: '7 7', animation: 'archFlow 0.7s linear infinite' } : {}),
+          }}
+        />
+        {label && (
+          <>
+            <rect
+              x={labelX - pillW / 2}
+              y={labelY - pillH / 2}
+              width={pillW}
+              height={pillH}
+              rx={9}
+              style={{ fill: 'rgba(15,23,42,0.88)', stroke: 'rgba(148,163,184,0.18)', strokeWidth: 1 }}
+            />
+            <text
+              x={labelX}
+              y={labelY}
+              textAnchor="middle"
+              dominantBaseline="central"
+              style={{ fill: '#94a3b8', fontSize: 10, fontWeight: 600, letterSpacing: '0.04em' }}
+            >
+              {labelStr}
+            </text>
+          </>
+        )}
+      </>
+    );
+  }
   const obstacles = getNodeBounds(
     nodes,
     // Extract source/target IDs from edge - we use position-based detection

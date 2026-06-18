@@ -65,10 +65,10 @@ export async function generateArchitecture(description: string): Promise<Generat
   const ai: AIArchitectureJSON = payload?.data ?? payload;
   const { nodes, edges, title } = aiJsonToGraph(ai);
 
-  // LLM gives no coordinates — ELK computes positions + group sizing.
+  // LLM gives no coordinates — ELK computes positions, group sizing and routes.
   try {
     const result = await applyElkLayout(nodes, edges, 'horizontal');
-    return { nodes: result.nodes, edges, title };
+    return { nodes: result.nodes, edges: result.edges, title };
   } catch (e) {
     console.error('ELK layout failed, falling back to raw nodes:', e);
     return { nodes, edges, title };
@@ -78,7 +78,10 @@ export async function generateArchitecture(description: string): Promise<Generat
 /** Pure converter: AI JSON → store Node[]/Edge[] (positions are placeholders). */
 export function aiJsonToGraph(ai: AIArchitectureJSON): GeneratedArchitecture {
   const aiGroups = Array.isArray(ai.groups) ? ai.groups : [];
-  const aiNodes = Array.isArray(ai.nodes) ? ai.nodes : [];
+  // Drop nameless nodes — they render as empty "SERVICE" boxes.
+  const aiNodes = (Array.isArray(ai.nodes) ? ai.nodes : []).filter(
+    (n) => n && (String(n.label || '').trim() || String(n.id || '').trim())
+  );
   const aiConnections = Array.isArray(ai.connections) ? ai.connections : [];
 
   const groupIds = new Set(aiGroups.map((g) => g.id));
