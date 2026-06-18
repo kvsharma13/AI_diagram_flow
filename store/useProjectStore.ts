@@ -913,6 +913,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         console.log('Importing Gantt data:', data);
 
         const defaultColors = ['purple', 'blue', 'green', 'orange', 'pink', 'teal'];
+        const validColors = ['purple', 'blue', 'green', 'orange', 'pink', 'teal', 'red', 'indigo', 'yellow', 'cyan'];
 
         // Handle nested timeline/raciMatrix structure
         const timelineData = data.timeline || data;
@@ -963,7 +964,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
             startMonth: startMonth,
             duration: duration,
             deliverables: deliverables,
-            color: p.color || defaultColors[index % defaultColors.length],
+            color: (typeof p.color === 'string' && validColors.includes(p.color)) ? p.color : defaultColors[index % defaultColors.length],
             months: months || undefined,
           };
         });
@@ -984,7 +985,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
             ganttPhases: phases,
             timelineMonths: timelineMonths,
             timelineUnit: data.timelineUnit || 'months',
-            ganttTemplateStyle: data.style,
+            ganttTemplateStyle: data.style || state.project.ganttTemplateStyle,
             updatedAt: new Date(),
           },
         };
