@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { EdgeProps, EdgeLabelRenderer, useNodes } from 'reactflow';
+import { EdgeProps, useNodes } from 'reactflow';
 
 export interface Point {
   x: number;
@@ -284,7 +284,6 @@ export function SmartEdge({
   animated,
   selected,
   markerEnd,
-  label,
   data,
 }: EdgeProps) {
   const nodes = useNodes();
@@ -312,27 +311,14 @@ export function SmartEdge({
   }
 
   const pathD = buildSmoothPath(points);
-  // Label on the longest CLEAR segment — avoid node boxes and group headers
-  // (the strip at the top of a group where its title sits).
-  const labelObstacles: Rect[] = nodes.map((n: any) => {
-    const x = n.positionAbsolute?.x ?? n.position?.x ?? 0;
-    const y = n.positionAbsolute?.y ?? n.position?.y ?? 0;
-    const w = n.width || 200;
-    const h = n.height || 60;
-    return n.type === 'group' ? { x, y, width: w, height: 34 } : { x, y, width: w, height: h };
-  });
-  const [baseLabelX, baseLabelY] = bestLabelPos(points, labelObstacles);
-  // Global de-collision nudge (computed across ALL edges in ReactFlowCanvas) so
-  // labels don't pile on top of each other at convergence/divergence hubs.
-  const labelX = baseLabelX + ((data as any)?.labelDX || 0);
-  const labelY = baseLabelY + ((data as any)?.labelDY || 0);
 
-  const labelStr = typeof label === 'string' ? label : '';
   // Per-edge colour (tinted by source tier); indigo when selected/animated.
   const baseColor = (data as any)?.color || '#64748B';
   const stroke = selected || animated ? '#6366F1' : baseColor;
   const width = selected ? 3 : 2.2;
 
+  // NB: labels are NOT drawn here — they're rendered together by <EdgeLabels/>
+  // so they can be de-collided globally using the real rendered geometry.
   return (
     <>
       {/* soft halo keeps the line legible where it crosses a node/box edge */}
@@ -351,30 +337,6 @@ export function SmartEdge({
           ...(animated ? { strokeDasharray: '7 7', animation: 'archFlow 0.7s linear infinite' } : {}),
         }}
       />
-      {labelStr && (
-        <EdgeLabelRenderer>
-          <div
-            className="nodrag nopan"
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-              background: 'rgba(15, 23, 42, 0.94)',
-              color: '#E2E8F0',
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: '0.04em',
-              padding: '3px 8px',
-              borderRadius: 8,
-              border: '1px solid rgba(148, 163, 184, 0.3)',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-              whiteSpace: 'nowrap',
-              pointerEvents: 'none',
-            }}
-          >
-            {labelStr}
-          </div>
-        </EdgeLabelRenderer>
-      )}
     </>
   );
 }

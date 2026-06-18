@@ -17,6 +17,8 @@ import ReactFlow, {
   Position,
   MarkerType,
   NodeResizer,
+  EdgeLabelRenderer,
+  useStore,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
@@ -67,6 +69,110 @@ function normalizeEdgeColor(hex: string): string {
   const p = 2 * L - q;
   const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
   return `#${toHex(hue2rgb(p, q, h + 1 / 3))}${toHex(hue2rgb(p, q, h))}${toHex(hue2rgb(p, q, h - 1 / 3))}`;
+}
+
+// Renders ALL edge labels in one overlay, using React Flow's REAL node geometry
+// (positions + measured sizes). Because every label is placed here together, we
+// can de-collide them globally so they never stack — and because it uses the
+// same geometry the edges are drawn from, each label sits on its own line.
+function EdgeLabels() {
+  const edges = useStore((s: any) => s.edges);
+  const nodeInternals = useStore((s: any) => s.nodeInternals);
+
+  const rectOf = (id: string) => {
+    const n: any = nodeInternals.get(id);
+    if (!n || !n.positionAbsolute) return null;
+    return { x: n.positionAbsolute.x, y: n.positionAbsolute.y, w: n.width || 180, h: n.height || 60, type: n.type };
+  };
+  const sideOf = (hid?: string | null) => (hid ? hid.split('-')[1] : undefined);
+  const handlePt = (r: any, side?: string) => {
+    if (side === 'right') return { x: r.x + r.w, y: r.y + r.h / 2 };
+    if (side === 'left') return { x: r.x, y: r.y + r.h / 2 };
+    if (side === 'top') return { x: r.x + r.w / 2, y: r.y };
+    if (side === 'bottom') return { x: r.x + r.w / 2, y: r.y + r.h };
+    return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
+  };
+
+  const obstacles: Rect[] = [];
+  nodeInternals.forEach((n: any) => {
+    if (!n.positionAbsolute) return;
+    const w = n.width || 180;
+    const h = n.height || 60;
+    obstacles.push(
+      n.type === 'group'
+        ? { x: n.positionAbsolute.x, y: n.positionAbsolute.y, width: w, height: 34 }
+        : { x: n.positionAbsolute.x, y: n.positionAbsolute.y, width: w, height: h }
+    );
+  });
+
+  const items = edges
+    .filter((e: any) => e.label && e.sourceHandle && e.targetHandle)
+    .map((e: any) => {
+      const sr = rectOf(e.source);
+      const tr = rectOf(e.target);
+      if (!sr || !tr) return null;
+      const ss = sideOf(e.sourceHandle);
+      const ts = sideOf(e.targetHandle);
+      const hs = handlePt(sr, ss);
+      const ht = handlePt(tr, ts);
+      const route = orthogonalRoute(hs.x, hs.y, ss, ht.x, ht.y, ts);
+      const [x, y] = bestLabelPos(route, obstacles);
+      const label = String(e.label);
+      return { id: e.id, label, x, y, w: label.length * 6 + 18, h: 20 };
+    })
+    .filter(Boolean) as Array<{ id: string; label: string; x: number; y: number; w: number; h: number }>;
+
+  // De-collide: push overlapping labels apart along the smaller penetration axis.
+  for (let iter = 0; iter < 16; iter++) {
+    let moved = false;
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        const a = items[i];
+        const b = items[j];
+        const ox = (a.w + b.w) / 2 + 6 - Math.abs(a.x - b.x);
+        const oy = (a.h + b.h) / 2 + 4 - Math.abs(a.y - b.y);
+        if (ox > 0 && oy > 0) {
+          if (oy <= ox) {
+            const p = oy / 2 + 0.5;
+            if (a.y <= b.y) { a.y -= p; b.y += p; } else { a.y += p; b.y -= p; }
+          } else {
+            const p = ox / 2 + 0.5;
+            if (a.x <= b.x) { a.x -= p; b.x += p; } else { a.x += p; b.x -= p; }
+          }
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+
+  return (
+    <EdgeLabelRenderer>
+      {items.map((l) => (
+        <div
+          key={l.id}
+          className="nodrag nopan"
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${l.x}px, ${l.y}px)`,
+            background: 'rgba(15, 23, 42, 0.94)',
+            color: '#E2E8F0',
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: '0.04em',
+            padding: '3px 8px',
+            borderRadius: 8,
+            border: '1px solid rgba(148, 163, 184, 0.3)',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+          }}
+        >
+          {l.label}
+        </div>
+      ))}
+    </EdgeLabelRenderer>
+  );
 }
 
 const ServiceNode = ({ data, selected }: any) => {
@@ -356,134 +462,44 @@ export default function ReactFlowCanvas({
     return g?.data?.borderColor ? normalizeEdgeColor(g.data.borderColor) : '#64748B';
   };
 
-  // Absolute top-left + estimated size of a node (matches the layout sizing).
-  const nodeRect = (id: string): { x: number; y: number; w: number; h: number } | null => {
-    const n = nodeById.get(id) as any;
-    if (!n) return null;
-    let x = n.position?.x || 0;
-    let y = n.position?.y || 0;
-    let pid = n.layerId;
-    while (pid && nodeById.has(pid)) {
-      const p = nodeById.get(pid) as any;
-      x += p.position?.x || 0;
-      y += p.position?.y || 0;
-      pid = p.layerId;
-    }
-    if (n.type === 'group') {
-      return { x, y, w: parseInt(n.data?.width) || 320, h: parseInt(n.data?.height) || 160 };
-    }
-    const lbl = String(n.data?.label || n.label || '');
-    return { x, y, w: Math.min(300, Math.max(190, 78 + lbl.length * 7.2)), h: 64 };
-  };
-  const handlePoint = (r: { x: number; y: number; w: number; h: number }, side: string) => {
-    if (side === 'right') return { x: r.x + r.w, y: r.y + r.h / 2 };
-    if (side === 'left') return { x: r.x, y: r.y + r.h / 2 };
-    if (side === 'top') return { x: r.x + r.w / 2, y: r.y };
-    return { x: r.x + r.w / 2, y: r.y + r.h };
-  };
-
-  // Obstacles for label placement: service boxes (full) + group title strips.
-  const labelObstacles: Rect[] = rfNodes
-    .map((n) => {
-      const r = nodeRect(n.id);
-      if (!r) return null;
-      return n.type === 'group'
-        ? { x: r.x, y: r.y, width: r.w, height: 34 }
-        : { x: r.x, y: r.y, width: r.w, height: r.h };
-    })
-    .filter(Boolean) as Rect[];
-
-  // First pass: geometry, handles, colour, and a provisional label anchor.
-  const edgeInfos = (diagram?.edges || []).map((edge) => {
-    const s = absCenter(edge.source);
-    const t = absCenter(edge.target);
-    const bothServices =
-      (nodeById.get(edge.source) as any)?.type !== 'group' &&
-      (nodeById.get(edge.target) as any)?.type !== 'group';
-    let sSide: string | undefined;
-    let tSide: string | undefined;
-    if (s && t && bothServices) {
-      const dx = t.x - s.x;
-      const dy = t.y - s.y;
-      if (Math.abs(dx) >= Math.abs(dy)) {
-        sSide = dx >= 0 ? 'right' : 'left';
-        tSide = dx >= 0 ? 'left' : 'right';
-      } else {
-        sSide = dy >= 0 ? 'bottom' : 'top';
-        tSide = dy >= 0 ? 'top' : 'bottom';
-      }
-    }
-
-    let anchor: { x: number; y: number } | null = null;
-    let labelW = 0;
-    if (edge.label && sSide && tSide) {
-      const sr = nodeRect(edge.source);
-      const tr = nodeRect(edge.target);
-      if (sr && tr) {
-        const hs = handlePoint(sr, sSide);
-        const ht = handlePoint(tr, tSide);
-        const route = orthogonalRoute(hs.x, hs.y, sSide, ht.x, ht.y, tSide);
-        const [lx, ly] = bestLabelPos(route, labelObstacles);
-        anchor = { x: lx, y: ly };
-        labelW = String(edge.label).length * 6 + 18;
-      }
-    }
-
-    return {
-      edge,
-      sourceHandle: sSide ? `s-${sSide}` : undefined,
-      targetHandle: tSide ? `t-${tSide}` : undefined,
-      color: edgeColorFor(edge.source),
-      anchor,
-      labelW,
-    };
-  });
-
-  // Second pass: nudge overlapping labels apart (separate along the smaller
-  // penetration axis) so they never stack at hubs. Store the delta per edge.
-  const items = edgeInfos
-    .filter((e) => e.anchor)
-    .map((e) => ({ id: e.edge.id, x: e.anchor!.x, y: e.anchor!.y, ox: e.anchor!.x, oy: e.anchor!.y, w: e.labelW, h: 20 }));
-  for (let iter = 0; iter < 12; iter++) {
-    let moved = false;
-    for (let i = 0; i < items.length; i++) {
-      for (let j = i + 1; j < items.length; j++) {
-        const a = items[i];
-        const b = items[j];
-        const ox = (a.w + b.w) / 2 + 6 - Math.abs(a.x - b.x);
-        const oy = (a.h + b.h) / 2 + 4 - Math.abs(a.y - b.y);
-        if (ox > 0 && oy > 0) {
-          if (oy <= ox) {
-            const p = oy / 2 + 0.5;
-            if (a.y <= b.y) { a.y -= p; b.y += p; } else { a.y += p; b.y -= p; }
-          } else {
-            const p = ox / 2 + 0.5;
-            if (a.x <= b.x) { a.x -= p; b.x += p; } else { a.x += p; b.x -= p; }
-          }
-          moved = true;
+  const rfEdges: RFEdge[] =
+    diagram?.edges.map((edge) => {
+      const s = absCenter(edge.source);
+      const t = absCenter(edge.target);
+      const bothServices =
+        (nodeById.get(edge.source) as any)?.type !== 'group' &&
+        (nodeById.get(edge.target) as any)?.type !== 'group';
+      let sourceHandle: string | undefined;
+      let targetHandle: string | undefined;
+      if (s && t && bothServices) {
+        const dx = t.x - s.x;
+        const dy = t.y - s.y;
+        if (Math.abs(dx) >= Math.abs(dy)) {
+          // Attach to the face that points at the other node.
+          sourceHandle = dx >= 0 ? 's-right' : 's-left';
+          targetHandle = dx >= 0 ? 't-left' : 't-right';
+        } else {
+          sourceHandle = dy >= 0 ? 's-bottom' : 's-top';
+          targetHandle = dy >= 0 ? 't-top' : 't-bottom';
         }
       }
-    }
-    if (!moved) break;
-  }
-  const deltas = new Map(items.map((l) => [l.id, { dx: l.x - l.ox, dy: l.y - l.oy }]));
-
-  const rfEdges: RFEdge[] = edgeInfos.map((info) => {
-    const d = deltas.get(info.edge.id);
-    return {
-      id: info.edge.id,
-      source: info.edge.source,
-      target: info.edge.target,
-      sourceHandle: info.sourceHandle,
-      targetHandle: info.targetHandle,
-      type: 'smart',
-      animated: info.edge.animated,
-      style: { stroke: info.color, strokeWidth: 2.2 },
-      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: info.color },
-      data: { points: (info.edge as any).points, color: info.color, labelDX: d?.dx || 0, labelDY: d?.dy || 0 },
-      ...(info.edge.label ? { label: info.edge.label } : {}),
-    };
-  });
+      const color = edgeColorFor(edge.source);
+      return {
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle,
+        targetHandle,
+        type: 'smart',
+        animated: edge.animated,
+        style: { stroke: color, strokeWidth: 2.2 },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color },
+        // Labels are rendered globally by <EdgeLabels/> (see above) so they can
+        // be de-collided; the edge keeps `label` only as data for that overlay.
+        data: { points: (edge as any).points, color },
+        ...(edge.label ? { label: edge.label } : {}),
+      };
+    }) || [];
 
   const [nodes, setNodes, onNodesChange] = useNodesState(convertedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
@@ -722,6 +738,7 @@ export default function ReactFlowCanvas({
       style={{ background: lightBg ? '#F1F5F9' : '#0B0F1A', transition: 'background 0.2s' }}
     >
       <Background color={lightBg ? 'rgba(15,23,42,0.16)' : 'rgba(71,85,105,0.3)'} variant={BackgroundVariant.Dots} gap={20} size={0.6} />
+      <EdgeLabels />
       <Controls showInteractive={false} className="!bg-slate-900/80 !border-slate-700/50 !rounded-lg !shadow-lg [&_button]:!border-slate-700/30 [&_button]:!bg-transparent [&_button:hover]:!bg-slate-700/50 [&_button_svg]:!fill-slate-400" />
       <MiniMap
         nodeColor={(node) => node.type === 'group' ? 'rgba(71,85,105,0.4)' : 'rgba(148,163,184,0.6)'}
