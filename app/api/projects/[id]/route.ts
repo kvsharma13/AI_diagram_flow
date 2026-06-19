@@ -137,6 +137,23 @@ export async function PUT(
       console.warn('BA module update skipped:', e);
     }
 
+    // Architecture diagram — its own isolated best-effort update so a missing
+    // architecture_diagram column never blocks the BA-module save above.
+    try {
+      if (body.architectureDiagram !== undefined) {
+        const { error: archError } = await supabaseAdmin
+          .from('projects')
+          .update({ architecture_diagram: body.architectureDiagram })
+          .eq('id', projectId)
+          .eq('user_id', user.id);
+        if (archError) {
+          console.warn('Architecture diagram not saved — run supabase/migrations/0002_architecture_diagram.sql:', archError.message);
+        }
+      }
+    } catch (e) {
+      console.warn('Architecture diagram update skipped:', e);
+    }
+
     return NextResponse.json({ project });
   } catch (error) {
     console.error('Update project error:', error);

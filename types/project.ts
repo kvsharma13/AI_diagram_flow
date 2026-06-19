@@ -25,6 +25,7 @@ export interface Project {
   raciAssignments?: RACIAssignment[];
   architectureComponents: ArchitectureComponent[];
   architectureMermaidCode?: string; // Mermaid code for architecture diagram
+  architectureDiagram?: any | null; // React Flow architecture diagram (nodes/edges/mode) from architectureStore
   flowchartSteps: FlowchartStep[];
   bpmnDiagram?: BPMNDiagram;
   proposalDocument?: ProposalDocument;

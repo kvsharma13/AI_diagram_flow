@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Save, Check } from 'lucide-react';
 import { useProjectStore } from '@/store/useProjectStore';
+import { useArchitectureStore } from '@/store/architectureStore';
 import GanttEditor from '@/editors/GanttEditor';
 import RACIMatrixEditor from '@/editors/RACIMatrixEditor';
 import ArchitectureEditor from '@/editors/ArchitectureEditor';
@@ -43,10 +44,27 @@ export default function ProjectEditorPage() {
   const [projectName, setProjectName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
 
+  // Becomes true once the project (and its architecture diagram) has finished
+  // loading, so the mirror subscription below ignores load-time store writes.
+  const archLoadedRef = useRef(false);
+
   // Load project from database
   useEffect(() => {
+    archLoadedRef.current = false;
     loadProject();
   }, [projectId]);
+
+  // The architecture diagram lives in its own store (architectureStore). Mirror
+  // its edits into the project so the existing auto-save persists them.
+  useEffect(() => {
+    const unsub = useArchitectureStore.subscribe((state, prev) => {
+      if (!archLoadedRef.current || state.diagram === prev.diagram) return;
+      const proj = useProjectStore.getState().project;
+      if (!proj || proj.architectureDiagram === state.diagram) return;
+      useProjectStore.getState().setProject({ ...proj, architectureDiagram: state.diagram });
+    });
+    return unsub;
+  }, []);
 
   // Auto-save when project changes (debounced)
   useEffect(() => {
@@ -81,6 +99,7 @@ export default function ProjectEditorPage() {
         raciAssignments: dbProject.raci_assignments || [],
         architectureComponents: dbProject.architecture_components || [],
         architectureMermaidCode: dbProject.architecture_mermaid_code,
+        architectureDiagram: dbProject.architecture_diagram || null,
         flowchartSteps: dbProject.flowchart_steps || [],
         bpmnDiagram: {
           nodes: dbProject.bpmn_nodes || [],
@@ -116,6 +135,16 @@ export default function ProjectEditorPage() {
       });
 
       setProjectName(dbProject.name);
+
+      // Restore the architecture diagram into its store (or clear it so a
+      // previously-open project's diagram doesn't leak into this one).
+      const arch = useArchitectureStore.getState();
+      if (dbProject.architecture_diagram?.nodes) {
+        arch.loadDiagram(dbProject.architecture_diagram);
+      } else {
+        arch.resetDiagram();
+      }
+      archLoadedRef.current = true;
     } catch (error) {
       console.error('Failed to load project:', error);
       router.push('/dashboard/projects');
@@ -142,6 +171,7 @@ export default function ProjectEditorPage() {
           raciAssignments: project.raciAssignments,
           architectureComponents: project.architectureComponents,
           architectureMermaidCode: project.architectureMermaidCode,
+          architectureDiagram: project.architectureDiagram ?? null,
           bpmnNodes: project.bpmnDiagram?.nodes || [],
           bpmnEdges: project.bpmnDiagram?.edges || [],
           bpmnSwimlanes: project.bpmnDiagram?.swimlanes || [],
