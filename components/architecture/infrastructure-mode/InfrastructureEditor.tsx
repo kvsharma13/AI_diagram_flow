@@ -18,7 +18,15 @@ export default function InfrastructureEditor({ framed = false }: { framed?: bool
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showIcons, setShowIcons] = useState(false);
-  const [code, setCode] = useState(DEFAULT_INFRASTRUCTURE_CODE);
+  // Flowchart and Cloud keep INDEPENDENT code (so editing one doesn't change the
+  // other). `code`/`setCode` read/write the slot for the active mode.
+  const [codeByMode, setCodeByMode] = useState<{ flow: string; cloud: string }>({
+    flow: DEFAULT_INFRASTRUCTURE_CODE,
+    cloud: DEFAULT_INFRASTRUCTURE_CODE,
+  });
+  const codeKey = framed ? 'cloud' : 'flow';
+  const code = codeByMode[codeKey];
+  const setCode = (value: string) => setCodeByMode((p) => ({ ...p, [codeKey]: value }));
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
   const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('vertical');
   const [lightBg, setLightBg] = useState(false);
@@ -38,7 +46,7 @@ export default function InfrastructureEditor({ framed = false }: { framed?: bool
   // diagram keeps its saved/edited positions.
   const prevFramed = useRef<boolean | undefined>(undefined);
   useEffect(() => {
-    if (!diagram || diagram.nodes.length === 0) {
+    if (!diagram) {
       prevFramed.current = framed;
       return;
     }
@@ -46,6 +54,12 @@ export default function InfrastructureEditor({ framed = false }: { framed?: bool
     const isInitialCloud = prevFramed.current === undefined && framed;
     prevFramed.current = framed;
     if (!isToggle && !isInitialCloud) return;
+    if (diagram.nodes.length === 0) {
+      // Switching to an empty board (e.g. first time opening Cloud) — populate it
+      // from that board's own code. (Initial mount is handled by the effect above.)
+      if (isToggle) handleGenerateFromCode();
+      return;
+    }
     (async () => {
       try {
         const result = await applyElkLayout(diagram.nodes, diagram.edges, layoutDirection, framed);

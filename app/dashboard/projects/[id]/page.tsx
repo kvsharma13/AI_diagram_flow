@@ -54,14 +54,19 @@ export default function ProjectEditorPage() {
     loadProject();
   }, [projectId]);
 
-  // The architecture diagram lives in its own store (architectureStore). Mirror
-  // its edits into the project so the existing auto-save persists them.
+  // The architecture diagram lives in its own store (architectureStore) and holds
+  // two independent boards (Flowchart + Cloud). Mirror BOTH boards + the active
+  // mode into the project so the existing auto-save persists them.
   useEffect(() => {
     const unsub = useArchitectureStore.subscribe((state, prev) => {
-      if (!archLoadedRef.current || state.diagram === prev.diagram) return;
+      if (!archLoadedRef.current) return;
+      if (state.boards === prev.boards && state.architectureMode === prev.architectureMode) return;
       const proj = useProjectStore.getState().project;
-      if (!proj || proj.architectureDiagram === state.diagram) return;
-      useProjectStore.getState().setProject({ ...proj, architectureDiagram: state.diagram });
+      if (!proj) return;
+      useProjectStore.getState().setProject({
+        ...proj,
+        architectureDiagram: { boards: state.boards, mode: state.architectureMode },
+      });
     });
     return unsub;
   }, []);
@@ -136,11 +141,14 @@ export default function ProjectEditorPage() {
 
       setProjectName(dbProject.name);
 
-      // Restore the architecture diagram into its store (or clear it so a
-      // previously-open project's diagram doesn't leak into this one).
+      // Restore the architecture boards into the store (or clear them so a
+      // previously-open project's diagrams don't leak into this one).
       const arch = useArchitectureStore.getState();
-      if (dbProject.architecture_diagram?.nodes) {
-        arch.loadDiagram(dbProject.architecture_diagram);
+      const archData = dbProject.architecture_diagram;
+      if (archData?.boards) {
+        arch.loadBoards(archData.boards, archData.mode || 'infrastructure');
+      } else if (archData?.nodes) {
+        arch.loadDiagram(archData); // legacy single-diagram shape
       } else {
         arch.resetDiagram();
       }
