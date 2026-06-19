@@ -83,7 +83,7 @@ export default function AIGenerator() {
   };
 
   return (
-    <div className="h-full overflow-y-auto flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
+    <div className="h-full overflow-y-auto flex items-center justify-center p-8" style={{ background: 'var(--bg-base)' }}>
       <div className="max-w-3xl w-full space-y-8 py-8">
         {/* Header */}
         <div className="text-center space-y-4">

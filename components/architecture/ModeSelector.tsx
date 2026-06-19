@@ -34,7 +34,10 @@ export default function ModeSelector() {
   const { architectureMode, setMode } = useArchitectureStore();
 
   return (
-    <div className="flex items-center gap-2 bg-gray-950/50 backdrop-blur-sm p-1 rounded-lg border border-gray-800/50 shadow-lg">
+    <div
+      className="flex items-center gap-1 p-1 rounded-lg"
+      style={{ background: 'var(--surface-3)', border: '1px solid var(--border)' }}
+    >
       {modes.map((mode) => {
         const Icon = mode.icon;
         const isActive = architectureMode === mode.id;
@@ -42,11 +45,12 @@ export default function ModeSelector() {
           <button
             key={mode.id}
             onClick={() => setMode(mode.id)}
-            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-200 font-medium text-sm ${
+            className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-200 font-medium text-sm"
+            style={
               isActive
-                ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white shadow-md shadow-purple-500/30'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-            }`}
+                ? { background: 'var(--accent)', color: '#fff' }
+                : { color: 'var(--text-secondary)' }
+            }
           >
             <Icon className="w-3.5 h-3.5" />
             <span>{mode.label}</span>

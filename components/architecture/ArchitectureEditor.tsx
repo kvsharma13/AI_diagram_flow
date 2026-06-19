@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Boxes } from 'lucide-react';
 import { useArchitectureStore } from '@/store/architectureStore';
 import ModeSelector from './ModeSelector';
+import ModuleShell from '@/components/ba/ModuleShell';
 import dynamic from 'next/dynamic';
 
 // Dynamically import mode components
@@ -18,7 +20,7 @@ const AIMode = dynamic(() => import('./ai-mode/AIGenerator'), {
 
 function LoadingState({ mode }: { mode: string }) {
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bg-base)' }}>
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-t-2 border-blue-500"></div>
@@ -50,21 +52,15 @@ export default function ArchitectureEditor() {
   const framed = architectureMode === 'cloud';
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Compact Header with Mode Selector */}
-      <div className="bg-gray-900/50 backdrop-blur-sm border-b border-gray-700/50 px-6 py-2.5 shadow-lg">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent whitespace-nowrap">
-            Architecture Diagram
-          </h2>
-          <ModeSelector />
-        </div>
-      </div>
-
-      {/* Mode Content */}
-      <div className="flex-1 overflow-hidden">
-        {isAI ? <AIMode /> : <InfrastructureMode framed={framed} />}
-      </div>
-    </div>
+    <ModuleShell
+      id="architecture-export-area"
+      title="Architecture Diagram"
+      subtitle={isAI ? 'Generate from a description' : framed ? 'Cloud architecture board' : 'Flowchart diagram'}
+      icon={Boxes}
+      actions={<ModeSelector />}
+      bodyClassName="overflow-hidden p-0"
+    >
+      {isAI ? <AIMode /> : <InfrastructureMode framed={framed} />}
+    </ModuleShell>
   );
 }
