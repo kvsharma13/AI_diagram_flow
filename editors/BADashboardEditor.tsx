@@ -87,7 +87,10 @@ export default function BADashboardEditor({ onOpen }: { onOpen: (id: EditorType)
   // Artifact generators — one openable card each (mirrors the editor tabs)
   const ganttPhases = project.ganttPhases?.length || 0;
   const raciTasks = project.raciTasks?.length || 0;
-  const archCreated = (project.architectureComponents?.length || 0) > 0 || !!project.architectureMermaidCode;
+  const archCreated =
+    (project.architectureDiagram?.nodes?.length || 0) > 0 ||
+    (project.architectureComponents?.length || 0) > 0 ||
+    !!project.architectureMermaidCode;
   const bpmnNodes = project.bpmnDiagram?.nodes?.length || 0;
   const proposalSections = project.proposalDocument?.sections?.length || 0;
 
