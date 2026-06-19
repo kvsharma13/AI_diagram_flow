@@ -64,10 +64,6 @@ interface ProjectStore {
   setRACIValue: (taskId: string, stakeholderId: string, value: RACIValue) => void;
 
   // Architecture actions
-  addComponent: (component: Omit<ArchitectureComponent, 'id'>) => void;
-  updateComponent: (id: string, updates: Partial<ArchitectureComponent>) => void;
-  deleteComponent: (id: string) => void;
-  setArchitectureMermaidCode: (code: string) => void;
 
   // Flowchart actions
   addStep: (step: Omit<FlowchartStep, 'id'>) => void;
@@ -406,62 +402,6 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       };
     }),
 
-  // Architecture actions
-  addComponent: (component) =>
-    set((state) => {
-      if (!state.project) return state;
-      return {
-        project: {
-          ...state.project,
-          architectureComponents: [
-            ...state.project.architectureComponents,
-            { ...component, id: uuidv4() },
-          ],
-          updatedAt: new Date(),
-        },
-      };
-    }),
-
-  updateComponent: (id, updates) =>
-    set((state) => {
-      if (!state.project) return state;
-      return {
-        project: {
-          ...state.project,
-          architectureComponents: state.project.architectureComponents.map(
-            (component) =>
-              component.id === id ? { ...component, ...updates } : component
-          ),
-          updatedAt: new Date(),
-        },
-      };
-    }),
-
-  deleteComponent: (id) =>
-    set((state) => {
-      if (!state.project) return state;
-      return {
-        project: {
-          ...state.project,
-          architectureComponents: state.project.architectureComponents.filter(
-            (component) => component.id !== id
-          ),
-          updatedAt: new Date(),
-        },
-      };
-    }),
-
-  setArchitectureMermaidCode: (code) =>
-    set((state) => {
-      if (!state.project) return state;
-      return {
-        project: {
-          ...state.project,
-          architectureMermaidCode: code,
-          updatedAt: new Date(),
-        },
-      };
-    }),
 
   // Flowchart actions
   addStep: (step) =>

@@ -34,12 +34,7 @@ interface ArchitectureStore {
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   setLayers: (layers: Layer[]) => void;
-  setMermaidCode: (code: string) => void;
   addNode: (node: Omit<Node, 'id'>) => void;
-  updateNode: (id: string, updates: Partial<Node>) => void;
-  deleteNode: (id: string) => void;
-  addEdge: (edge: Omit<Edge, 'id'>) => void;
-  deleteEdge: (id: string) => void;
   createDiagram: (name: string, mode: ArchitectureMode) => void;
   loadDiagram: (diagram: ArchitectureDiagram) => void;
   loadBoards: (boards: Partial<Boards>, mode: ArchitectureMode) => void;
@@ -78,31 +73,9 @@ export const useArchitectureStore = create<ArchitectureStore>((set) => ({
   setNodes: (nodes) => set((state) => patchActive(state, () => ({ nodes }))),
   setEdges: (edges) => set((state) => patchActive(state, () => ({ edges }))),
   setLayers: (layers) => set((state) => patchActive(state, () => ({ layers }))),
-  setMermaidCode: (mermaidCode) => set((state) => patchActive(state, () => ({ mermaidCode }))),
 
   addNode: (node) =>
     set((state) => patchActive(state, (cur) => ({ nodes: [...cur.nodes, { ...node, id: uuidv4() }] }))),
-
-  updateNode: (id, updates) =>
-    set((state) =>
-      patchActive(state, (cur) => ({
-        nodes: cur.nodes.map((n) => (n.id === id ? { ...n, ...updates } : n)),
-      }))
-    ),
-
-  deleteNode: (id) =>
-    set((state) =>
-      patchActive(state, (cur) => ({
-        nodes: cur.nodes.filter((n) => n.id !== id),
-        edges: cur.edges.filter((e) => e.source !== id && e.target !== id),
-      }))
-    ),
-
-  addEdge: (edge) =>
-    set((state) => patchActive(state, (cur) => ({ edges: [...cur.edges, { ...edge, id: uuidv4() }] }))),
-
-  deleteEdge: (id) =>
-    set((state) => patchActive(state, (cur) => ({ edges: cur.edges.filter((e) => e.id !== id) }))),
 
   createDiagram: (name, mode) =>
     set((state) => {
