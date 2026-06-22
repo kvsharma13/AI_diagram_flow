@@ -15,6 +15,7 @@ import GenerateSOWModal from '@/components/proposal/GenerateSOWModal';
 import { Palette, LayoutTemplate, Sparkles } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { captureDiagramSnapshot } from '@/lib/proposal/diagramSnapshot';
+import { buildSowContext } from '@/lib/proposal/sowContext';
 import { assignUIDs } from '@/lib/proposal/diagramTokens';
 
 // Which diagram source to auto-embed per section title keywords
@@ -129,10 +130,14 @@ export default function ProposalEditor() {
     setGenerateSOWError('');
 
     try {
+      // Ground the SOW in the project's real BA artifacts (requirements, business
+      // case, Gantt, RACI, gaps, test cases, architecture) — the differentiator.
+      const sowContext = buildSowContext(project);
+
       const response = await fetch('/api/ai-generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ textInput: prompt, type: 'full_sow' }),
+        body: JSON.stringify({ textInput: prompt, type: 'full_sow', sowContext }),
       });
 
       if (!response.ok) {

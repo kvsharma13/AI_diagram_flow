@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { textInput, type } = await request.json();
+    const { textInput, type, sowContext } = await request.json();
 
     if (!textInput || !type) {
       return NextResponse.json(
@@ -445,6 +445,18 @@ Rules:
 
     console.log('Calling OpenAI API from server...');
 
+    // For full SOW, append the project's real artifacts so the document is built
+    // from THIS project rather than invented (the differentiator vs generic tools).
+    const userContent =
+      type === 'full_sow' && typeof sowContext === 'string' && sowContext.trim()
+        ? `${textInput}\n\n=== PROJECT CONTEXT (REAL DATA FROM THIS PROJECT) ===\n` +
+          `Ground the SOW in the data below: turn EVERY requirement into a Scope of Services item (all "Included"), ` +
+          `EVERY delivery phase into a Project Delivery Timeline row AND a payment milestone, EVERY stakeholder into ` +
+          `Governance & Responsibilities, EVERY gap/risk into Risks, EVERY acceptance/test case into a quantified ` +
+          `Go-Live Success Criterion/SLA, and reflect the listed architecture components in Solution Architecture. ` +
+          `Do NOT contradict this context; where it is thin, use sensible professional defaults.\n\n${sowContext}`
+        : textInput;
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -455,10 +467,10 @@ Rules:
         model: (type === 'full_sow' || type === 'architecture') ? 'gpt-4o' : 'gpt-4',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: textInput }
+          { role: 'user', content: userContent }
         ],
         temperature: type === 'architecture' ? 0.4 : 0.3,
-        ...(type === 'full_sow' ? { max_tokens: 8000 } : {}),
+        ...(type === 'full_sow' ? { max_tokens: 16000 } : {}),
         ...(type === 'architecture'
           ? { max_tokens: 4000, response_format: { type: 'json_object' } }
           : {}),
