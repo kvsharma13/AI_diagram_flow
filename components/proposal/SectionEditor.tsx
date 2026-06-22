@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Eye, Edit3, Camera, Sparkles, Trash2, EyeOff, PlusCircle } from 'lucide-react';
 import { ProposalSection } from '@/types/project';
-import { captureDiagramSnapshot } from '@/lib/proposal/diagramSnapshot';
+import { renderProjectDiagram } from '@/lib/proposal/renderDiagram';
+import { useProjectStore } from '@/store/useProjectStore';
 import {
   parseTokens,
   assignUIDs,
@@ -22,11 +23,11 @@ interface SectionEditorProps {
   onAIGenerate: (section: ProposalSection) => void;
 }
 
-const diagramSourceMap: Record<string, string> = {
-  timeline: 'gantt-export-area',
-  stakeholders: 'raci-export-area',
-  architecture: 'architecture-export-area',
-  bpmn_process: 'bpmn-export-area',
+// Section type -> a project diagram we can render from STORED DATA (no live DOM,
+// so it works even though those editors aren't mounted on the Proposal tab).
+const diagramTypeMap: Record<string, string> = {
+  timeline: 'gantt',
+  architecture: 'architecture',
 };
 
 // Colour map for slot badges
@@ -48,7 +49,7 @@ export default function SectionEditor({ section, onUpdate, onDelete, onSnapshot,
   const [isCapturing, setIsCapturing] = useState(false);
   const [activeSlotUid, setActiveSlotUid] = useState<string | null>(null);
 
-  const diagramSource = diagramSourceMap[section.type];
+  const diagramType = diagramTypeMap[section.type];
   const diagrams = getDiagrams(section);
 
   // Auto-assign UIDs to any tokens that don't have them yet
@@ -63,14 +64,21 @@ export default function SectionEditor({ section, onUpdate, onDelete, onSnapshot,
   const activeToken = tokens.find(t => t.uid === activeSlotUid) ?? null;
 
   const handleCapture = async () => {
-    if (!diagramSource) return;
+    if (!diagramType) return;
     setIsCapturing(true);
     try {
-      const snapshot = await captureDiagramSnapshot(diagramSource);
+      const project = useProjectStore.getState().project;
+      const snapshot = project ? await renderProjectDiagram(diagramType, project) : null;
       if (snapshot) onSnapshot(section.id, snapshot);
-      else alert('Could not capture diagram. Make sure the corresponding editor tab has content.');
+      else
+        alert(
+          diagramType === 'gantt'
+            ? 'No Gantt phases found yet. Add phases in the Gantt Chart module first.'
+            : 'No architecture diagram found yet. Build one in the Architecture module first.'
+        );
     } catch (e) {
-      console.error('Capture failed:', e);
+      console.error('Render failed:', e);
+      alert('Could not render the diagram from project data.');
     } finally {
       setIsCapturing(false);
     }
@@ -179,7 +187,7 @@ export default function SectionEditor({ section, onUpdate, onDelete, onSnapshot,
           className="text-lg font-semibold text-gray-900 bg-transparent focus:outline-none focus:ring-2 focus:ring-purple-500 rounded px-2 py-1"
         />
         <div className="flex items-center gap-2">
-          {diagramSource && (
+          {diagramType && (
             <button
               onClick={handleCapture}
               disabled={isCapturing}
