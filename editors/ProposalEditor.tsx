@@ -14,16 +14,16 @@ import ProposalExportBar from '@/components/proposal/ProposalExportBar';
 import GenerateSOWModal from '@/components/proposal/GenerateSOWModal';
 import { Palette, LayoutTemplate, Sparkles } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { captureDiagramSnapshot } from '@/lib/proposal/diagramSnapshot';
+import { renderProjectDiagram } from '@/lib/proposal/renderDiagram';
 import { buildSowContext } from '@/lib/proposal/sowContext';
 import { assignUIDs } from '@/lib/proposal/diagramTokens';
 
-// Which diagram source to auto-embed per section title keywords
-const DIAGRAM_INJECTION_MAP: Array<{ keywords: string[]; sourceId: string }> = [
-  { keywords: ['timeline', 'gantt', 'delivery', 'schedule', 'phase'], sourceId: 'gantt-export-area' },
-  { keywords: ['architecture', 'technical', 'system', 'solution'], sourceId: 'architecture-export-area' },
-  { keywords: ['process', 'bpmn', 'workflow', 'flow'], sourceId: 'bpmn-export-area' },
-  { keywords: ['stakeholder', 'raci', 'governance', 'responsibility', 'team'], sourceId: 'raci-export-area' },
+// Which diagram type to auto-embed per section title keywords. Diagrams are
+// rendered from stored project data (renderProjectDiagram) — not the live DOM —
+// so they embed reliably even though those editors aren't mounted here.
+const DIAGRAM_INJECTION_MAP: Array<{ keywords: string[]; type: string }> = [
+  { keywords: ['timeline', 'gantt', 'delivery', 'schedule', 'phase'], type: 'gantt' },
+  { keywords: ['architecture', 'technical', 'system', 'solution'], type: 'architecture' },
 ];
 
 export default function ProposalEditor() {
@@ -155,14 +155,15 @@ export default function ProposalEditor() {
         sowData.sections.map(async (s: { type: string; title: string; content: string }, idx: number) => {
           const titleLower = s.title.toLowerCase();
 
-          // Find matching diagram source for this section
+          // Find matching diagram type for this section and render it from
+          // stored project data (reliable — no dependency on a mounted editor).
           const match = DIAGRAM_INJECTION_MAP.find(({ keywords }) =>
             keywords.some(kw => titleLower.includes(kw))
           );
 
           let diagramSnapshot: string | undefined;
           if (match) {
-            const snap = await captureDiagramSnapshot(match.sourceId).catch(() => null);
+            const snap = await renderProjectDiagram(match.type, project).catch(() => null);
             if (snap) diagramSnapshot = snap;
           }
 
