@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { EdgeProps, useNodes } from 'reactflow';
+import { ARCH_THEME, ArchTheme } from './archTheme';
 
 export interface Point {
   x: number;
@@ -325,17 +326,15 @@ export function SmartEdge({
 
   const pathD = buildSmoothPath(points);
 
-  // Per-edge colour (tinted by source tier); indigo when selected/animated.
-  const baseColor = (data as any)?.color || '#64748B';
-  const stroke = selected || animated ? '#6366F1' : baseColor;
-  const width = selected ? 3 : 2.2;
+  // Calm, neutral edges that adapt to the current theme.
+  const theme = ARCH_THEME[useContext(ArchTheme)];
+  const stroke = selected || animated ? theme.edgeSel : theme.edge;
+  const width = selected ? 2.2 : 1.6;
 
   // NB: labels are NOT drawn here — they're rendered together by <EdgeLabels/>
   // so they can be de-collided globally using the real rendered geometry.
   return (
     <>
-      {/* soft halo keeps the line legible where it crosses a node/box edge */}
-      <path d={pathD} fill="none" stroke={stroke} strokeWidth={width + 5} strokeOpacity={0.14} strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }} />
       <path
         id={id}
         className="react-flow__edge-path"
@@ -347,7 +346,7 @@ export function SmartEdge({
           strokeWidth: width,
           strokeLinecap: 'round',
           strokeLinejoin: 'round',
-          ...(animated ? { strokeDasharray: '7 7', animation: 'archFlow 0.7s linear infinite' } : {}),
+          ...(animated ? { strokeDasharray: '6 6', animation: 'archFlow 0.7s linear infinite' } : {}),
         }}
       />
     </>

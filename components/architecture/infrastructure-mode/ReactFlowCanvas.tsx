@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useContext, useEffect, useRef } from 'react';
 import ReactFlow, {
   Node as RFNode,
   Edge as RFEdge,
@@ -23,6 +23,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
 import { SmartEdge, orthogonalRoute, bundledRoute, bestLabelPos, Rect } from '@/lib/architecture/smartEdge';
+import { ARCH_THEME, ArchTheme } from '@/lib/architecture/archTheme';
 import { resolveIcon } from '@/lib/architecture/iconMap';
 import ServiceIcon from '@/components/architecture/ServiceIcon';
 
@@ -37,45 +38,12 @@ const handleStyle = {
 
 // Unified Service Node — icon-forward, eraser-style card with brand logo,
 // left accent bar, type badge and bold service name.
-// Normalize a group colour to a mid-lightness tone that stays legible on BOTH
-// the dark and the light canvas (avoids invisible dark navies and neon brights).
-function normalizeEdgeColor(hex: string): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
-  if (!m) return '#64748B';
-  const int = parseInt(m[1], 16);
-  let r = ((int >> 16) & 255) / 255;
-  let g = ((int >> 8) & 255) / 255;
-  let b = (int & 255) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0; const l = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
-    else if (max === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h /= 6;
-  }
-  const S = Math.min(Math.max(s, 0.4), 0.62);
-  const L = 0.62;
-  const hue2rgb = (p: number, q: number, t: number) => {
-    if (t < 0) t += 1; if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-    return p;
-  };
-  const q = L < 0.5 ? L * (1 + S) : L + S - L * S;
-  const p = 2 * L - q;
-  const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
-  return `#${toHex(hue2rgb(p, q, h + 1 / 3))}${toHex(hue2rgb(p, q, h))}${toHex(hue2rgb(p, q, h - 1 / 3))}`;
-}
-
 // Renders ALL edge labels in one overlay, using React Flow's REAL node geometry
 // (positions + measured sizes). Because every label is placed here together, we
 // can de-collide them globally so they never stack — and because it uses the
 // same geometry the edges are drawn from, each label sits on its own line.
 function EdgeLabels() {
+  const theme = ARCH_THEME[useContext(ArchTheme)];
   const edges = useStore((s: any) => s.edges);
   const nodeInternals = useStore((s: any) => s.nodeInternals);
 
@@ -157,15 +125,14 @@ function EdgeLabels() {
           style={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${l.x}px, ${l.y}px)`,
-            background: 'rgba(15, 23, 42, 0.94)',
-            color: '#E2E8F0',
+            background: theme.labelBg,
+            color: theme.labelText,
             fontSize: 10,
             fontWeight: 600,
-            letterSpacing: '0.04em',
-            padding: '3px 8px',
-            borderRadius: 8,
-            border: '1px solid rgba(148, 163, 184, 0.3)',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            letterSpacing: '0.03em',
+            padding: '2px 7px',
+            borderRadius: 6,
+            border: `1px solid ${theme.labelBorder}`,
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
           }}
@@ -178,6 +145,7 @@ function EdgeLabels() {
 }
 
 const ServiceNode = ({ data, selected }: any) => {
+  const theme = ARCH_THEME[useContext(ArchTheme)];
   const spec = resolveIcon({
     service: data.service || data.icon,
     type: data.type,
@@ -186,34 +154,22 @@ const ServiceNode = ({ data, selected }: any) => {
 
   return (
     <div
-      className="group transition-transform duration-200 hover:-translate-y-[2px]"
+      className="group transition-shadow duration-150"
       style={{
         position: 'relative',
-        background: 'linear-gradient(180deg, #18243C 0%, #0E1626 100%)',
-        border: `1px solid ${selected ? spec.accent + 'CC' : spec.accent + '33'}`,
-        borderRadius: '11px',
-        minWidth: '172px',
-        overflow: 'hidden',
-        boxShadow: selected
-          ? `0 0 0 1px ${spec.accent}66, 0 0 22px ${spec.accent}22, 0 10px 28px rgba(0,0,0,0.5)`
-          : 'inset 0 1px 0 rgba(255,255,255,0.05), 0 3px 12px rgba(0,0,0,0.45)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '9px 14px',
+        minWidth: 168,
+        background: theme.nodeBg,
+        border: `1px solid ${selected ? theme.nodeBorderSel : theme.nodeBorder}`,
+        borderRadius: 10,
+        boxShadow: selected ? theme.shadowSel : theme.shadow,
       }}
     >
-      {/* Left accent strip */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: '3px',
-          background: spec.accent,
-          borderRadius: '10px 0 0 10px',
-        }}
-      />
-
-      {/* Handles on every side (source + target) so edges can attach to the face
-          that points at the other node — this is what keeps fan-outs tidy. */}
+      {/* Handles on every side (source + target) so edges attach to the face
+          that points at the other node — keeps fan-outs tidy. */}
       <Handle id="t-top" type="target" position={Position.Top} style={handleStyle} className="group-hover:!opacity-70" />
       <Handle id="s-top" type="source" position={Position.Top} style={handleStyle} className="group-hover:!opacity-70" />
       <Handle id="t-bottom" type="target" position={Position.Bottom} style={handleStyle} className="group-hover:!opacity-70" />
@@ -223,59 +179,40 @@ const ServiceNode = ({ data, selected }: any) => {
       <Handle id="t-right" type="target" position={Position.Right} style={handleStyle} className="group-hover:!opacity-70" />
       <Handle id="s-right" type="source" position={Position.Right} style={handleStyle} className="group-hover:!opacity-70" />
 
-      {/* Content */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '11px', padding: '10px 14px 10px 17px' }}>
-        {/* Icon tile */}
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 9,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: spec.brand ? 'rgba(255,255,255,0.06)' : spec.accent + '1A',
-            border: `1px solid ${spec.accent}22`,
-            flexShrink: 0,
-          }}
-        >
-          <ServiceIcon spec={spec} size={21} />
+      {/* Icon tile — neutral tile, brand-coloured glyph (the only colour) */}
+      <div
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: 8,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: theme.iconBg,
+          flexShrink: 0,
+        }}
+      >
+        <ServiceIcon spec={spec} size={18} />
+      </div>
+      {/* Text */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: theme.nodeText, lineHeight: 1.25, whiteSpace: 'nowrap' }}>
+          {data.label}
         </div>
-        {/* Text column */}
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: '8.5px',
-              fontWeight: 700,
-              letterSpacing: '0.09em',
-              color: spec.accent,
-              textTransform: 'uppercase',
-              marginBottom: '2px',
-            }}
-          >
-            {spec.label}
-          </div>
-          <div
-            style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#E2E8F0',
-              lineHeight: 1.2,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {data.label}
-          </div>
+        <div style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: '0.06em', color: theme.nodeSub, textTransform: 'uppercase', marginTop: 1 }}>
+          {spec.label}
         </div>
       </div>
     </div>
   );
 };
 
-// Group Node — subtle dashed border, downward tag badge from top
+// Group Node — clean neutral frame with a subtle top-left label (the tier's
+// colour appears only as a small square, keeping the whole thing calm).
 const GroupNode = ({ data, selected }: any) => {
-  const borderColor = data.borderColor || '#6b7280';
+  const theme = ARCH_THEME[useContext(ArchTheme)];
   const isFrame = !!data.__frame;
+  const accent = data.borderColor || theme.groupLabel;
 
   return (
     <div
@@ -283,50 +220,28 @@ const GroupNode = ({ data, selected }: any) => {
         position: 'relative',
         width: '100%',
         height: '100%',
-        background: isFrame ? `${borderColor}06` : `${borderColor}0D`,
-        border: isFrame ? `1.5px dashed ${borderColor}55` : `1px solid ${borderColor}30`,
-        borderRadius: isFrame ? '20px' : '14px',
-        boxShadow: isFrame ? `inset 0 0 80px ${borderColor}06` : `inset 0 0 40px ${borderColor}08`,
+        background: theme.groupBg,
+        border: `1px ${isFrame ? 'dashed' : 'solid'} ${theme.groupBorder}`,
+        borderRadius: isFrame ? 18 : 12,
       }}
     >
       <NodeResizer
-        color={borderColor}
+        color={theme.nodeBorderSel}
         isVisible={selected && !isFrame}
         minWidth={220}
         minHeight={130}
         handleStyle={{ width: 9, height: 9, borderRadius: 2 }}
-        lineStyle={{ borderColor: `${borderColor}66` }}
+        lineStyle={{ borderColor: theme.nodeBorderSel }}
       />
-      {/* Downward tag badge from top — not shown on the outer cloud frame. */}
       {!isFrame && data.label && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '-1px',
-            left: '16px',
-            background: borderColor,
-            borderRadius: '0 0 6px 6px',
-            padding: '2px 10px 3px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-          }}
-        >
-          <div
-            style={{
-              width: 5,
-              height: 5,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.55)',
-              flexShrink: 0,
-            }}
-          />
+        <div style={{ position: 'absolute', top: 10, left: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 7, height: 7, borderRadius: 2, background: accent, flexShrink: 0 }} />
           <span
             style={{
-              fontSize: '10px',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              color: '#fff',
+              fontSize: 10.5,
+              fontWeight: 600,
+              letterSpacing: '0.055em',
+              color: theme.groupLabel,
               textTransform: 'uppercase',
             }}
           >
@@ -461,13 +376,8 @@ export default function ReactFlowCanvas({
     return { x: x + w / 2, y: y + h / 2 };
   };
 
-  // Edge colour = the (normalised) colour of the group the edge originates in,
-  // so each tier's flows are visually distinct. Falls back to neutral slate.
-  const edgeColorFor = (sourceId: string): string => {
-    const n = nodeById.get(sourceId) as any;
-    const g = n?.layerId ? (nodeById.get(n.layerId) as any) : null;
-    return g?.data?.borderColor ? normalizeEdgeColor(g.data.borderColor) : '#64748B';
-  };
+  // One calm neutral edge colour per theme (no tier colouring).
+  const edgeColor = (lightBg ? ARCH_THEME.light : ARCH_THEME.dark).edge;
 
   // Estimated edge-of-node handle point (only used to position a shared trunk;
   // the actual line endpoints come from React Flow's real geometry).
@@ -539,7 +449,6 @@ export default function ReactFlowCanvas({
           : { axis: 'y', at: h.y + (tSide === 'top' ? -BUNDLE : BUNDLE) };
       }
     }
-    const color = edgeColorFor(edge.source);
     return {
       id: edge.id,
       source: edge.source,
@@ -548,10 +457,11 @@ export default function ReactFlowCanvas({
       targetHandle: tSide ? `t-${tSide}` : undefined,
       type: 'smart',
       animated: edge.animated,
-      style: { stroke: color, strokeWidth: 2.2 },
-      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color },
+      // Calm neutral edges (no tier colouring) — matches the clean aesthetic.
+      style: { stroke: edgeColor, strokeWidth: 1.6 },
+      markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: edgeColor },
       // Labels render globally in <EdgeLabels/>; `bundle` is the shared trunk.
-      data: { color, bundle },
+      data: { bundle },
       ...(edge.label ? { label: edge.label } : {}),
     };
   });
@@ -618,7 +528,8 @@ export default function ReactFlowCanvas({
   // Sync edges when they change
   useEffect(() => {
     setEdges(rfEdges);
-  }, [diagram?.edges, setEdges]);
+    // lightBg included so edge/arrow colours refresh when the theme is toggled.
+  }, [diagram?.edges, lightBg, setEdges]);
 
   // Handle node changes and sync to store
   const handleNodesChange = useCallback(
@@ -796,7 +707,10 @@ export default function ReactFlowCanvas({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedNodeId, onDeleteNode]);
 
+  const t = lightBg ? ARCH_THEME.light : ARCH_THEME.dark;
+
   return (
+    <ArchTheme.Provider value={lightBg ? 'light' : 'dark'}>
     <ReactFlow
       nodes={nodes}
       edges={edges}
@@ -816,17 +730,17 @@ export default function ReactFlowCanvas({
       nodesConnectable={true}
       defaultEdgeOptions={{
         animated: false,
-        style: { stroke: '#3F4E63', strokeWidth: 1.5 },
+        style: { stroke: t.edge, strokeWidth: 1.6 },
         type: 'smart',
-        markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10, color: '#8593AD' },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: t.edge },
       }}
-      connectionLineStyle={{ stroke: '#64748b', strokeWidth: 1.5 }}
+      connectionLineStyle={{ stroke: t.edge, strokeWidth: 1.6 }}
       connectionLineType={ConnectionLineType.SmoothStep}
       minZoom={0.15}
       maxZoom={2.5}
-      style={{ background: lightBg ? '#F1F5F9' : '#171C28', transition: 'background 0.2s' }}
+      style={{ background: t.canvas, transition: 'background 0.2s' }}
     >
-      <Background color={lightBg ? 'rgba(15,23,42,0.16)' : 'rgba(71,85,105,0.3)'} variant={BackgroundVariant.Dots} gap={20} size={0.6} />
+      <Background color={t.dot} variant={BackgroundVariant.Dots} gap={22} size={0.6} />
       <EdgeLabels />
       <Controls showInteractive={false} className="!bg-slate-900/80 !border-slate-700/50 !rounded-lg !shadow-lg [&_button]:!border-slate-700/30 [&_button]:!bg-transparent [&_button:hover]:!bg-slate-700/50 [&_button_svg]:!fill-slate-400" />
       <MiniMap
@@ -839,5 +753,6 @@ export default function ReactFlowCanvas({
         }}
       />
     </ReactFlow>
+    </ArchTheme.Provider>
   );
 }
