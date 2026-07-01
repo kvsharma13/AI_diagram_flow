@@ -21,25 +21,25 @@ export default function ModuleShell({
 }) {
   return (
     <div id={id} className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg-base)' }}>
-      {/* Header */}
+      {/* Header — compact, so each module keeps the maximum working area. */}
       <div className="flex-shrink-0" style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
-        <div className="px-4 md:px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="px-4 md:px-6 py-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             {Icon && (
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
                 style={{ background: 'var(--accent-soft-bg)', border: '1px solid var(--accent-soft-bd)' }}
               >
-                <Icon className="w-4 h-4" style={{ color: 'var(--accent-hover)' }} />
+                <Icon className="w-3.5 h-3.5" style={{ color: 'var(--accent-hover)' }} />
               </div>
             )}
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{title}</h1>
-              {subtitle && <p className="text-sm mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>}
+            <div className="min-w-0 flex items-baseline gap-2">
+              <h1 className="text-base font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{title}</h1>
+              {subtitle && <p className="text-xs truncate hidden md:block" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>}
             </div>
           </div>
           {(actions || exportModuleId) && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 flex-wrap lg:flex-nowrap">
+            <div className="flex items-center gap-2 overflow-x-auto flex-shrink-0">
               {actions}
               {exportModuleId && <ExportMenu moduleId={exportModuleId} />}
             </div>

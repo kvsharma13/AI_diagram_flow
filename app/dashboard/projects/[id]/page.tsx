@@ -237,94 +237,80 @@ export default function ProjectEditorPage() {
     <div className="h-full flex flex-col overflow-hidden" style={{ background: 'var(--bg-base)' }}>
       {/* Header */}
       <div className="flex-shrink-0" style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
-        <div className="px-6 py-3">
-          <div className="flex items-center justify-between mb-2.5">
+        {/* Single compact row — leaves the maximum canvas to each module. */}
+        <div className="px-4 md:px-6 py-2 flex items-center justify-between gap-3">
+          {/* Left: back + project name */}
+          <div className="flex items-center gap-2.5 min-w-0">
             {activeEditor === 'baDashboard' ? (
               <Link
                 href="/dashboard/projects"
-                className="flex items-center gap-2 transition-colors"
+                className="flex items-center gap-1.5 text-sm flex-shrink-0 transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'}
               >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Projects
+                <ArrowLeft className="w-4 h-4" /> Projects
               </Link>
             ) : (
               <button
                 onClick={() => setActiveEditor('baDashboard')}
-                className="flex items-center gap-2 transition-colors"
+                className="flex items-center gap-1.5 text-sm flex-shrink-0 transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'}
               >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Dashboard
+                <ArrowLeft className="w-4 h-4" /> Dashboard
               </button>
             )}
-
-            {/* Save Status */}
-            <div className="flex items-center gap-3">
-              {isSaving ? (
-                <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving...</span>
-                </div>
-              ) : lastSaved ? (
-                <div className="flex items-center gap-2 text-sm text-green-400">
-                  <Check className="w-4 h-4" />
-                  <span>Saved {lastSaved.toLocaleTimeString()}</span>
-                </div>
-              ) : null}
-
-              <button
-                onClick={saveProject}
-                disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium disabled:opacity-40"
-                style={{ background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+            <div className="w-px h-5 flex-shrink-0" style={{ background: 'var(--border)' }} />
+            {isEditingName ? (
+              <input
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                onBlur={handleNameUpdate}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleNameUpdate();
+                  if (e.key === 'Escape') {
+                    setProjectName(project?.name || '');
+                    setIsEditingName(false);
+                  }
+                }}
+                className="text-lg font-bold px-2 py-0.5 border-2 border-purple-500 rounded focus:outline-none min-w-0"
+                style={{ background: 'var(--surface-2)', color: 'var(--text-primary)' }}
+                autoFocus
+              />
+            ) : (
+              <h1
+                onClick={() => setIsEditingName(true)}
+                className="text-lg font-bold cursor-pointer truncate px-2 py-0.5 rounded hover:bg-[rgba(37,99,235,0.08)]"
+                style={{ color: 'var(--text-primary)' }}
               >
-                <Save className="w-4 h-4" />
-                Save Now
-              </button>
-            </div>
+                {project?.name}
+              </h1>
+            )}
           </div>
 
-          {/* Project Name & Navigation - Single Row */}
-          <div className="flex items-center justify-between gap-4">
-            {/* Project Name */}
-            <div>
-              {isEditingName ? (
-                <input
-                  type="text"
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  onBlur={handleNameUpdate}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleNameUpdate();
-                    if (e.key === 'Escape') {
-                      setProjectName(project?.name || '');
-                      setIsEditingName(false);
-                    }
-                  }}
-                  className="text-2xl font-bold px-3 py-1 border-2 border-purple-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  style={{ background: 'var(--surface-2)', color: 'var(--text-primary)' }}
-                  autoFocus
-                />
-              ) : (
-                <h1
-                  onClick={() => setIsEditingName(true)}
-                  className="text-2xl font-bold cursor-pointer transition-colors px-3 py-1 rounded-lg hover:bg-[rgba(37,99,235,0.08)]"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  {project?.name}
-                </h1>
-              )}
-            </div>
-
-            {/* Navigation — all views (dashboard, BA modules, generators) open from here / the dashboard grid */}
-            <div className="flex items-center gap-2">
-              <BAModuleNav active={activeEditor} onSelect={setActiveEditor} />
-            </div>
+          {/* Right: save status + save + module nav */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {isSaving ? (
+              <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…
+              </span>
+            ) : lastSaved ? (
+              <span className="hidden md:flex items-center gap-1.5 text-xs text-green-400">
+                <Check className="w-3.5 h-3.5" /> Saved {lastSaved.toLocaleTimeString()}
+              </span>
+            ) : null}
+            <button
+              onClick={saveProject}
+              disabled={isSaving}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium disabled:opacity-40"
+              style={{ background: 'var(--surface-3)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+            >
+              <Save className="w-3.5 h-3.5" /> Save
+            </button>
+            <BAModuleNav active={activeEditor} onSelect={setActiveEditor} />
           </div>
         </div>
       </div>
