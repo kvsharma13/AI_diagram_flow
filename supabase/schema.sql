@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS projects (
   -- Architecture & Flowchart (for future)
   architecture_components JSONB DEFAULT '[]',
   architecture_mermaid_code TEXT,
+  architecture_diagram JSONB, -- React Flow boards (Flowchart + Cloud); see migrations/0002
   flowchart_steps JSONB DEFAULT '[]',
 
   -- BPMN Process Flow
