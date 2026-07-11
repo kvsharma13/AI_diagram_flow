@@ -1,15 +1,23 @@
 import type { Project } from '@/types/project';
+import { buildClientBriefContext } from '@/lib/documents/briefContext';
 
 /**
  * Builds a compact, grounded "PROJECT CONTEXT" block from the real BA artifacts
  * already in the project, so the SOW generator writes from THIS project instead
  * of inventing generic content. Kept summary-only (titles/key fields) to stay
  * within token limits. Returns '' when the project has no usable data.
+ *
+ * The client's uploaded-document brief (if any) is placed FIRST as the
+ * authoritative source of truth for the engagement.
  */
 export function buildSowContext(project: Project): string {
   const out: string[] = [];
   const t = (s: any, n = 600) => (s ? String(s).trim().slice(0, n) : '');
   const push = (s: string) => out.push(s);
+
+  // ── Client source brief (uploaded RFP/documents) — highest priority ──
+  const briefContext = buildClientBriefContext(project);
+  if (briefContext) push(briefContext);
 
   // ── BRD ──────────────────────────────────────────────────────────────
   const brd = project.brd;

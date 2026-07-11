@@ -1,6 +1,6 @@
 import {
   type LucideIcon, LayoutDashboard, BookOpen, ListChecks, ScrollText,
-  SquareUser, Database, GitCompare, Table, ClipboardCheck, Scale, Briefcase,
+  SquareUser, Database, GitCompare, Table, ClipboardCheck, Scale, Briefcase, FileUp,
 } from 'lucide-react';
 import { EditorType } from '@/types/project';
 
@@ -17,6 +17,7 @@ export interface BAModuleDef {
 // overview entry up top.
 export const BA_MODULES: BAModuleDef[] = [
   { id: 'baDashboard',  label: 'Project Dashboard',   icon: LayoutDashboard, group: 'Overview' },
+  { id: 'sources',      label: 'Client Sources',      icon: FileUp,          group: 'Overview' },
   { id: 'brd',          label: 'BRD',                 icon: BookOpen,        group: 'Requirements' },
   { id: 'requirements', label: 'Requirements',        icon: ListChecks,      group: 'Requirements' },
   { id: 'userStories',  label: 'User Stories',        icon: ScrollText,      group: 'Requirements' },

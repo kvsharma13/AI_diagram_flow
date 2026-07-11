@@ -30,6 +30,7 @@ import {
   TestCase,
   GapAnalysis,
   BusinessCase,
+  ClientBrief,
 } from '@/types/project';
 import {
   EMPTY_BRD, EMPTY_REQUIREMENTS, EMPTY_USER_STORIES, EMPTY_USECASE, EMPTY_ERD,
@@ -113,6 +114,7 @@ interface ProjectStore {
   setTestCases: (testCases: TestCase[]) => void;
   setGapAnalysis: (gap: GapAnalysis) => void;
   setBusinessCase: (businessCase: BusinessCase) => void;
+  setClientBrief: (clientBrief: ClientBrief) => void;
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
@@ -185,6 +187,8 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     set((state) => (!state.project ? state : { project: { ...state.project, gapAnalysis, updatedAt: new Date() } })),
   setBusinessCase: (businessCase) =>
     set((state) => (!state.project ? state : { project: { ...state.project, businessCase, updatedAt: new Date() } })),
+  setClientBrief: (clientBrief) =>
+    set((state) => (!state.project ? state : { project: { ...state.project, clientBrief, updatedAt: new Date() } })),
 
   setTimelineMonths: (months: number) =>
     set((state) => {

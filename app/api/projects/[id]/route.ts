@@ -154,6 +154,23 @@ export async function PUT(
       console.warn('Architecture diagram update skipped:', e);
     }
 
+    // Client brief — isolated best-effort update so a missing client_brief column
+    // (migration 0003 not yet applied) never blocks the saves above.
+    try {
+      if (body.clientBrief !== undefined) {
+        const { error: briefError } = await supabaseAdmin
+          .from('projects')
+          .update({ client_brief: body.clientBrief })
+          .eq('id', projectId)
+          .eq('user_id', user.id);
+        if (briefError) {
+          console.warn('Client brief not saved — run supabase/migrations/0003_client_sources.sql:', briefError.message);
+        }
+      }
+    } catch (e) {
+      console.warn('Client brief update skipped:', e);
+    }
+
     return NextResponse.json({ project });
   } catch (error) {
     console.error('Update project error:', error);

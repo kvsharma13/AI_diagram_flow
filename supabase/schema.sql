@@ -62,9 +62,28 @@ CREATE TABLE IF NOT EXISTS projects (
   gap_analysis JSONB DEFAULT '{}',
   business_case JSONB DEFAULT '{}',
 
+  -- Client sources: distilled brief from uploaded RFP/docs (see migrations/0003)
+  client_brief JSONB,
+
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Uploaded client documents (RFP etc.) — see supabase/migrations/0003_client_sources.sql
+CREATE TABLE IF NOT EXISTS project_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  file_name TEXT NOT NULL,
+  file_type TEXT,
+  file_size INTEGER,
+  storage_path TEXT,
+  extracted_text TEXT,
+  status TEXT DEFAULT 'uploaded',
+  error TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_project_documents_project ON project_documents(project_id);
 
 -- Create AI usage tracking table
 CREATE TABLE IF NOT EXISTS ai_usage (

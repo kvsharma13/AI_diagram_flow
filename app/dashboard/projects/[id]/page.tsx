@@ -30,6 +30,7 @@ import TestCaseEditor from '@/editors/TestCaseEditor';
 import GapAnalysisEditor from '@/editors/GapAnalysisEditor';
 import BusinessCaseEditor from '@/editors/BusinessCaseEditor';
 import BADashboardEditor from '@/editors/BADashboardEditor';
+import SourcesEditor from '@/editors/SourcesEditor';
 
 export default function ProjectEditorPage() {
   const params = useParams();
@@ -133,6 +134,7 @@ export default function ProjectEditorPage() {
         testCases: dbProject.test_cases || EMPTY_TEST_CASES(),
         gapAnalysis: { ...EMPTY_GAP_ANALYSIS(), ...(dbProject.gap_analysis || {}) },
         businessCase: { ...EMPTY_BUSINESS_CASE(), ...(dbProject.business_case || {}) },
+        clientBrief: dbProject.client_brief || undefined,
         timelineMonths: dbProject.timeline_months || 12,
         timelineUnit: dbProject.timeline_unit || 'months',
         createdAt: new Date(dbProject.created_at),
@@ -201,6 +203,7 @@ export default function ProjectEditorPage() {
           testCases: project.testCases,
           gapAnalysis: project.gapAnalysis,
           businessCase: project.businessCase,
+          clientBrief: project.clientBrief ?? null,
           timelineMonths: project.timelineMonths,
           timelineUnit: project.timelineUnit,
         }),
@@ -334,7 +337,8 @@ export default function ProjectEditorPage() {
         {activeEditor === 'gapAnalysis' && <GapAnalysisEditor />}
         {activeEditor === 'businessCase' && <BusinessCaseEditor />}
         {activeEditor === 'baDashboard' && <BADashboardEditor onOpen={setActiveEditor} />}
-        {isBAModule(activeEditor) && !['baDashboard', 'brd', 'requirements', 'userStories', 'useCase', 'erd', 'asIsToBe', 'traceability', 'testCases', 'gapAnalysis', 'businessCase'].includes(activeEditor) && <ComingSoon module={activeEditor} />}
+        {activeEditor === 'sources' && <SourcesEditor />}
+        {isBAModule(activeEditor) && !['baDashboard', 'sources', 'brd', 'requirements', 'userStories', 'useCase', 'erd', 'asIsToBe', 'traceability', 'testCases', 'gapAnalysis', 'businessCase'].includes(activeEditor) && <ComingSoon module={activeEditor} />}
       </div>
     </div>
   );

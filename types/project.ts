@@ -40,6 +40,8 @@ export interface Project {
   testCases?: TestCase[];
   gapAnalysis?: GapAnalysis;
   businessCase?: BusinessCase;
+  // ── Client sources — structured brief distilled from uploaded RFP/documents ──
+  clientBrief?: ClientBrief;
   timelineMonths?: number; // Total duration for Gantt timeline (default: 12)
   timelineUnit?: TimelineUnit; // Unit for timeline (default: 'months')
   createdAt: Date;
@@ -443,6 +445,55 @@ export type EditorType =
   | 'gantt' | 'raci' | 'architecture' | 'flowchart' | 'bpmn' | 'proposal' | 'templates'
   // BA modules
   | 'baDashboard'
+  | 'sources'
   | 'brd' | 'requirements' | 'userStories'
   | 'useCase' | 'erd' | 'asIsToBe'
   | 'traceability' | 'testCases' | 'gapAnalysis' | 'businessCase';
+
+// ── Client sources (uploaded RFP / client documents) ──────────────────────
+// One structured brief per project, distilled ONCE from the uploaded documents
+// and then reused to ground every generator (SOW, requirements, architecture…).
+export type DocumentStatus = 'uploaded' | 'extracting' | 'analyzing' | 'ready' | 'error';
+
+export interface ProjectDocument {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  status: DocumentStatus;
+  error?: string;
+  createdAt: string;
+}
+
+export interface ClientBriefRequirement {
+  description: string;
+  type?: 'Functional' | 'Non-Functional';
+  priority?: 'Must Have' | 'Should Have' | 'Could Have' | "Won't Have";
+  category?: string;
+}
+
+export interface ClientBriefStakeholder {
+  name: string;
+  role?: string;
+}
+
+export interface ClientBrief {
+  clientName?: string;
+  projectName?: string;
+  background?: string;          // current situation / context
+  objectives?: string[];        // goals the client wants to achieve
+  scopeIn?: string[];
+  scopeOut?: string[];
+  requirements?: ClientBriefRequirement[];
+  stakeholders?: ClientBriefStakeholder[];
+  constraints?: string[];
+  assumptions?: string[];
+  deliverables?: string[];
+  budget?: string;
+  timeline?: string;
+  compliance?: string[];        // regulatory / standards mentioned
+  risks?: string[];
+  summary?: string;             // short narrative overview
+  sourceDocuments?: string[];   // file names this brief was distilled from
+  updatedAt?: string;
+}
