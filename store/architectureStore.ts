@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { ArchitectureMode, Node, Edge, Layer, ArchitectureDiagram } from '@/types/architecture';
+import { ColorMode } from '@/lib/architecture/theme';
 
 // Flowchart and Cloud Architecture are INDEPENDENT boards. The store keeps one
 // diagram per board and `diagram` always mirrors the board for the active mode,
@@ -28,9 +29,11 @@ interface ArchitectureStore {
   boards: Boards;
   diagram: ArchitectureDiagram | null; // mirror of the active board
   architectureMode: ArchitectureMode;
+  colorMode: ColorMode; // node/group colour theme: pastel (default) | bold | outline
 
   // Actions
   setMode: (mode: ArchitectureMode) => void;
+  setColorMode: (mode: ColorMode) => void;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   setLayers: (layers: Layer[]) => void;
@@ -57,6 +60,9 @@ export const useArchitectureStore = create<ArchitectureStore>((set) => ({
   boards: { infrastructure: null, cloud: null },
   diagram: null,
   architectureMode: 'ai',
+  colorMode: 'pastel',
+
+  setColorMode: (colorMode) => set({ colorMode }),
 
   setMode: (mode) =>
     set((state) => {

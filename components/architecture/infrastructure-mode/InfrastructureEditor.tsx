@@ -14,7 +14,7 @@ import { applyElkLayout } from '@/lib/architecture/elkLayout';
 import NodeSidebarDropdown from './NodeSidebar';
 
 export default function InfrastructureEditor({ framed = false }: { framed?: boolean }) {
-  const { diagram, setNodes, setEdges } = useArchitectureStore();
+  const { diagram, setNodes, setEdges, colorMode, setColorMode } = useArchitectureStore();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showIcons, setShowIcons] = useState(false);
@@ -29,7 +29,8 @@ export default function InfrastructureEditor({ framed = false }: { framed?: bool
   const setCode = (value: string) => setCodeByMode((p) => ({ ...p, [codeKey]: value }));
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
   const [layoutDirection, setLayoutDirection] = useState<'horizontal' | 'vertical'>('vertical');
-  const [lightBg, setLightBg] = useState(false);
+  // Pastel is a light-canvas look, so default the board to light.
+  const [lightBg, setLightBg] = useState(true);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Load the default template only when the diagram is empty. A non-empty
@@ -285,6 +286,24 @@ connections:
                 >
                   <Code className="w-3.5 h-3.5" />
                 </button>
+              </div>
+
+              <div className="w-px h-4 bg-slate-700/50 mx-1" />
+
+              {/* Colour mode — pastel / bold / outline (eraser.io style) */}
+              <div className="flex items-center bg-slate-800/50 p-0.5 rounded">
+                {(['pastel', 'bold', 'outline'] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setColorMode(m)}
+                    className={`px-2 py-1 rounded text-[10px] font-medium capitalize transition-colors ${
+                      colorMode === m ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                    title={`${m} colour mode`}
+                  >
+                    {m}
+                  </button>
+                ))}
               </div>
 
               <div className="w-px h-4 bg-slate-700/50 mx-1" />

@@ -24,6 +24,7 @@ import 'reactflow/dist/style.css';
 import { useArchitectureStore } from '@/store/architectureStore';
 import { SmartEdge, orthogonalRoute, bundledRoute, bestLabelPos, Rect } from '@/lib/architecture/smartEdge';
 import { ARCH_THEME, ArchTheme } from '@/lib/architecture/archTheme';
+import { nodeStyle, groupStyle, normalizeAccent, withAlpha } from '@/lib/architecture/theme';
 import { resolveIcon } from '@/lib/architecture/iconMap';
 import ServiceIcon from '@/components/architecture/ServiceIcon';
 
@@ -145,12 +146,17 @@ function EdgeLabels() {
 }
 
 const ServiceNode = ({ data, selected }: any) => {
-  const theme = ARCH_THEME[useContext(ArchTheme)];
+  const base = useContext(ArchTheme);
+  const theme = ARCH_THEME[base];
+  const mode = useArchitectureStore((s) => s.colorMode);
   const spec = resolveIcon({
     service: data.service || data.icon,
     type: data.type,
     label: data.label,
   });
+  // Optional per-node emphasis colour (highlighted "Bug"/"Feature" nodes).
+  const emphasis = typeof data.color === 'string' ? data.color : undefined;
+  const s = nodeStyle(spec.accent, mode, base === 'dark', emphasis);
 
   return (
     <div
@@ -162,8 +168,8 @@ const ServiceNode = ({ data, selected }: any) => {
         gap: 10,
         padding: '9px 14px',
         minWidth: 168,
-        background: theme.nodeBg,
-        border: `1px solid ${selected ? theme.nodeBorderSel : theme.nodeBorder}`,
+        background: s.background,
+        border: `1px solid ${selected ? theme.nodeBorderSel : s.border}`,
         borderRadius: 10,
         boxShadow: selected ? theme.shadowSel : theme.shadow,
       }}
@@ -179,7 +185,7 @@ const ServiceNode = ({ data, selected }: any) => {
       <Handle id="t-right" type="target" position={Position.Right} style={handleStyle} className="group-hover:!opacity-70" />
       <Handle id="s-right" type="source" position={Position.Right} style={handleStyle} className="group-hover:!opacity-70" />
 
-      {/* Icon tile — neutral tile, brand-coloured glyph (the only colour) */}
+      {/* Icon tile — tinted per colour mode; brand glyphs keep their own colour */}
       <div
         style={{
           width: 30,
@@ -188,18 +194,19 @@ const ServiceNode = ({ data, selected }: any) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: theme.iconBg,
+          background: s.iconBg,
+          border: `1px solid ${s.iconBorder}`,
           flexShrink: 0,
         }}
       >
-        <ServiceIcon spec={spec} size={18} />
+        <ServiceIcon spec={spec} size={18} color={s.iconColor} />
       </div>
       {/* Text */}
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: theme.nodeText, lineHeight: 1.25, whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: s.text, lineHeight: 1.25, whiteSpace: 'nowrap' }}>
           {data.label}
         </div>
-        <div style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: '0.06em', color: theme.nodeSub, textTransform: 'uppercase', marginTop: 1 }}>
+        <div style={{ fontSize: 9.5, fontWeight: 500, letterSpacing: '0.06em', color: s.subtext, textTransform: 'uppercase', marginTop: 1 }}>
           {spec.label}
         </div>
       </div>
@@ -207,12 +214,15 @@ const ServiceNode = ({ data, selected }: any) => {
   );
 };
 
-// Group Node — clean neutral frame with a subtle top-left label (the tier's
-// colour appears only as a small square, keeping the whole thing calm).
+// Group Node — soft colored domain container with a labelled chip (eraser look).
 const GroupNode = ({ data, selected }: any) => {
-  const theme = ARCH_THEME[useContext(ArchTheme)];
+  const base = useContext(ArchTheme);
+  const theme = ARCH_THEME[base];
+  const mode = useArchitectureStore((s) => s.colorMode);
   const isFrame = !!data.__frame;
-  const accent = data.borderColor || theme.groupLabel;
+  // Normalise the domain colour to a legible mid-tone, then theme it.
+  const accent = normalizeAccent(data.borderColor || '#7B8595');
+  const g = groupStyle(accent, mode, base === 'dark');
 
   return (
     <div
@@ -220,9 +230,9 @@ const GroupNode = ({ data, selected }: any) => {
         position: 'relative',
         width: '100%',
         height: '100%',
-        background: theme.groupBg,
-        border: `1px ${isFrame ? 'dashed' : 'solid'} ${theme.groupBorder}`,
-        borderRadius: isFrame ? 18 : 12,
+        background: isFrame ? withAlpha(accent, 0.03) : g.background,
+        border: `1px ${isFrame ? 'dashed' : 'solid'} ${isFrame ? withAlpha(accent, 0.3) : g.border}`,
+        borderRadius: isFrame ? 18 : 14,
       }}
     >
       <NodeResizer
@@ -233,15 +243,26 @@ const GroupNode = ({ data, selected }: any) => {
         handleStyle={{ width: 9, height: 9, borderRadius: 2 }}
         lineStyle={{ borderColor: theme.nodeBorderSel }}
       />
+      {/* Labelled chip hanging from the top edge — hidden on the outer cloud frame. */}
       {!isFrame && data.label && (
-        <div style={{ position: 'absolute', top: 10, left: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 7, height: 7, borderRadius: 2, background: accent, flexShrink: 0 }} />
+        <div
+          style={{
+            position: 'absolute',
+            top: -1,
+            left: 16,
+            background: g.chipBg,
+            borderRadius: '0 0 7px 7px',
+            padding: '3px 10px 4px',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
           <span
             style={{
-              fontSize: 10.5,
-              fontWeight: 600,
-              letterSpacing: '0.055em',
-              color: theme.groupLabel,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              color: g.chipText,
               textTransform: 'uppercase',
             }}
           >

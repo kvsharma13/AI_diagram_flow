@@ -30,19 +30,21 @@ type Category =
   | 'external'
   | 'generic';
 
+// Muted, desaturated accents tuned so nodes read as soft pastels (or calm bold
+// fills) rather than neon. Feeds the colour-mode theme in lib/architecture/theme.ts.
 const CAT_ACCENT: Record<Category, string> = {
-  frontend: '#60A5FA',
-  backend: '#818CF8',
-  database: '#34D399',
-  cache: '#FB7185',
-  storage: '#A78BFA',
-  queue: '#FBBF24',
-  network: '#38BDF8',
-  security: '#F472B6',
-  analytics: '#C084FC',
-  ai: '#2DD4BF',
-  external: '#FB923C',
-  generic: '#818CF8',
+  frontend: '#4F7CC4', // muted blue
+  backend: '#7B6FD0', // muted indigo/violet
+  database: '#3F9E6E', // muted emerald
+  cache: '#D9695F', // muted coral/red
+  storage: '#9B7ED0', // muted purple
+  queue: '#C99A3F', // muted amber
+  network: '#4A93C7', // muted sky
+  security: '#C56FA0', // muted pink
+  analytics: '#9A6FC0', // muted purple
+  ai: '#3FA89A', // muted teal
+  external: '#CF8A4A', // muted orange
+  generic: '#7B8595', // slate
 };
 
 const CAT_LABEL: Record<Category, string> = {
